@@ -24,6 +24,7 @@ services:
             - $MYSQL_DATA:/var/lib/mysql
     nginx:
         image: briefthreat/nginx
+        restart: always
         build:
             context: ./build
             dockerfile: Dockerfile.nginx
@@ -31,5 +32,8 @@ services:
             - briefthreat
         environment:
             - NGINX_HOST=${NGINX_HOST}
+        volumes:
+            - ${SSL_CERTS}:/opt/ssl
         ports:
             - "80:80"
+            - "443:443"
