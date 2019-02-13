@@ -2,9 +2,8 @@ version: '3'
 services:
     briefthreat:
         image: briefthreat/app
+        restart: always
         build: ./build
-        depends_on:
-            - db
         environment:
             - FLASK_ENV=${FLASK_ENV}
             - MYSQL_HOST=db
