@@ -2,12 +2,14 @@ version: '3'
 services:
     briefthreat:
         image: briefthreat/app
-        build: .
+        build: ./build
         depends_on:
             - db
         env_file:
             - ./common.env
             - ./app.env
+        volumes:
+            - ./app:/opt/app:ro
     db:
         image: mariadb:latest
         restart: always
@@ -19,7 +21,7 @@ services:
     nginx:
         image: briefthreat/nginx
         build:
-            context: .
+            context: ./build
             dockerfile: Dockerfile.nginx
         depends_on:
             - briefthreat
