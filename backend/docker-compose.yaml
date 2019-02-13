@@ -5,17 +5,22 @@ services:
         build: ./build
         depends_on:
             - db
-        env_file:
-            - ./common.env
-            - ./app.env
+        environment:
+            - FLASK_ENV=${FLASK_ENV}
+            - MYSQL_HOST=db
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
         volumes:
             - ./app:/opt/app:ro
     db:
         image: mariadb:latest
         restart: always
-        env_file:
-            - ./common.env
-            - ./mysql.env
+        environment:
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
         volumes:
             - $MYSQL_DATA:/var/lib/mysql
     nginx:
@@ -25,7 +30,7 @@ services:
             dockerfile: Dockerfile.nginx
         depends_on:
             - briefthreat
-        env_file:
-            - ./nginx.env
+        environment:
+            - NGINX_HOST=${NGINX_HOST}
         ports:
             - "80:80"

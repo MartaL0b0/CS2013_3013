@@ -1,5 +1,2 @@
 .env
-mysql.env
-app.env
-nginx.env
 data/
