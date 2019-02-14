@@ -13,6 +13,8 @@ MYSQL_PASSWORD=hunter2
 MYSQL_DATABASE=briefthreat
 FLASK_ENV=development
 NGINX_HOST=localhost
+NGINX_HTTP_PORT=8080
+NGINX_HTTPS_PORT=8443
 SSL_CERTS=./ssl
 ```
 
@@ -23,3 +25,5 @@ SSL_CERTS=./ssl
 Note that the filenames must be `key.pem` for the private key and `certificate.crt` for the certificate.
 
 To start the app, just run `docker-compose up`. Hit CTRL+C to shut it down.
+
+Note: If the Docker images change, you can run `docker-compose up --build --force-recreate` to ensure they're re-built.
