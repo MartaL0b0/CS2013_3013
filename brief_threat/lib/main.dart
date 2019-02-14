@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 void main() {
   runApp(MaterialApp(
-    title: 'Flutter Tutorial',
+    //title: 'Requests app', haven't found a use for it right now
     home: LoginPage(),
   ));
 }
@@ -17,50 +17,50 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: SafeArea(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 24.0),
+        child: ListView(
+          padding: EdgeInsets.symmetric(horizontal: 24.0),
+          children: <Widget>[
+            SizedBox(height: 80.0),
+            Column(
               children: <Widget>[
-                SizedBox(height: 80.0),
-                Column(
-                  children: <Widget>[
-                    SizedBox(height: 40.0),
-                    Text('BETAQ',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
+                SizedBox(height: 40.0),
+                Text('BETAQ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
 
-                    ),
-                  ],
                 ),
-                SizedBox(height: 120.0),
-                TextField(
-                  cursorColor: Colors.white,
-                  decoration: InputDecoration(
-                    labelText: "Username",
-                    filled: true,
-                  ),
-                ),
-                SizedBox(height: 12.0), //spacer
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    filled: true,
-                  ),
-                  obscureText: true,
-                ),
-                ButtonBar(
-                  children: <Widget>[
-                    FlatButton(
-                      child: Text('Login'),
-                      onPressed: (){
-                        // do something on login
-                      },
-                    )
-                  ],
+              ],
+            ),
+            SizedBox(height: 120.0),
+            TextField(
+              cursorColor: Colors.white,
+              decoration: InputDecoration(
+                labelText: "Username",
+                filled: true,
+              ),
+            ),
+            SizedBox(height: 12.0), //spacer
+            TextField(
+              decoration: InputDecoration(
+                labelText: "Password",
+                filled: true,
+              ),
+              obscureText: true,
+            ),
+            ButtonBar(
+              children: <Widget>[
+                FlatButton(
+                  child: Text('Login'),
+                  onPressed: (){
+                    // do something on login
+                  },
                 )
-
               ],
             )
+
+          ],
         )
+      )
 
     );
   }
