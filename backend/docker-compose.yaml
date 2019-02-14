@@ -1,0 +1,39 @@
+version: '3'
+services:
+    briefthreat:
+        image: briefthreat/app
+        restart: always
+        build: ./build
+        environment:
+            - FLASK_ENV=${FLASK_ENV}
+            - MYSQL_HOST=db
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+        volumes:
+            - ./app:/opt/app:ro
+    db:
+        image: mariadb:latest
+        restart: always
+        environment:
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+        volumes:
+            - $MYSQL_DATA:/var/lib/mysql
+    nginx:
+        image: briefthreat/nginx
+        restart: always
+        build:
+            context: ./build
+            dockerfile: Dockerfile.nginx
+        depends_on:
+            - briefthreat
+        environment:
+            - NGINX_HOST=${NGINX_HOST}
+        volumes:
+            - ${SSL_CERTS}:/opt/ssl
+        ports:
+            - "80:80"
+            - "443:443"
