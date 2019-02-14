@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
             Column(
               children: <Widget>[
                 SizedBox(height: 40.0),
-                Text('BETAQ',
+                Text('LOGIN SCREEN',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
 
