@@ -3,61 +3,56 @@ import os
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
+from flask_restful import Api
 from flask_marshmallow import Marshmallow
+from flask_jwt_extended import JWTManager
+
+import models, resources
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://{user}:{password}@{host}/{database}'.format(
+
+# Configuration is provided through environment variables by Docker Compose
+app.config.update({
+    'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+    'SQLALCHEMY_DATABASE_URI': 'mysql+mysqlconnector://{user}:{password}@{host}/{database}'.format(
         user = os.environ['MYSQL_USER'],
         password = os.environ['MYSQL_PASSWORD'],
         host = os.environ['MYSQL_HOST'],
         database = os.environ['MYSQL_DATABASE']
-)
+    ),
+    'SECRET_KEY': os.environ['FLASK_SECRET'],
+    'JWT_SECRET_KEY': os.environ['JWT_SECRET'],
+    'JWT_BLACKLIST_ENABLED': True,
+    'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh']
+})
 
-db = SQLAlchemy(app)
+api = Api(app)
+models.db.init_app(app)
 validation = Marshmallow(app)
+jwt = JWTManager(app)
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-class UserSchema(validation.ModelSchema):
-    class Meta:
-        model = User
+# Mount our API endpoints
+api.add_resource(resources.UserRegistration, '/registration')
+api.add_resource(resources.UserLogin, '/login')
+api.add_resource(resources.UserLogoutAccess, '/logout/access')
+api.add_resource(resources.UserLogoutRefresh, '/logout/refresh')
+api.add_resource(resources.TokenRefresh, '/token/refresh')
+api.add_resource(resources.AllUsers, '/users')
+api.add_resource(resources.SecretResource, '/secret')
 
-user_schema = UserSchema(strict=True)
-users_schema = UserSchema(many=True, strict=True)
+@app.before_first_request
+def create_tables():
+    # Create the tables (does nothing if they already exist)
+    models.db.create_all()
 
-@app.route('/users', methods=['POST'])
-def make_user():
-    json = request.get_json()
-    if not json:
-        return jsonify({'message': 'No input data provided'}), 400
-
-    # Validate and deserialize input
-    new_user = User()
-    try:
-        user_schema.load(json, instance=new_user)
-    except ValidationError as err:
-        return jsonify(err.messages), 422
-
-    db.session.add(new_user)
-    try:
-        db.session.commit()
-    except IntegrityError as err:
-        return jsonify({ 'message': 'User already exists' }), 400
-
-    return user_schema.jsonify(new_user)
-
-@app.route('/users', methods=['GET'])
-def list_users():
-    return users_schema.jsonify(User.query.all())
-
-@app.route('/')
-def hello_world():
-    return jsonify({ 'message': 'Hello, World!' })
+# Logout functionality. Tokens cannnot be removed as they are valid until expired
+# Instead we add them to a blacklist and check against it.
+# This is done for access and refresh tokens.
+@jwt.token_in_blacklist_loader
+def check_if_token_in_blacklist(decrypted_token):
+    jti = decrypted_token['jti']
+    return models.RevokedTokenModel.is_jti_blacklisted(jti)
 
 if __name__ == "__main__":
-    db.create_all()
+    # If we are started directly, run the Flask development server
     app.run(host='0.0.0.0', port=8080)

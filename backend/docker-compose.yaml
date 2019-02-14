@@ -6,6 +6,8 @@ services:
         build: ./build
         environment:
             - FLASK_ENV=${FLASK_ENV}
+            - FLASK_SECRET=${FLASK_SECRET}
+            - JWT_SECRET=${JWT_SECRET}
             - MYSQL_HOST=db
             - MYSQL_USER=${MYSQL_USER}
             - MYSQL_PASSWORD=${MYSQL_PASSWORD}
