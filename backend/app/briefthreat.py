@@ -16,13 +16,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://{user}:{password
 )
 
 db = SQLAlchemy(app)
-ma = Marshmallow(app)
+validation = Marshmallow(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-class UserSchema(ma.ModelSchema):
+class UserSchema(validation.ModelSchema):
     class Meta:
         model = User
 
