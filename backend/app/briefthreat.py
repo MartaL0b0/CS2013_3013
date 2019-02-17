@@ -27,8 +27,8 @@ app.config.update({
 
 api = Api(app, prefix='/api/v1')
 db.init_app(app)
-validation.init_app(app)
 auth.jwt.init_app(app)
+validation.init_app(app)
 
 # Mount our API endpoints
 api.add_resource(auth.Registration, '/auth/register')

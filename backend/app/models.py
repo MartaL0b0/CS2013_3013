@@ -29,6 +29,7 @@ class RevokedToken(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(128), db.ForeignKey('users.username'), nullable=False)
+    # JTI is the unique identifier of a JWT
     jti = db.Column(db.String(64), nullable=False)
 
     @classmethod
@@ -45,6 +46,7 @@ class RevokedTokenSchema(validation.ModelSchema):
 
     @marshmallow.pre_load
     def extract_jti(self, in_data):
+        # Load the username and jti from the token we have been asked to revoke
         token = decode_token(in_data['token'])
         in_data['username'] = token['identity']
         in_data['jti'] = token['jti']
@@ -55,6 +57,7 @@ class RevokedTokenSchema(validation.ModelSchema):
 class UserSchema(validation.ModelSchema):
     class Meta:
         model = User
+        # Users shouldn't be able to supply a list of revoked tokens
         dump_only = ("revoked_tokens")
 
     revoked_tokens = validation.Nested(RevokedTokenSchema, many=True)
