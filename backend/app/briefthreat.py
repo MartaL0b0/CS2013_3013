@@ -22,7 +22,9 @@ app.config.update({
     'SECRET_KEY': os.environ['FLASK_SECRET'],
     'JWT_SECRET_KEY': os.environ['JWT_SECRET'],
     'JWT_BLACKLIST_ENABLED': True,
-    'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh']
+    'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
+    'JWT_ACCESS_TOKEN_EXPIRES': int(os.environ['JWT_ACCESS_EXPIRY']),
+    'JWT_REFRESH_TOKEN_EXPIRES': int(os.environ['JWT_REFRESH_EXPIRY'])
 })
 
 api = Api(app, prefix='/api/v1')

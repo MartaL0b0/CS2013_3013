@@ -8,6 +8,8 @@ services:
             - FLASK_ENV=${FLASK_ENV}
             - FLASK_SECRET=${FLASK_SECRET}
             - JWT_SECRET=${JWT_SECRET}
+            - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY}
+            - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY}
             - MYSQL_HOST=db
             - MYSQL_USER=${MYSQL_USER}
             - MYSQL_PASSWORD=${MYSQL_PASSWORD}
