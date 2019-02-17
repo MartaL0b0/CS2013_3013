@@ -1,5 +1,6 @@
 from passlib.hash import pbkdf2_sha256 as sha256
 import marshmallow
+from marshmallow import ValidationError
 from marshmallow_sqlalchemy import field_for
 
 from flask_sqlalchemy import SQLAlchemy
@@ -47,7 +48,11 @@ class RevokedTokenSchema(validation.ModelSchema):
     @marshmallow.pre_load
     def extract_jti(self, in_data):
         # Load the username and jti from the token we have been asked to revoke
-        token = decode_token(in_data['token'])
+        try:
+            token = decode_token(in_data['token'])
+        except Exception as ex:
+            raise ValidationError('Invalid token provided: {}'.format(ex))
+
         in_data['username'] = token['identity']
         in_data['jti'] = token['jti']
         del in_data['token']
