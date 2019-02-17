@@ -1,62 +1,71 @@
 from passlib.hash import pbkdf2_sha256 as sha256
+import marshmallow
+from marshmallow_sqlalchemy import field_for
+
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
+from flask_jwt_extended import decode_token
 
 db = SQLAlchemy()
+validation = Marshmallow()
 
-class UserModel(db.Model):
+class User(db.Model):
     __tablename__ = 'users'
 
-    # Defining table collumns
-    id = db.Column(db.Integer, primary_key = True)
-    username = db.Column(db.String(120), unique = True, nullable = False)
-    password = db.Column(db.String(120), nullable = False)
-
-    #save behaviour
-    def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(128), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    revoked_tokens = db.relationship('RevokedToken', backref='user')
 
     @classmethod
     def find_by_username(cls, username):
-        return cls.query.filter_by(username = username).first()
+        return cls.query.filter_by(username=username).first()
 
+    def verify_password(self, password):
+        return sha256.verify(password, self.password_hash)
 
-    @classmethod
-    def return_all(cls):
-        def to_json(x):
-            return {
-                'username': x.username,
-                'password': x.password
-            }
-        return {'users': list(map(lambda x: to_json(x), UserModel.query.all()))}
-
-    @classmethod
-    def delete_all(cls):
-        try:
-            num_rows_deleted = db.session.query(cls).delete()
-            db.session.commit()
-            return {'message': '{} row(s) deleted'.format(num_rows_deleted)}
-        except:
-            return {'message': 'Something went wrong'}
-
-    @staticmethod
-    def generate_hash(password):
-        return sha256.hash(password)
-
-    @staticmethod
-    def verify_hash(password, hash):
-        return sha256.verify(password, hash)
-
-class RevokedTokenModel(db.Model):
+class RevokedToken(db.Model):
     __tablename__ = 'revoked_tokens'
-    id = db.Column(db.Integer, primary_key = True)
-    jti = db.Column(db.String(120))
 
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(128), db.ForeignKey('users.username'), nullable=False)
+    jti = db.Column(db.String(64), nullable=False)
 
     @classmethod
-    def is_jti_blacklisted(cls, jti):
-        query = cls.query.filter_by(jti = jti).first()
+    def is_revoked(cls, jti):
+        query = cls.query.filter_by(jti=jti).first()
         return bool(query)
+
+class RevokedTokenSchema(validation.ModelSchema):
+    class Meta:
+        model = RevokedToken
+
+    # We need access to this field after deserialization!
+    username = field_for(User, 'username', dump_only=False)
+
+    @marshmallow.pre_load
+    def extract_jti(self, in_data):
+        token = decode_token(in_data['token'])
+        in_data['username'] = token['identity']
+        in_data['jti'] = token['jti']
+        del in_data['token']
+
+        return in_data
+
+class UserSchema(validation.ModelSchema):
+    class Meta:
+        model = User
+        dump_only = ("revoked_tokens")
+
+    revoked_tokens = validation.Nested(RevokedTokenSchema, many=True)
+
+    @marshmallow.pre_load
+    def hash_password(self, in_data):
+        # We don't want to store the password in plain text!
+        in_data['password_hash'] = sha256.hash(in_data['password'])
+        return in_data
+
+user_schema = UserSchema(strict=True)
+users_schema = UserSchema(strict=True, many=True)
+
+revoked_token_schema = RevokedTokenSchema(strict=True)
