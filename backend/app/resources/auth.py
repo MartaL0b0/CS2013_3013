@@ -30,6 +30,10 @@ def e_unauthorized(e):
 def e_user_loader(identity):
     return jsonify({'message': 'User {} specified by token does not exist'.format(identity)}), 401
 
+@jwt.user_loader_callback_loader
+def user_loader(identity):
+    return User.find_by_username(identity)
+
 # A token's revocation is determined by its presence (or lack thereof) in the database
 @jwt.token_in_blacklist_loader
 def is_token_revoked(decoded_token):
@@ -86,8 +90,7 @@ class Token(Resource):
     # POST -> Obtain a new access token with a refresh token
     @jwt_refresh_token_required
     def post(self):
-        username = get_jwt_identity()
-        return {'access_token': create_access_token(identity=username)}
+        return {'access_token': create_access_token(identity=current_user.username)}
 
     # DELETE -> Revoke a token (for logout)
     # Tokens cannot be removed as they are valid until expired.
@@ -98,8 +101,6 @@ class Token(Resource):
         json = request.get_json()
         if not json:
             return {'message': 'No input data provided'}, 400
-        username = get_jwt_identity()
-        raise Exception('test')
 
         # Validate and deserialize input
         to_revoke = RevokedToken()
@@ -109,7 +110,7 @@ class Token(Resource):
             return err.messages, 422
 
         # Don't allow users to revoke tokens other than their own!
-        if to_revoke.username != username:
+        if to_revoke.username != current_user.username:
             return {'message': 'You may only revoke your own tokens!'}
 
         existing = RevokedToken.is_revoked(to_revoke.jti)
