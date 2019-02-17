@@ -1,8 +1,6 @@
 import os
 
-from marshmallow import ValidationError
-from sqlalchemy.exc import IntegrityError
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_restful import Api
 
 from resources import auth
@@ -26,6 +24,13 @@ app.config.update({
     'JWT_ACCESS_TOKEN_EXPIRES': int(os.environ['JWT_ACCESS_EXPIRY']),
     'JWT_REFRESH_TOKEN_EXPIRES': int(os.environ['JWT_REFRESH_EXPIRY'])
 })
+
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith('/api/v1'):
+        return jsonify({'message': 'Not found'}), 404
+
+    return render_template('404.html'), 404
 
 api = Api(app, prefix='/api/v1')
 db.init_app(app)

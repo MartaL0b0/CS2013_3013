@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify
 from marshmallow import ValidationError
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import *
@@ -6,6 +6,34 @@ from flask_jwt_extended import *
 from models import *
 
 jwt = JWTManager()
+
+# Error handlers which produces values consistent with the rest of the API
+@jwt.claims_verification_failed_loader
+def e_claims_verification_failed():
+    return jsonify({'message': 'User claims verification failed'}), 400
+@jwt.expired_token_loader
+def e_expired_token():
+    return jsonify({'message': 'Token has expired'}), 401
+@jwt.invalid_token_loader
+def e_invalid_token(e):
+    return jsonify({'message': e}), 422
+@jwt.needs_fresh_token_loader
+def e_needs_fresh_token():
+    return jsonify({'message': 'Fresh token required'}), 401
+@jwt.revoked_token_loader
+def e_revoked_token():
+    return jsonify({'message': 'Token has been revoked'}), 401
+@jwt.unauthorized_loader
+def e_unauthorized(e):
+    return jsonify({'message': e}), 401
+@jwt.user_loader_error_loader
+def e_user_loader(identity):
+    return jsonify({'message': 'User {} specified by token does not exist'.format(identity)}), 401
+
+# A token's revocation is determined by its presence (or lack thereof) in the database
+@jwt.token_in_blacklist_loader
+def is_token_revoked(decoded_token):
+    return RevokedToken.is_revoked(decoded_token['jti'])
 
 class Registration(Resource):
     def post(self):
@@ -71,6 +99,7 @@ class Token(Resource):
         if not json:
             return {'message': 'No input data provided'}, 400
         username = get_jwt_identity()
+        raise Exception('test')
 
         # Validate and deserialize input
         to_revoke = RevokedToken()
@@ -92,7 +121,3 @@ class Token(Resource):
         db.session.commit()
 
         return None, 204
-
-@jwt.token_in_blacklist_loader
-def is_token_revoked(decoded_token):
-    return RevokedToken.is_revoked(decoded_token['jti'])
