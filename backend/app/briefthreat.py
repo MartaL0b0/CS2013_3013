@@ -1,11 +1,12 @@
 import os
 
+import passlib.pwd
 from flask import Flask, request, jsonify, render_template
 from flask_restful import Api
 from healthcheck import HealthCheck
 
 from resources import auth
-from models import db, validation, User
+from models import db, validation, User, user_schema
 
 app = Flask(__name__)
 
@@ -44,7 +45,7 @@ health = HealthCheck(app, '/health')
 health.add_check(db_ok)
 
 # Mount our API endpoints
-api.add_resource(auth.Registration, '/auth/register')
+#api.add_resource(auth.Registration, '/auth/register')
 api.add_resource(auth.Login, '/auth/login')
 api.add_resource(auth.Token, '/auth/token')
 
@@ -52,6 +53,18 @@ api.add_resource(auth.Token, '/auth/token')
 def create_tables():
     # Create the tables (does nothing if they already exist)
     db.create_all()
+
+    # Create the default `root` user if they don't exist
+    root = User.find_by_username('root')
+    if not root:
+        root = User()
+        password = passlib.pwd.genword(entropy='secure')
+        user_schema.load({'username': 'root', 'password': password}, instance=root)
+        db.session.add(root)
+        db.session.commit()
+
+        print('**** ROOT USER CREATED ****')
+        print('PASSWORD: {}'.format(password))
 
 if __name__ == "__main__":
     # If we are started directly, run the Flask development server
