@@ -2,9 +2,10 @@ import os
 
 from flask import Flask, request, jsonify, render_template
 from flask_restful import Api
+from healthcheck import HealthCheck
 
 from resources import auth
-from models import db, validation
+from models import db, validation, User
 
 app = Flask(__name__)
 
@@ -36,6 +37,11 @@ api = Api(app, prefix='/api/v1')
 db.init_app(app)
 auth.jwt.init_app(app)
 validation.init_app(app)
+
+def db_ok():
+    return User.query.count() >= 0, "database ok"
+health = HealthCheck(app, '/health')
+health.add_check(db_ok)
 
 # Mount our API endpoints
 api.add_resource(auth.Registration, '/auth/register')
