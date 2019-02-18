@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 import passlib.pwd
+from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask, request, jsonify, render_template
 from flask_restful import Api
 from healthcheck import HealthCheck
@@ -10,6 +11,8 @@ from resources import auth
 from models import db, validation, User, full_user_schema
 
 app = Flask(__name__)
+# Make sure request.remote_addr represents the real client IP
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 # Configuration is provided through environment variables by Docker Compose
 app.config.update({
