@@ -16,6 +16,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(128), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
+    is_approved = db.Column(db.Boolean, nullable=False)
+    is_admin = db.Column(db.Boolean, nullable=False)
     revoked_tokens = db.relationship('RevokedToken', backref='user')
 
     @classmethod
@@ -69,22 +71,16 @@ class UserSchema(validation.ModelSchema):
 
     @marshmallow.pre_load
     def hash_password(self, in_data):
-        # We don't want to store the password in plain text!
-        in_data['password_hash'] = sha256.hash(in_data['password'])
+        if 'password_hash' in in_data:
+            del in_data['password_hash']
+        if 'password' in in_data:
+            # We don't want to store the password in plain text!
+            in_data['password_hash'] = sha256.hash(in_data['password'])
         return in_data
 
-class ChangePasswordSchema(marshmallow.Schema):
-    password_hash = marshmallow.fields.Str()
-
-    @marshmallow.pre_load
-    def hash_password(self, in_data):
-        # We don't want to store the password in plain text!
-        in_data['password_hash'] = sha256.hash(in_data['password'])
-        return in_data
-
-user_schema = UserSchema(strict=True)
-users_schema = UserSchema(strict=True, many=True)
+full_user_schema = UserSchema(strict=True)
+new_user_schema = UserSchema(strict=True, only=('username', 'password', 'password_hash'))
+change_pw_schema = UserSchema(strict=True, only=('password', 'password_hash'))
+change_access_schema = UserSchema(strict=True, only=('username', 'approved', 'is_admin'))
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
-
-change_pw_schema = ChangePasswordSchema(strict=True)

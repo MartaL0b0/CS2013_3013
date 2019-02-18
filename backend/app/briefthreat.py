@@ -6,7 +6,7 @@ from flask_restful import Api
 from healthcheck import HealthCheck
 
 from resources import auth
-from models import db, validation, User, user_schema
+from models import db, validation, User, full_user_schema
 
 app = Flask(__name__)
 
@@ -48,6 +48,7 @@ health.add_check(db_ok)
 #api.add_resource(auth.Registration, '/auth/register')
 api.add_resource(auth.Login, '/auth/login')
 api.add_resource(auth.Token, '/auth/token')
+api.add_resource(auth.Access, '/auth/access')
 
 @app.before_first_request
 def create_tables():
@@ -58,8 +59,14 @@ def create_tables():
     root = User.find_by_username('root')
     if not root:
         root = User()
-        password = passlib.pwd.genword(entropy='secure')
-        user_schema.load({'username': 'root', 'password': password}, instance=root)
+        password = passlib.pwd.genword(entropy=256)
+        full_user_schema.load({
+            'username': 'root',
+            'password': password,
+            'is_approved': True,
+            'is_admin': True
+        }, instance=root)
+
         db.session.add(root)
         db.session.commit()
 

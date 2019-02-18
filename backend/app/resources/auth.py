@@ -1,3 +1,5 @@
+from functools import wraps
+
 from flask import request, jsonify
 from marshmallow import ValidationError
 from flask_restful import Resource, reqparse
@@ -39,6 +41,16 @@ def user_loader(identity):
 def is_token_revoked(decoded_token):
     return RevokedToken.is_revoked(decoded_token['jti'])
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        verify_jwt_in_request()
+        if not current_user.is_admin:
+            return jsonify({'message': 'This endpoint requires admin status'}), 401
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 class Registration(Resource):
     def post(self):
         json = request.get_json()
@@ -48,7 +60,7 @@ class Registration(Resource):
         # Validate and deserialize input
         new_user = User()
         try:
-            user_schema.load(json, instance=new_user)
+            new_user_schema.load(json, instance=new_user)
         except ValidationError as err:
             return err.messages, 422
 
@@ -72,14 +84,18 @@ class Login(Resource):
         # Validate and deserialize input
         login_user = User()
         try:
-            user_schema.load(json, instance=login_user)
+            new_user_schema.load(json, instance=login_user)
         except ValidationError as err:
             return err.messages, 422
 
         # Find the existing user and validate the input password against the saved hash
         user = User.find_by_username(login_user.username)
         if not user or not user.verify_password(json['password']):
-            return {'message': 'Invalid credentials'}
+            return {'message': 'Invalid credentials'}, 401
+
+        # User should be approved before being able to log in
+        if not current_user.is_approved:
+            return jsonify({'message': 'Your account is not approved'}), 401
 
         # Create a new refresh token (and access token for convenience)
         return {
@@ -95,12 +111,13 @@ class Login(Resource):
             return {'message': 'No input data provided'}, 400
 
         # Validate and deserialize input
+        pw_change = User()
         try:
-            pw_change = change_pw_schema.load(json)
+            change_pw_schema.load(json, instance=pw_change)
         except ValidationError as err:
             return err.messages, 422
 
-        current_user.password_hash = pw_change.data['password_hash']
+        current_user.password_hash = pw_change.password_hash
         db.session.commit()
         return None, 204
 
@@ -137,6 +154,36 @@ class Token(Resource):
 
         # Commit the revocation to the database
         db.session.add(to_revoke)
+        db.session.commit()
+
+        return None, 204
+
+class Access(Resource):
+    # PATCH -> Set a user's approval / admin status
+    @admin_required
+    def patch(self):
+        json = request.get_json()
+        if not json:
+            return {'message': 'No input data provided'}, 400
+
+        # Validate and deserialize input
+        change_access = User()
+        try:
+            change_access_schema.load(json, instance=change_access)
+        except ValidationError as err:
+            return err.messages, 422
+
+        user = User.find_by_username(change_access.username)
+        if not user:
+            return {'message': 'User \'{}\' does not exist'.format(change_access.username)}
+
+        if change_access.is_approved != None:
+            user.is_approved = change_access.is_approved
+        if change_access.is_admin != None:
+            user.is_admin = change_access.is_admin
+            if user.is_admin:
+                # `is_admin` should always mean approval
+                user.is_approved = True
         db.session.commit()
 
         return None, 204
