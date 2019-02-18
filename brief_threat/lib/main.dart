@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'FormScreen.dart';
+
 void main() {
   runApp(MaterialApp(
-    //title: 'Requests app', someone please suggest something :)
+    title: 'Form app',  // someone please suggest something :)
     home: LoginPage(),
   ));
 }
@@ -20,7 +21,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
     return Scaffold(
+      key: _scaffoldKey,
         body: SafeArea(
             child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 24.0),
@@ -29,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
                 Column(
                   children: <Widget>[
                     SizedBox(height: 40.0),
-                    Text('LOGIN SCREEN',
+                    Text('Welcome !',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
                     ),
@@ -57,15 +60,45 @@ class _LoginPageState extends State<LoginPage> {
                   children: <Widget>[
                     FlatButton(
                       child: Text('Login'),
-                      onPressed: (){
-                        _user = _userNameController.text;
+                      onPressed: () async {
+                        // trim user name but not password
+                        _user = _userNameController.text.trim();
                         _password = _passwordController.text;
-                        // redirect to new page
+
+                        if (_user.isEmpty || _password.isEmpty) {
+                          showSnackBarErrorMessage(_scaffoldKey, "Please fill in all fields");
+                          return;
+                        }
+
+                        // show loading snack bar
+                          _scaffoldKey.currentState.showSnackBar(
+                              new SnackBar(
+                                content: new Row(
+                                children: <Widget>[
+                                  new CircularProgressIndicator(),
+                                  new Text("  Signing-In...")
+                                ],
+                              ),
+                              ));
                         _loginPressed();
+
+
+                        // TODO implement this when we have the login system setup
+                        /*
+                        showSnackBarErrorMessage(_scaffoldKey, "Incorrect username or password. Please try again");
+                        return;
+                        */
+
+                        // wait before loading new page
+                        // TODO remove when login is implemented with backend
+                        await new Future.delayed(const Duration(seconds: 3));
+
+                        // redirect to new page
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => FormScreen()),
                         );
+
                       },
                     )
                   ],
@@ -82,4 +115,15 @@ class _LoginPageState extends State<LoginPage> {
     print('The user wants to login with $_user and $_password');
   }
 
+  void showSnackBarErrorMessage (GlobalKey<ScaffoldState> _scaffoldKey, String message) {
+    _scaffoldKey.currentState.showSnackBar(
+        new SnackBar(
+          duration: Duration(seconds: 3),
+          content: new Row(
+            children: <Widget>[
+              new Text(message)
+            ],
+          ),
+        ));
+  }
 }
