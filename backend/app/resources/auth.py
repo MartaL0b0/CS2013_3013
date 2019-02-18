@@ -1,6 +1,7 @@
 from functools import wraps
+from datetime import datetime, timedelta
 
-from flask import request, jsonify
+from flask import current_app, request, jsonify
 from marshmallow import ValidationError
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import *
@@ -52,6 +53,7 @@ def admin_required(f):
     return decorated_function
 
 class Registration(Resource):
+    # POST -> Create a new user account
     def post(self):
         json = request.get_json()
         if not json:
@@ -69,6 +71,7 @@ class Registration(Resource):
 
         # New users should not be approved or admins
         new_user.is_approved = new_user.is_admin = False
+        new_user.registration_time = datetime.now()
 
         # Save the new user into the database
         db.session.add(new_user)
@@ -76,6 +79,17 @@ class Registration(Resource):
 
         # HTTP 204 is "No Content"
         return None, 204
+
+    # DELETE -> Clean up stale unapproved registrations
+    def delete(self):
+        if request.remote_addr != '127.0.0.1':
+            return {'message': 'This is an internal task only'}, 403
+
+        # Clean up registrations that have gone unapproved for more than `REGISTRATION_WINDOW`
+        cutoff = datetime.utcnow() - timedelta(seconds=current_app.config['REGISTRATION_WINDOW'])
+        removed = User.query.filter(User.registration_time < cutoff, User.is_approved == False).delete()
+        db.session.commit()
+        return {'removed': removed}, 200
 
 class Login(Resource):
     # POST -> Log in
@@ -180,7 +194,7 @@ class Access(Resource):
 
         user = User.find_by_username(change_access.username)
         if not user:
-            return {'message': 'User \'{}\' does not exist'.format(change_access.username)}
+            return {'message': 'User \'{}\' does not exist'.format(change_access.username)}, 400
 
         if change_access.is_approved != None:
             user.is_approved = change_access.is_approved

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from passlib.hash import pbkdf2_sha256 as sha256
 import marshmallow
 from marshmallow import ValidationError
@@ -16,6 +18,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(128), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
+    registration_time = db.Column(db.DateTime(), nullable=False)
     is_approved = db.Column(db.Boolean, nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False)
     revoked_tokens = db.relationship('RevokedToken', backref='user')
@@ -71,6 +74,9 @@ class UserSchema(validation.ModelSchema):
 
     @marshmallow.pre_load
     def hash_password(self, in_data):
+        if 'registration_time' in in_data and isinstance(in_data['registration_time'], datetime):
+            # Marshmallow expects DateTime fields to be in ISO string form
+            in_data['registration_time'] = in_data['registration_time'].isoformat()
         if 'password' in in_data:
             # We don't want to store the password in plain text!
             in_data['password'] = sha256.hash(in_data['password'])
@@ -79,6 +85,6 @@ class UserSchema(validation.ModelSchema):
 full_user_schema = UserSchema(strict=True)
 new_user_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
-change_access_schema = UserSchema(strict=True, exclude=['password'], partial=['is_approved', 'is_admin'])
+change_access_schema = UserSchema(strict=True, exclude=['password', 'registration_time'], partial=['is_approved', 'is_admin'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)

@@ -16,6 +16,7 @@ FLASK_SECRET=thisshouldbesecret
 JWT_SECRET=thisshouldalsobesecret
 JWT_ACCESS_EXPIRY=900
 JWT_REFRESH_EXPIRY=2592000
+REGISTRATION_WINDOW=86400
 NGINX_HOST=localhost
 NGINX_HTTP_PORT=8080
 NGINX_HTTPS_PORT=8443
@@ -28,6 +29,7 @@ SSL_CERTS=./ssl
 `openssl req -x509 -subj '/CN=localhost' -newkey rsa:4096 -keyout key.pem -nodes -out certificate.crt -days 365`
 Note that the filenames must be `key.pem` for the private key and `certificate.crt` for the certificate.
 - The `JWT_*_EXPIRY` variables set how long the JWT access and refresh tokens should be valid for (in seconds)
+- `REGISTRATION_WINDOW` configures how old unapproved registrations must be before being removed (in seconds). This behaviour only occurs when a `DELETE` request reaches `/api/v1/auth/register`, which happens periodically in production.
 
 To start the app, just run `docker-compose up`. Hit CTRL+C to shut it down.
 

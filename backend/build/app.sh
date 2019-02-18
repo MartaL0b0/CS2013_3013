@@ -9,5 +9,11 @@ if [ "$FLASK_ENV" == "development" ]; then
 	exec python /opt/app/briefthreat.py
 else
 	# use gunicorn in production
-	exec gunicorn --workers $GUNICORN_WORKERS --bind :8080 --chdir /opt/app --user nobody --group nogroup briefthreat:app
+	gunicorn --workers $GUNICORN_WORKERS --bind :8080 --chdir /opt/app --user nobody --group nogroup briefthreat:app &
+
+	# in production periodically clean up stale unapproved registrations
+	while true; do
+		sleep 120
+		curl -s -X DELETE http://localhost:8080/api/v1/auth/register > /dev/null
+	done
 fi

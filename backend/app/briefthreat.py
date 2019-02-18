@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import passlib.pwd
 from flask import Flask, request, jsonify, render_template
@@ -24,7 +25,8 @@ app.config.update({
     'JWT_BLACKLIST_ENABLED': True,
     'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
     'JWT_ACCESS_TOKEN_EXPIRES': int(os.environ['JWT_ACCESS_EXPIRY']),
-    'JWT_REFRESH_TOKEN_EXPIRES': int(os.environ['JWT_REFRESH_EXPIRY'])
+    'JWT_REFRESH_TOKEN_EXPIRES': int(os.environ['JWT_REFRESH_EXPIRY']),
+    'REGISTRATION_WINDOW': int(os.environ['REGISTRATION_WINDOW'])
 })
 
 @app.errorhandler(404)
@@ -63,6 +65,7 @@ def create_tables():
         full_user_schema.load({
             'username': 'root',
             'password': password,
+            'registration_time': datetime.utcnow(),
             'is_approved': True,
             'is_admin': True
         }, instance=root)

@@ -1,9 +1,10 @@
-version: '3'
+version: '3.7'
 services:
     briefthreat:
         image: briefthreat/app
         restart: always
         build: ./build
+        init: true
         environment:
             - FLASK_ENV=${FLASK_ENV}
             - FLASK_SECRET=${FLASK_SECRET}
@@ -14,6 +15,7 @@ services:
             - MYSQL_USER=${MYSQL_USER}
             - MYSQL_PASSWORD=${MYSQL_PASSWORD}
             - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - REGISTRATION_WINDOW=${REGISTRATION_WINDOW}
         volumes:
             - ./app:/opt/app:ro
     db:
