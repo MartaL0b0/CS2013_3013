@@ -52,6 +52,9 @@ class RevokedTokenSchema(validation.ModelSchema):
 
     @marshmallow.pre_load
     def extract_jti(self, in_data):
+        if not 'token' in in_data:
+            raise ValidationError('No token provided')
+
         # Load the username and jti from the token we have been asked to revoke
         try:
             token = decode_token(in_data['token'])
