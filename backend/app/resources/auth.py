@@ -6,6 +6,7 @@ from marshmallow import ValidationError
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import *
 
+from . import json_required
 from models import *
 
 jwt = JWTManager()
@@ -47,22 +48,19 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         verify_jwt_in_request()
         if not current_user.is_admin:
-            return jsonify({'message': 'This endpoint requires admin status'}), 401
+            return {'message': 'This endpoint requires admin status'}, 401
         return f(*args, **kwargs)
 
     return decorated_function
 
 class Registration(Resource):
     # POST -> Create a new user account
+    @json_required
     def post(self):
-        json = request.get_json()
-        if not json:
-            return {'message': 'No input data provided'}, 400
-
         # Validate and deserialize input
         new_user = User()
         try:
-            new_user_schema.load(json, instance=new_user)
+            new_user_schema.load(request.r_data, instance=new_user)
         except ValidationError as err:
             return err.messages, 422
 
@@ -93,17 +91,15 @@ class Registration(Resource):
 
 class Login(Resource):
     # POST -> Log in
+    @json_required
     def post(self):
-        json = request.get_json()
-        if not json:
-            return {'message': 'No input data provided'}, 400
         # This will get overwritten with the hashed value later
-        password = json['password'] if 'password' in json else None
+        password = request.r_data['password'] if 'password' in request.r_data else None
 
         # Validate and deserialize input
         login_user = User()
         try:
-            new_user_schema.load(json, instance=login_user)
+            new_user_schema.load(request.r_data, instance=login_user)
         except ValidationError as err:
             return err.messages, 422
 
@@ -125,14 +121,10 @@ class Login(Resource):
     # PUT -> Change password
     @jwt_required
     def put(self):
-        json = request.get_json()
-        if not json:
-            return {'message': 'No input data provided'}, 400
-
         # Validate and deserialize input
         pw_change = User()
         try:
-            change_pw_schema.load(json, instance=pw_change)
+            change_pw_schema.load(request.r_data, instance=pw_change)
         except ValidationError as err:
             return err.messages, 422
 
@@ -150,16 +142,13 @@ class Token(Resource):
     # Tokens cannot be removed as they are valid until expired.
     # Instead we add them to a revocation list and check against it.
     # This is done for access and refresh tokens.
+    @json_required
     @jwt_required
     def delete(self):
-        json = request.get_json()
-        if not json:
-            return {'message': 'No input data provided'}, 400
-
         # Validate and deserialize input
         to_revoke = RevokedToken()
         try:
-            revoked_token_schema.load(json, instance=to_revoke)
+            revoked_token_schema.load(request.r_data, instance=to_revoke)
         except ValidationError as err:
             return err.messages, 422
 
@@ -179,16 +168,13 @@ class Token(Resource):
 
 class Access(Resource):
     # PATCH -> Set a user's approval / admin status
+    @json_required
     @admin_required
     def patch(self):
-        json = request.get_json()
-        if not json:
-            return {'message': 'No input data provided'}, 400
-
         # Validate and deserialize input
         change_access = User()
         try:
-            change_access_schema.load(json, instance=change_access)
+            change_access_schema.load(request.r_data, instance=change_access)
         except ValidationError as err:
             return err.messages, 422
 
