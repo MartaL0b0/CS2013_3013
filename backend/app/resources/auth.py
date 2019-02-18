@@ -63,6 +63,7 @@ class Registration(Resource):
         return None, 204
 
 class Login(Resource):
+    # POST -> Log in
     def post(self):
         json = request.get_json()
         if not json:
@@ -85,6 +86,23 @@ class Login(Resource):
             'refresh_token': create_refresh_token(identity=user.username),
             'access_token': create_access_token(identity=user.username)
         }
+
+    # PUT -> Change password
+    @jwt_required
+    def put(self):
+        json = request.get_json()
+        if not json:
+            return {'message': 'No input data provided'}, 400
+
+        # Validate and deserialize input
+        try:
+            pw_change = change_pw_schema.load(json)
+        except ValidationError as err:
+            return err.messages, 422
+
+        current_user.password_hash = pw_change.data['password_hash']
+        db.session.commit()
+        return None, 204
 
 class Token(Resource):
     # POST -> Obtain a new access token with a refresh token

@@ -73,7 +73,18 @@ class UserSchema(validation.ModelSchema):
         in_data['password_hash'] = sha256.hash(in_data['password'])
         return in_data
 
+class ChangePasswordSchema(marshmallow.Schema):
+    password_hash = marshmallow.fields.Str()
+
+    @marshmallow.pre_load
+    def hash_password(self, in_data):
+        # We don't want to store the password in plain text!
+        in_data['password_hash'] = sha256.hash(in_data['password'])
+        return in_data
+
 user_schema = UserSchema(strict=True)
 users_schema = UserSchema(strict=True, many=True)
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
+
+change_pw_schema = ChangePasswordSchema(strict=True)
