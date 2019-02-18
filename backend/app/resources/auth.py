@@ -189,6 +189,10 @@ class Access(Resource):
             if user.is_admin:
                 # `is_admin` should always mean approval
                 user.is_approved = True
+        if not user.is_approved and user.is_admin:
+            # If we set `is_approved` to false, `is_admin` should be false
+            user.is_admin = False
+
         db.session.commit()
 
         return None, 204

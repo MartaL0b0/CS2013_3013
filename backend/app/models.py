@@ -79,6 +79,6 @@ class UserSchema(validation.ModelSchema):
 full_user_schema = UserSchema(strict=True)
 new_user_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
-change_access_schema = UserSchema(strict=True, exclude=['password'], partial=['approved', 'is_admin'])
+change_access_schema = UserSchema(strict=True, exclude=['password'], partial=['is_approved', 'is_admin'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
