@@ -45,7 +45,7 @@ health = HealthCheck(app, '/health')
 health.add_check(db_ok)
 
 # Mount our API endpoints
-#api.add_resource(auth.Registration, '/auth/register')
+api.add_resource(auth.Registration, '/auth/register')
 api.add_resource(auth.Login, '/auth/login')
 api.add_resource(auth.Token, '/auth/token')
 api.add_resource(auth.Access, '/auth/access')

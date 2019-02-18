@@ -25,7 +25,7 @@ class User(db.Model):
         return cls.query.filter_by(username=username).first()
 
     def verify_password(self, password):
-        return sha256.verify(password, self.password_hash)
+        return sha256.verify(password, self.password)
 
 class RevokedToken(db.Model):
     __tablename__ = 'revoked_tokens'
@@ -77,7 +77,7 @@ class UserSchema(validation.ModelSchema):
         return in_data
 
 full_user_schema = UserSchema(strict=True)
-new_user_schema = UserSchema(strict=True, only=['is_approved', 'is_admin'])
+new_user_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
 change_access_schema = UserSchema(strict=True, exclude=['password'], partial=['approved', 'is_admin'])
 

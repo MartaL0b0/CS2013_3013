@@ -60,12 +60,15 @@ class Registration(Resource):
         # Validate and deserialize input
         new_user = User()
         try:
-            user_schema.load(json, instance=new_user, partial=False)
+            new_user_schema.load(json, instance=new_user)
         except ValidationError as err:
             return err.messages, 422
 
         if User.find_by_username(new_user.username):
             return {'message': 'User {} already exists'.format(new_user.username)}, 400
+
+        # New users should not be approved or admins
+        new_user.is_approved = new_user.is_admin = False
 
         # Save the new user into the database
         db.session.add(new_user)
@@ -80,6 +83,8 @@ class Login(Resource):
         json = request.get_json()
         if not json:
             return {'message': 'No input data provided'}, 400
+        # This will get overwritten with the hashed value later
+        password = json['password'] if 'password' in json else None
 
         # Validate and deserialize input
         login_user = User()
@@ -90,12 +95,12 @@ class Login(Resource):
 
         # Find the existing user and validate the input password against the saved hash
         user = User.find_by_username(login_user.username)
-        if not user or not user.verify_password(json['password']):
+        if not user or not user.verify_password(password):
             return {'message': 'Invalid credentials'}, 401
 
         # User should be approved before being able to log in
-        if not current_user.is_approved:
-            return jsonify({'message': 'Your account is not approved'}), 401
+        if not user.is_approved:
+            return {'message': 'Your account is not approved'}, 401
 
         # Create a new refresh token (and access token for convenience)
         return {
