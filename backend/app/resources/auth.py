@@ -60,7 +60,7 @@ class Registration(Resource):
         # Validate and deserialize input
         new_user = User()
         try:
-            new_user_schema.load(json, instance=new_user)
+            user_schema.load(json, instance=new_user, partial=False)
         except ValidationError as err:
             return err.messages, 422
 
@@ -117,7 +117,7 @@ class Login(Resource):
         except ValidationError as err:
             return err.messages, 422
 
-        current_user.password_hash = pw_change.password_hash
+        current_user.password = pw_change.password
         db.session.commit()
         return None, 204
 
