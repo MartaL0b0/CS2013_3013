@@ -65,7 +65,7 @@ class UserSchema(validation.ModelSchema):
     class Meta:
         model = User
         # Users shouldn't be able to supply a list of revoked tokens
-        dump_only = ("revoked_tokens")
+        dump_only = ["revoked_tokens"]
 
     revoked_tokens = validation.Nested(RevokedTokenSchema, many=True)
 
@@ -77,8 +77,8 @@ class UserSchema(validation.ModelSchema):
         return in_data
 
 full_user_schema = UserSchema(strict=True)
-new_user_schema = UserSchema(strict=True, exclude=('is_approved', 'is_admin'))
-change_pw_schema = UserSchema(strict=True, exclude=('username', 'is_approved', 'is_admin'))
-change_access_schema = UserSchema(strict=True, exclude=('password'), partial=('approved', 'is_admin'))
+new_user_schema = UserSchema(strict=True, only=['is_approved', 'is_admin'])
+change_pw_schema = UserSchema(strict=True, only=['password'])
+change_access_schema = UserSchema(strict=True, exclude=['password'], partial=['approved', 'is_admin'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
