@@ -18,7 +18,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(128), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
-    registration_time = db.Column(db.DateTime(), nullable=False)
+    registration_time = db.Column(db.DateTime, nullable=False)
     is_approved = db.Column(db.Boolean, nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False)
     revoked_tokens = db.relationship('RevokedToken', backref='user')
@@ -37,6 +37,7 @@ class RevokedToken(db.Model):
     username = db.Column(db.String(128), db.ForeignKey('users.username'), nullable=False)
     # JTI is the unique identifier of a JWT
     jti = db.Column(db.String(64), nullable=False)
+    expiry = db.Column(db.DateTime, nullable=False)
 
     @classmethod
     def is_revoked(cls, jti):
@@ -63,6 +64,7 @@ class RevokedTokenSchema(validation.ModelSchema):
 
         in_data['username'] = token['identity']
         in_data['jti'] = token['jti']
+        in_data['expiry'] = datetime.utcfromtimestamp(token['exp']).isoformat()
         del in_data['token']
 
         return in_data

@@ -54,6 +54,7 @@ api.add_resource(auth.Registration, '/auth/register')
 api.add_resource(auth.Login, '/auth/login')
 api.add_resource(auth.Token, '/auth/token')
 api.add_resource(auth.Access, '/auth/access')
+api.add_resource(auth.Cleanup, '/auth/cleanup')
 
 @app.before_first_request
 def create_tables():

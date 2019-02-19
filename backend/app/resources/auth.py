@@ -78,17 +78,6 @@ class Registration(Resource):
         # HTTP 204 is "No Content"
         return None, 204
 
-    # DELETE -> Clean up stale unapproved registrations
-    def delete(self):
-        if request.remote_addr != '127.0.0.1':
-            return {'message': 'This is an internal task only'}, 403
-
-        # Clean up registrations that have gone unapproved for more than `REGISTRATION_WINDOW`
-        cutoff = datetime.utcnow() - timedelta(seconds=current_app.config['REGISTRATION_WINDOW'])
-        removed = User.query.filter(User.registration_time < cutoff, User.is_approved == False).delete()
-        db.session.commit()
-        return {'removed': removed}, 200
-
 class Login(Resource):
     # POST -> Log in
     @json_required
@@ -196,3 +185,18 @@ class Access(Resource):
         db.session.commit()
 
         return None, 204
+
+class Cleanup(Resource):
+    def delete(self):
+        if request.remote_addr != '127.0.0.1':
+            return {'message': 'This is an internal task only'}, 403
+
+        # Clean up registrations that have gone unapproved for more than `REGISTRATION_WINDOW`
+        cutoff = datetime.utcnow() - timedelta(seconds=current_app.config['REGISTRATION_WINDOW'])
+        reg_removed = User.query.filter(User.registration_time < cutoff, User.is_approved == False).delete()
+
+        # Clean up revoked tokens that have expired
+        tokens_removed = RevokedToken.query.filter(RevokedToken.expiry < datetime.utcnow()).delete()
+
+        db.session.commit()
+        return {'registrations_removed': reg_removed, 'tokens_removed': tokens_removed}, 200

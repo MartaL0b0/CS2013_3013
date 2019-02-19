@@ -14,6 +14,6 @@ else
 	# in production periodically clean up stale unapproved registrations
 	while true; do
 		sleep 120
-		curl -s -X DELETE http://localhost:8080/api/v1/auth/register > /dev/null
+		curl -s -X DELETE http://localhost:8080/api/v1/auth/cleanup > /dev/null
 	done
 fi
