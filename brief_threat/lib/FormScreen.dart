@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
-class FormScreen extends StatelessWidget {
+class FormScreen extends StatefulWidget {
+  @override
+  State createState() => _FormScreen();
+}
+
+class _FormScreen extends State<FormScreen> {
   // TODO implement this screen 
   @override
   Widget build(BuildContext context) {
