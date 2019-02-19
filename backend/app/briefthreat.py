@@ -1,63 +1,91 @@
-import os
+from os import environ
+from datetime import datetime
 
-from marshmallow import ValidationError
-from sqlalchemy.exc import IntegrityError
-from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
+import passlib.pwd
+from werkzeug.contrib.fixers import ProxyFix
+from flask import Flask, request, jsonify, render_template
+from flask_restful import Api
+from healthcheck import HealthCheck
+
+from resources import limiter, auth
+from models import db, validation, User, full_user_schema
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://{user}:{password}@{host}/{database}'.format(
-        user = os.environ['MYSQL_USER'],
-        password = os.environ['MYSQL_PASSWORD'],
-        host = os.environ['MYSQL_HOST'],
-        database = os.environ['MYSQL_DATABASE']
-)
+# Make sure request.remote_addr represents the real client IP
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
-db = SQLAlchemy(app)
-validation = Marshmallow(app)
+# Configuration is provided through environment variables by Docker Compose
+app.config.update({
+    'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+    'SQLALCHEMY_DATABASE_URI': 'mysql+mysqlconnector://{user}:{password}@{host}/{database}'.format(
+        user = environ['MYSQL_USER'],
+        password = environ['MYSQL_PASSWORD'],
+        host = environ['MYSQL_HOST'],
+        database = environ['MYSQL_DATABASE']
+    ),
+    'SECRET_KEY': environ['FLASK_SECRET'],
+    'JWT_SECRET_KEY': environ['JWT_SECRET'],
+    'JWT_BLACKLIST_ENABLED': True,
+    'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
+    'JWT_ACCESS_TOKEN_EXPIRES': int(environ['JWT_ACCESS_EXPIRY']),
+    'JWT_REFRESH_TOKEN_EXPIRES': int(environ['JWT_REFRESH_EXPIRY']),
+    'REGISTRATION_WINDOW': int(environ['REGISTRATION_WINDOW']),
+    'RATELIMIT_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
+    'RATELIMIT_DEFAULT': environ['RATELIMIT_DEFAULT'],
+    # We use memcached since there will be load balancing between workers in production,
+    # so there must be synchronisation between them!
+    'RATELIMIT_STORAGE_URL': 'memcached://memcache:11211'
+})
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-class UserSchema(validation.ModelSchema):
-    class Meta:
-        model = User
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith('/api/v1'):
+        return jsonify({'message': 'Not found'}), 404
 
-user_schema = UserSchema(strict=True)
-users_schema = UserSchema(many=True, strict=True)
+    return render_template('404.html'), 404
 
-@app.route('/users', methods=['POST'])
-def make_user():
-    json = request.get_json()
-    if not json:
-        return jsonify({'message': 'No input data provided'}), 400
+api = Api(app, prefix='/api/v1')
+db.init_app(app)
+auth.jwt.init_app(app)
+validation.init_app(app)
+limiter.init_app(app)
 
-    # Validate and deserialize input
-    new_user = User()
-    try:
-        user_schema.load(json, instance=new_user)
-    except ValidationError as err:
-        return jsonify(err.messages), 422
+def db_ok():
+    return User.query.count() >= 0, "database ok"
+health = HealthCheck(app, '/health')
+health.add_check(db_ok)
 
-    db.session.add(new_user)
-    try:
+# Mount our API endpoints
+api.add_resource(auth.Registration, '/auth/register')
+api.add_resource(auth.Login, '/auth/login')
+api.add_resource(auth.Token, '/auth/token')
+api.add_resource(auth.Access, '/auth/access')
+api.add_resource(auth.Cleanup, '/auth/cleanup')
+
+@app.before_first_request
+def create_tables():
+    # Create the tables (does nothing if they already exist)
+    db.create_all()
+
+    # Create the default `root` user if they don't exist
+    root = User.find_by_username('root')
+    if not root:
+        root = User()
+        password = passlib.pwd.genword(entropy=256)
+        full_user_schema.load({
+            'username': 'root',
+            'password': password,
+            'registration_time': datetime.utcnow(),
+            'is_approved': True,
+            'is_admin': True
+        }, instance=root)
+
+        db.session.add(root)
         db.session.commit()
-    except IntegrityError as err:
-        return jsonify({ 'message': 'User already exists' }), 400
 
-    return user_schema.jsonify(new_user)
-
-@app.route('/users', methods=['GET'])
-def list_users():
-    return users_schema.jsonify(User.query.all())
-
-@app.route('/')
-def hello_world():
-    return jsonify({ 'message': 'Hello, World!' })
+        print('**** ROOT USER CREATED ****')
+        print('PASSWORD: {}'.format(password))
 
 if __name__ == "__main__":
-    db.create_all()
+    # If we are started directly, run the Flask development server
     app.run(host='0.0.0.0', port=8080)

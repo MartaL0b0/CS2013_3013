@@ -12,7 +12,16 @@ MYSQL_USER=briefthreat
 MYSQL_PASSWORD=hunter2
 MYSQL_DATABASE=briefthreat
 FLASK_ENV=development
+FLASK_SECRET=thisshouldbesecret
+JWT_SECRET=thisshouldalsobesecret
+JWT_ACCESS_EXPIRY=900
+JWT_REFRESH_EXPIRY=2592000
+REGISTRATION_WINDOW=86400
+RATELIMIT_DEFAULT=1000/hour;10000/day
+RATELIMIT_REGISTRATION=10/hour;50/day
 NGINX_HOST=localhost
+NGINX_HTTP_PORT=8080
+NGINX_HTTPS_PORT=8443
 SSL_CERTS=./ssl
 ```
 
@@ -21,5 +30,10 @@ SSL_CERTS=./ssl
 - `SSL_CERTS` specifies the directory on your system where SSL certificates can be found. You can generate your own self-signed certificate with the following command:
 `openssl req -x509 -subj '/CN=localhost' -newkey rsa:4096 -keyout key.pem -nodes -out certificate.crt -days 365`
 Note that the filenames must be `key.pem` for the private key and `certificate.crt` for the certificate.
+- The `JWT_*_EXPIRY` variables set how long the JWT access and refresh tokens should be valid for (in seconds)
+- `REGISTRATION_WINDOW` configures how old unapproved registrations must be before being removed (in seconds). This behaviour only occurs when a `DELETE` request reaches `/api/v1/auth/register`, which happens periodically in production.
+- The format for th `RATELIMIT_*` options can be found in the [documentation for `flask-limiter`](https://flask-limiter.readthedocs.io/en/stable/#rate-limit-string-notation)
 
 To start the app, just run `docker-compose up`. Hit CTRL+C to shut it down.
+
+Note: If the Docker images change, you can run `docker-compose up --build --force-recreate` to ensure they're re-built.
