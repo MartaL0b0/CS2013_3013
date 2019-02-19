@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 
 class FormScreen extends StatefulWidget {
   @override
@@ -6,7 +8,37 @@ class FormScreen extends StatefulWidget {
 }
 
 class _FormScreen extends State<FormScreen> {
-  // TODO implement this screen 
+  //define type of date input needed, all of them are here now because I am unsure wether we need the time or not yet :)
+  final formats = {
+    InputType.both: DateFormat("EEEE, MMMM d, yyyy 'at' h:mma"),
+    InputType.date: DateFormat('yyyy-MM-dd'),
+    InputType.time: DateFormat("HH:mm"),
+  };
+
+  // let the user pick a date and time (for now)
+  InputType inputType = InputType.both;
+  DateTime date;
+
+  //payment types :
+  List<DropdownMenuItem<String>> _dropDownMenuItems;
+  String _currentPaymentMethod; 
+
+  @override
+  void initState() {
+    _dropDownMenuItems = [
+      new DropdownMenuItem(
+        value: "Cash",
+        child: new Text("Cash")
+      ),
+      new DropdownMenuItem(
+        value: "Cheque",
+        child: new Text("Cheque")
+      )
+    ];
+    _currentPaymentMethod = _dropDownMenuItems[0].value;
+    super.initState();
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,9 +49,9 @@ class _FormScreen extends State<FormScreen> {
                 SizedBox(height: 80.0),
                 Column(
                   children: <Widget>[
-                    Text('WELCOME :)',
+                    Text('Customer Details:',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                     ),
                     SizedBox(height: 30.0),
                     TextField(
@@ -49,29 +81,34 @@ class _FormScreen extends State<FormScreen> {
                       //controller: _userNameController,
                     ),
                     SizedBox(height: 12.0),
-                    TextField(
-                      cursorColor: Colors.white,
+                    DateTimePickerFormField(
+                      inputType: inputType,
+                      format: formats[inputType],
+                      editable: false,
                       decoration: InputDecoration(
-                        labelText: "Date",
-                        filled: true,
-                      ),
-                      //controller: _userNameController,
+                        labelText: 'Date/Time', hasFloatingPlaceholder: false),
+                        onChanged: (dt) => setState(() => date = dt),
+                    ),
+                    SizedBox(height: 12.0),
+                    Text("Payment Method: "),
+                    new DropdownButton(
+                      value: _currentPaymentMethod,
+                      items: _dropDownMenuItems,
+                      onChanged: changedDropDownItem,
+                      hint: Text("Payment Method"),
                     ),
                     SizedBox(height: 12.0),
                     TextField(
+                      autofocus: true,
+                      keyboardType: TextInputType.number,
                       cursorColor: Colors.white,
-                      decoration: InputDecoration(
-                        labelText: "Payment",
-                        filled: true,
-                      ),
-                      //controller: _userNameController,
-                    ),
-                    SizedBox(height: 12.0),
-                    TextField(
-                      cursorColor: Colors.white,
+                      inputFormatters: [
+                        
+                      ],
                       decoration: InputDecoration(
                         labelText: "Amount",
                         filled: true,
+                        prefixText: '€',
                       ),
                       //controller: _userNameController,
                     ),
@@ -89,7 +126,7 @@ class _FormScreen extends State<FormScreen> {
                         FlatButton(
                           child: Text('SUBMIT'),
                           onPressed: () {
-                            print("submit pressed");
+                            print("submit pressed date input is : $date");
                           },
                         )
                       ],
@@ -100,5 +137,12 @@ class _FormScreen extends State<FormScreen> {
             )
         )
     );
+
+
+  }
+  void changedDropDownItem(String paymentMethod) {
+    setState(() {
+      _currentPaymentMethod = paymentMethod;
+    });
   }
 }
