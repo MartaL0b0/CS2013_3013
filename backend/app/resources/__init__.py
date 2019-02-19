@@ -1,6 +1,10 @@
 from functools import wraps
 
 from flask import request, jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 def json_required(f):
     @wraps(f)

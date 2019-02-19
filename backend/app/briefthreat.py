@@ -1,4 +1,4 @@
-import os
+from os import environ
 from datetime import datetime
 
 import passlib.pwd
@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_restful import Api
 from healthcheck import HealthCheck
 
-from resources import auth
+from resources import limiter, auth
 from models import db, validation, User, full_user_schema
 
 app = Flask(__name__)
@@ -18,18 +18,23 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 app.config.update({
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'SQLALCHEMY_DATABASE_URI': 'mysql+mysqlconnector://{user}:{password}@{host}/{database}'.format(
-        user = os.environ['MYSQL_USER'],
-        password = os.environ['MYSQL_PASSWORD'],
-        host = os.environ['MYSQL_HOST'],
-        database = os.environ['MYSQL_DATABASE']
+        user = environ['MYSQL_USER'],
+        password = environ['MYSQL_PASSWORD'],
+        host = environ['MYSQL_HOST'],
+        database = environ['MYSQL_DATABASE']
     ),
-    'SECRET_KEY': os.environ['FLASK_SECRET'],
-    'JWT_SECRET_KEY': os.environ['JWT_SECRET'],
+    'SECRET_KEY': environ['FLASK_SECRET'],
+    'JWT_SECRET_KEY': environ['JWT_SECRET'],
     'JWT_BLACKLIST_ENABLED': True,
     'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
-    'JWT_ACCESS_TOKEN_EXPIRES': int(os.environ['JWT_ACCESS_EXPIRY']),
-    'JWT_REFRESH_TOKEN_EXPIRES': int(os.environ['JWT_REFRESH_EXPIRY']),
-    'REGISTRATION_WINDOW': int(os.environ['REGISTRATION_WINDOW'])
+    'JWT_ACCESS_TOKEN_EXPIRES': int(environ['JWT_ACCESS_EXPIRY']),
+    'JWT_REFRESH_TOKEN_EXPIRES': int(environ['JWT_REFRESH_EXPIRY']),
+    'REGISTRATION_WINDOW': int(environ['REGISTRATION_WINDOW']),
+    'RATELIMIT_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
+    'RATELIMIT_DEFAULT': environ['RATELIMIT_DEFAULT'],
+    # We use memcached since there will be load balancing between workers in production,
+    # so there must be synchronisation between them!
+    'RATELIMIT_STORAGE_URL': 'memcached://memcache:11211'
 })
 
 @app.errorhandler(404)
@@ -43,6 +48,7 @@ api = Api(app, prefix='/api/v1')
 db.init_app(app)
 auth.jwt.init_app(app)
 validation.init_app(app)
+limiter.init_app(app)
 
 def db_ok():
     return User.query.count() >= 0, "database ok"

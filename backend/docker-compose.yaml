@@ -5,6 +5,9 @@ services:
         restart: always
         build: ./build
         init: true
+        depends_on:
+            - db
+            - memcache
         environment:
             - FLASK_ENV=${FLASK_ENV}
             - FLASK_SECRET=${FLASK_SECRET}
@@ -16,8 +19,13 @@ services:
             - MYSQL_PASSWORD=${MYSQL_PASSWORD}
             - MYSQL_DATABASE=${MYSQL_DATABASE}
             - REGISTRATION_WINDOW=${REGISTRATION_WINDOW}
+            - RATELIMIT_DEFAULT=${RATELIMIT_DEFAULT}
+            - RATELIMIT_REGISTRATION=${RATELIMIT_REGISTRATION}
         volumes:
             - ./app:/opt/app:ro
+    memcache:
+        image: memcached:alpine
+        restart: always
     db:
         image: mariadb:latest
         restart: always

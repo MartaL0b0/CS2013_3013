@@ -1,3 +1,4 @@
+from os import environ
 from functools import wraps
 from datetime import datetime, timedelta
 
@@ -6,7 +7,7 @@ from marshmallow import ValidationError
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import *
 
-from . import json_required
+from . import json_required, limiter
 from models import *
 
 jwt = JWTManager()
@@ -54,6 +55,8 @@ def admin_required(f):
     return decorated_function
 
 class Registration(Resource):
+    decorators = [limiter.limit(environ['RATELIMIT_REGISTRATION'])]
+
     # POST -> Create a new user account
     @json_required
     def post(self):
