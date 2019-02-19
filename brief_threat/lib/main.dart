@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'FormScreen.dart';
+import 'SnackBarController.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -98,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
 
                         // wait before loading new page
                         // TODO remove when login is implemented with backend
-                        await new Future.delayed(const Duration(seconds: 3));
+                        //await new Future.delayed(const Duration(seconds: 3));
 
                         // redirect to new page
                         Navigator.push(
@@ -120,18 +121,5 @@ class _LoginPageState extends State<LoginPage> {
   // handle login, currently just prints what was entered in the text fields
   void _loginPressed () {
     print('The user wants to login with $_user and $_password');
-  }
-
-  void showSnackBarErrorMessage (GlobalKey<ScaffoldState> _scaffoldKey, String message) {
-      _scaffoldKey.currentState.hideCurrentSnackBar();
-    _scaffoldKey.currentState.showSnackBar(
-        new SnackBar(
-          duration: Duration(seconds: 3),
-          content: new Row(
-            children: <Widget>[
-              new Text(message)
-            ],
-          ),
-        ));
   }
 }
