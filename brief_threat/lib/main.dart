@@ -14,6 +14,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // text input controllers & variables
   final TextEditingController _userNameController = new TextEditingController();
   final TextEditingController _passwordController = new TextEditingController();
   String _user = "";
@@ -68,9 +69,13 @@ class _LoginPageState extends State<LoginPage> {
                         if (_user.isEmpty || _password.isEmpty) {
                           showSnackBarErrorMessage(_scaffoldKey, "Please fill in all fields");
                           return;
+                        } else if (RegExp(r'[.,<>§£$°^!@#<>?":_`~;[\]\\|=+)(*&^%-]').hasMatch(_user)) {
+                          showSnackBarErrorMessage(_scaffoldKey, "Invalid username");
+                          return;
                         }
 
-                        // show loading snack bar
+                        // show loading snack bar, close any previous snackbar before showing new one
+                         _scaffoldKey.currentState.hideCurrentSnackBar();
                           _scaffoldKey.currentState.showSnackBar(
                               new SnackBar(
                                 content: new Row(
@@ -85,8 +90,10 @@ class _LoginPageState extends State<LoginPage> {
 
                         // TODO implement this when we have the login system setup
                         /*
+                        if incorrect login
                         showSnackBarErrorMessage(_scaffoldKey, "Incorrect username or password. Please try again");
                         return;
+                        else : 
                         */
 
                         // wait before loading new page
@@ -116,6 +123,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void showSnackBarErrorMessage (GlobalKey<ScaffoldState> _scaffoldKey, String message) {
+      _scaffoldKey.currentState.hideCurrentSnackBar();
     _scaffoldKey.currentState.showSnackBar(
         new SnackBar(
           duration: Duration(seconds: 3),
