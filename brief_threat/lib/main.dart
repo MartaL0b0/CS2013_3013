@@ -99,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
 
                         // wait before loading new page
                         // TODO remove when login is implemented with backend
-                        //await new Future.delayed(const Duration(seconds: 3));
+                        await new Future.delayed(const Duration(seconds: 3));
 
                         // redirect to new page
                         Navigator.push(
