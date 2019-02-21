@@ -1,13 +1,31 @@
+import 'globals.dart' as globals;
 import 'package:flutter/material.dart';
 import 'FormScreen.dart';
+import 'jwtProcessor.dart';
 import 'SnackBarController.dart';
+import 'RefreshToken.dart';
 import 'Verification.dart';
-
+import 'Requests.dart';
+import 'dart:async';
 void main() {
   runApp(MaterialApp(
-    title: 'Form app',  // someone please suggest something :)
-    home: LoginPage(),
+      title: 'Form app',
+      home: LoginPage(),
+    ));
+    /*
+  if (globals.isLoggedIn) {
+    // TODO verify validity of refresh token
+    runApp(MaterialApp(
+      title: 'Form app',  // someone please suggest something :)
+      home: FormScreen(),
   ));
+  } else {
+    runApp(MaterialApp(
+      title: 'Form app',
+      home: LoginPage(),
+    ));
+  }
+  */
 }
 
 class LoginPage extends StatefulWidget {
@@ -97,20 +115,12 @@ class _LoginPageState extends State<LoginPage> {
                                 ],
                               ),
                               ));
-                        _loginPressed();
-
-                        // TODO implement this when we have the login system setup
-                        /*
-                        if incorrect login
-                        SnackBarController.showSnackBarErrorMessage(_scaffoldKey, "Incorrect username or password. Please try again");
-                        return;
-                        else : 
-                        */
-
-                        // wait before loading new page
-                        // TODO remove when login is implemented with backend
-                        await new Future.delayed(const Duration(seconds: 3));
-
+                        bool status = await _loginPressed(_user, _password, _scaffoldKey);
+                        
+                        // don't redirect if login failed
+                        if(!status) {
+                          return;
+                        }
                         // redirect to new page
                         Navigator.push(
                           context,
@@ -133,7 +143,20 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
   // handle login, currently just prints what was entered in the text fields
-  void _loginPressed () {
+  Future<bool> _loginPressed (String user, String password, GlobalKey<ScaffoldState> key) async {
     print('The user wants to login with $_user and $_password');
+    RefreshToken token = await Requests.login(_user, _password);
+    if (token == null) {
+      // show error message
+      SnackBarController.showSnackBarErrorMessage(key, "Incorrect username or password. Please try again");
+      return false;
+    } else {
+      // successful login 
+      globals.isLoggedIn = true;
+      globals.refreshToken = token.refreshToken;
+      key.currentState.hideCurrentSnackBar();
+      TokenParser.validateToken(token.refreshToken);
+      return true;
+    }
   }
 }
