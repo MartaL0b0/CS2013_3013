@@ -144,11 +144,11 @@ class _FormScreen extends State<FormScreen> {
                       FlatButton(
                         child: Text('SUBMIT'),
                         onPressed: () async {
-                          _user =_userNameController.text;
-                          _repName =_repNameController.text;
-                          _course =_courseController.text;
-                          _amount =_amountController.text;
-                          _receipt =_receiptController.text;
+                          _user =_userNameController.text.trim();
+                          _repName =_repNameController.text.trim();
+                          _course =_courseController.text.trim();
+                          _amount =_amountController.text.trim();
+                          _receipt =_receiptController.text.trim();
                           double _amountValue = Verification.checkForMoneyAmountInput(_amount);
 
                           String printErrorMessage = Verification.validateFormSubmission(_user, _repName, _course, _amount, _amountValue, _receipt, _date);
@@ -156,7 +156,9 @@ class _FormScreen extends State<FormScreen> {
                             SnackBarController.showSnackBarErrorMessage(_scaffoldKey, printErrorMessage);
                             return;
                           }
-
+                          if (_receipt.isEmpty) {
+                            print("receipt is empty");
+                          }
                           print("date : $_date, username : $_user, rep name : $_repName, course : $_course, method : $_currentPaymentMethod, amount : $_amountValue, receipt no : $_receipt");
                         },
                       )

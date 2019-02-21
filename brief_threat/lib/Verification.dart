@@ -20,8 +20,14 @@ class Verification {
     return RegExp(r'[.,<>§£$°^!@#<>?":_`~;[\]\\|=+)(*&^%-]').hasMatch(s);
   }
 
-  static bool areAllEmpty(List s) {
-    return s.every((elem) => elem.isEmpty);
+  // checks that a list of elements (strings) contain no empty strings
+  static bool areAllEmpty(List<String> s) {
+    for(int i = 0; i < s.length; i++){
+      if(s[i].isEmpty) {
+        return true;
+      }
+    }
+    return false;
   }
 
   static String validateFormSubmission (String user, String repName, String course, String amount, double amountVal, String receipt, DateTime date){

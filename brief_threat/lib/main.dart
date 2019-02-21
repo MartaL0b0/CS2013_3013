@@ -65,6 +65,7 @@ class _LoginPageState extends State<LoginPage> {
                     FlatButton(
                       child: Text('Show'),
                       onPressed: () {
+                        //handle show/hide password
                         _toggleShowPassword();
                       },
                     )
