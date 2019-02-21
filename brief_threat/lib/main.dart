@@ -1,12 +1,13 @@
-import 'globals.dart' as globals;
 import 'package:flutter/material.dart';
 import 'FormScreen.dart';
-import 'jwtProcessor.dart';
+import 'Tokens/TokenProcessor.dart';
 import 'SnackBarController.dart';
-import 'RefreshToken.dart';
+import 'Tokens/models/RefreshToken.dart';
 import 'Verification.dart';
 import 'Requests.dart';
 import 'dart:async';
+import 'Tokens/models/AccessToken.dart';
+
 void main() {
   runApp(MaterialApp(
       title: 'Form app',
@@ -152,10 +153,10 @@ class _LoginPageState extends State<LoginPage> {
       return false;
     } else {
       // successful login 
-      globals.isLoggedIn = true;
-      globals.refreshToken = token.refreshToken;
       key.currentState.hideCurrentSnackBar();
-      TokenParser.validateToken(token.refreshToken);
+      bool val = TokenParser.validateToken(token.refreshToken);
+      print("token is : $val");
+      AccessToken s = await Requests.generateAccessToken(token.refreshToken);
       return true;
     }
   }
