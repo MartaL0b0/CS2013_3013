@@ -20,7 +20,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = new TextEditingController();
   String _user = "";
   String _password = "";
-
+  var hidePassword = true;
+  
   @override
   Widget build(BuildContext context) {
     final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
@@ -56,7 +57,17 @@ class _LoginPageState extends State<LoginPage> {
                     filled: true,
                   ),
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: hidePassword,
+                ),
+                ButtonBar(
+                children: <Widget>[
+                    FlatButton(
+                      child: Text('Show'),
+                      onPressed: () {
+                        _toggleShowPassword();
+                      },
+                    )
+                  ],
                 ),
                 ButtonBar(
                   children: <Widget>[
@@ -115,6 +126,12 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // Toggles the password show status
+  void _toggleShowPassword() {
+    setState(() {
+      hidePassword = !hidePassword;
+    });
+  }
   // handle login, currently just prints what was entered in the text fields
   void _loginPressed () {
     print('The user wants to login with $_user and $_password');
