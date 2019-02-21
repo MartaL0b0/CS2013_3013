@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'FormScreen.dart';
 import 'SnackBarController.dart';
+import 'Verification.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -21,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   String _user = "";
   String _password = "";
   var hidePassword = true;
-  
+
   @override
   Widget build(BuildContext context) {
     final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
@@ -78,11 +79,9 @@ class _LoginPageState extends State<LoginPage> {
                         _user = _userNameController.text.trim();
                         _password = _passwordController.text;
 
-                        if (_user.isEmpty || _password.isEmpty) {
-                          showSnackBarErrorMessage(_scaffoldKey, "Please fill in all fields");
-                          return;
-                        } else if (RegExp(r'[.,<>§£$°^!@#<>?":_`~;[\]\\|=+)(*&^%-]').hasMatch(_user)) {
-                          showSnackBarErrorMessage(_scaffoldKey, "Invalid username");
+                        String error = Verification.validateLoginSubmission(_user, _password);
+                        if (error != null) {
+                          SnackBarController.showSnackBarErrorMessage(_scaffoldKey, error);
                           return;
                         }
 
@@ -102,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                         // TODO implement this when we have the login system setup
                         /*
                         if incorrect login
-                        showSnackBarErrorMessage(_scaffoldKey, "Incorrect username or password. Please try again");
+                        SnackBarController.showSnackBarErrorMessage(_scaffoldKey, "Incorrect username or password. Please try again");
                         return;
                         else : 
                         */

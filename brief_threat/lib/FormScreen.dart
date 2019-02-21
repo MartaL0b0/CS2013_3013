@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'SnackBarController.dart';
-import 'TextVerification.dart';
+import 'Verification.dart';
 
 class FormScreen extends StatefulWidget {
   @override
@@ -18,12 +18,12 @@ class _FormScreen extends State<FormScreen> {
   };
 
   // let the user pick a date and time (for now)
-  InputType inputType = InputType.both;
+  InputType inputType = InputType.date;
   DateTime _date;
 
-  //payment types :
-  List<DropdownMenuItem<String>> _dropDownMenuItems;
-  String _currentPaymentMethod; 
+  int _radioValue = 0;
+  //default value for the radio button
+  String _currentPaymentMethod = "CASH"; 
 
   // controllers and variables for the inputs 
   final TextEditingController _userNameController = new TextEditingController();
@@ -37,22 +37,7 @@ class _FormScreen extends State<FormScreen> {
   String _course = "";
   String _amount = "";
   String _receipt = "";
-  
-  @override
-  void initState() {
-    _dropDownMenuItems = [
-      new DropdownMenuItem(
-        value: "Cash",
-        child: new Text("Cash")
-      ),
-      new DropdownMenuItem(
-        value: "Cheque",
-        child: new Text("Cheque")
-      )
-    ];
-    _currentPaymentMethod = _dropDownMenuItems[0].value;
-    super.initState();
-  }
+
   static final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
@@ -60,7 +45,7 @@ class _FormScreen extends State<FormScreen> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: Text('Customer Details'),
+        title: Text('Transaction Details'),
           automaticallyImplyLeading: false
       ),
       body: SafeArea(
@@ -108,11 +93,30 @@ class _FormScreen extends State<FormScreen> {
                   ),
                   SizedBox(height: 12.0),
                   Text("Payment Method: "),
-                  new DropdownButton(
-                    value: _currentPaymentMethod,
-                    items: _dropDownMenuItems,
-                    onChanged: changedDropDownItem,
-                    hint: Text("Payment Method"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      new Radio(
+                        value: 0,
+                        groupValue: _radioValue,
+                        onChanged: _handleRadioChange,
+                      ),
+                      new Text(
+                        'Cash',
+                        style: new TextStyle(fontSize: 16.0),
+                      ),
+                      new Radio(
+                        value: 1,
+                        groupValue: _radioValue,
+                        onChanged: _handleRadioChange,
+                      ),
+                      new Text(
+                        'Cheque',
+                        style: new TextStyle(
+                          fontSize: 16.0,
+                        ),
+                      ),
+                    ]
                   ),
                   SizedBox(height: 12.0),
                   TextField(
@@ -145,26 +149,11 @@ class _FormScreen extends State<FormScreen> {
                           _course =_courseController.text;
                           _amount =_amountController.text;
                           _receipt =_receiptController.text;
-                          double _amountValue;
+                          double _amountValue = Verification.checkForMoneyAmountInput(_amount);
 
-                          // input data checks, woho
-                          if (_user.isEmpty || _repName.isEmpty || _course.isEmpty || _amount.isEmpty || _receipt.isEmpty || _date == null) {
-                            showSnackBarErrorMessage(_scaffoldKey, "Please fill in all fields");
-                            return;
-                          } else if (checkForSpecialChars(_user) == null) {
-                            showSnackBarErrorMessage(_scaffoldKey, "Invalid username.");
-                            return;
-                          } else if (checkForSpecialChars(_repName) == null) {
-                            showSnackBarErrorMessage(_scaffoldKey, "Invalid representative name.");
-                            return;
-                          } else if (checkForSpecialChars(_course) == null) {
-                            showSnackBarErrorMessage(_scaffoldKey, "Invalid course name.");
-                            return;
-                          } else if((_amountValue = checkForMoneyAmountInput(_amount)) == null) {
-                            showSnackBarErrorMessage(_scaffoldKey, "Invalid amount.");
-                            return;
-                          } else if(checkForNumbersOnly(_receipt) == null) {
-                            showSnackBarErrorMessage(_scaffoldKey, "Invalid receipt Number.");
+                          String printErrorMessage = Verification.validateFormSubmission(_user, _repName, _course, _amount, _amountValue, _receipt, _date);
+                          if (printErrorMessage != null) {
+                            SnackBarController.showSnackBarErrorMessage(_scaffoldKey, printErrorMessage);
                             return;
                           }
 
@@ -180,9 +169,19 @@ class _FormScreen extends State<FormScreen> {
       )
     );
   }
-  void changedDropDownItem(String paymentMethod) {
+
+  void _handleRadioChange(int value) {
     setState(() {
-      _currentPaymentMethod = paymentMethod;
+      _radioValue = value;
+  
+      switch (_radioValue) {
+        case 0:
+          _currentPaymentMethod = "CASH";
+          break;
+        case 1:
+          _currentPaymentMethod = "CHEQUE";
+          break;
+      }
     });
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
-void showSnackBarErrorMessage (GlobalKey<ScaffoldState> _scaffoldKey, String message) {
+class SnackBarController {
+  static void showSnackBarErrorMessage (GlobalKey<ScaffoldState> _scaffoldKey, String message) {
       _scaffoldKey.currentState.hideCurrentSnackBar();
     _scaffoldKey.currentState.showSnackBar(
         new SnackBar(
@@ -12,3 +12,4 @@ void showSnackBarErrorMessage (GlobalKey<ScaffoldState> _scaffoldKey, String mes
           ),
         ));
   }
+}
