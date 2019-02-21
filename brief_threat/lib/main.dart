@@ -88,7 +88,6 @@ class _LoginPageState extends State<LoginPage> {
                               ));
                         _loginPressed();
 
-
                         // TODO implement this when we have the login system setup
                         /*
                         if incorrect login
@@ -106,12 +105,10 @@ class _LoginPageState extends State<LoginPage> {
                           context,
                           MaterialPageRoute(builder: (context) => FormScreen()),
                         );
-
                       },
                     )
                   ],
                 )
-
               ],
             )
         )

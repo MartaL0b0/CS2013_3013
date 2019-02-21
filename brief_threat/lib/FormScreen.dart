@@ -168,7 +168,7 @@ class _FormScreen extends State<FormScreen> {
                             return;
                           }
 
-                          print("date : $_date, username : $_user, rep name : $_repName, course : $_course, method : $_currentPaymentMethod, amount : $_amount, receipt no : $_receipt");
+                          print("date : $_date, username : $_user, rep name : $_repName, course : $_course, method : $_currentPaymentMethod, amount : $_amountValue, receipt no : $_receipt");
                         },
                       )
                     ],
@@ -178,8 +178,7 @@ class _FormScreen extends State<FormScreen> {
             ],
           )
       )
-  );
-
+    );
   }
   void changedDropDownItem(String paymentMethod) {
     setState(() {
