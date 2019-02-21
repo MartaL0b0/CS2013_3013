@@ -13,20 +13,6 @@ void main() {
       title: 'Form app',
       home: LoginPage(),
     ));
-    /*
-  if (globals.isLoggedIn) {
-    // TODO verify validity of refresh token
-    runApp(MaterialApp(
-      title: 'Form app',  // someone please suggest something :)
-      home: FormScreen(),
-  ));
-  } else {
-    runApp(MaterialApp(
-      title: 'Form app',
-      home: LoginPage(),
-    ));
-  }
-  */
 }
 
 class LoginPage extends StatefulWidget {
@@ -143,6 +129,7 @@ class _LoginPageState extends State<LoginPage> {
       hidePassword = !hidePassword;
     });
   }
+
   // handle login, currently just prints what was entered in the text fields
   Future<bool> _loginPressed (String user, String password, GlobalKey<ScaffoldState> key) async {
     print('The user wants to login with $_user and $_password');
@@ -154,9 +141,6 @@ class _LoginPageState extends State<LoginPage> {
     } else {
       // successful login 
       key.currentState.hideCurrentSnackBar();
-      bool val = TokenParser.validateToken(token.refreshToken);
-      print("token is : $val");
-      AccessToken s = await Requests.generateAccessToken(token.refreshToken);
       return true;
     }
   }
