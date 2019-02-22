@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 
 from passlib.hash import pbkdf2_sha256 as sha256
 import marshmallow
@@ -22,6 +23,7 @@ class User(db.Model):
     is_approved = db.Column(db.Boolean, nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False)
     revoked_tokens = db.relationship('RevokedToken', backref='user')
+    forms = db.relationship('Form', backref='user')
 
     @classmethod
     def find_by_username(cls, username):
@@ -43,6 +45,38 @@ class RevokedToken(db.Model):
     def is_revoked(cls, jti):
         query = cls.query.filter_by(jti=jti).first()
         return bool(query)
+
+class Form(db.Model):
+    __tablename__ = 'forms'
+
+    class PaymentType(Enum):
+        cash = 1
+        cheque = 2
+
+    id = db.Column(db.Integer, primary_key=True)
+    submitter = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    customer_name = db.Column(db.String(128), nullable=False)
+    course = db.Column(db.String(256), nullable=False)
+    payment_method = db.Column(db.Enum(PaymentType), nullable=False)
+    amount = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
+    receipt = db.Column(db.String(128), nullable=False)
+    resolved = db.Column(db.Boolean, nullable=False)
+
+    @classmethod
+    def find_by_id(cls, id):
+        return cls.query.get(id)
+
+    def update(self, other):
+        if other.customer_name != None:
+            self.customer_name = other.customer_name
+        if other.course != None:
+            self.course = other.course
+        if other.payment_method != None:
+            self.payment_method = other.payment_method
+        if other.amount != None:
+            self.amount = other.amount
+        if other.receipt != None:
+            self.receipt = other.receipt
 
 class RevokedTokenSchema(validation.ModelSchema):
     class Meta:
@@ -69,6 +103,34 @@ class RevokedTokenSchema(validation.ModelSchema):
 
         return in_data
 
+class FormSchema(validation.ModelSchema):
+    class Meta:
+        model = Form
+        exclude = ['user', 'submitter']
+
+    @marshmallow.post_dump(pass_many=True, pass_original=True)
+    def add_submitter_name(self, out_data, many, out):
+        # Return the username for the user who submitted the form
+        if not many:
+            out_data = [out_data]
+            out = [out]
+
+        for i, d in enumerate(out_data):
+            d['submitter'] = out[i].user.username
+
+        return out_data
+
+    @marshmallow.post_dump
+    def stringify_amount(self, out_data):
+        # Stringify the amount to ensure fixed point precision
+        # Python's JSON serializer will refuse to serialize Decimal anyway
+        out_data['amount'] = str(out_data['amount'])
+
+    @marshmallow.post_dump
+    def stringify_payment_type(self, out_data):
+        # Python's JSON serializer will not serialize enums
+        out_data['payment_method'] = out_data['payment_method'].name
+
 class UserSchema(validation.ModelSchema):
     class Meta:
         model = User
@@ -76,6 +138,7 @@ class UserSchema(validation.ModelSchema):
         dump_only = ["revoked_tokens"]
 
     revoked_tokens = validation.Nested(RevokedTokenSchema, many=True)
+    forms = validation.Nested(FormSchema, many=True)
 
     @marshmallow.pre_load
     def hash_password(self, in_data):
@@ -90,6 +153,12 @@ class UserSchema(validation.ModelSchema):
 full_user_schema = UserSchema(strict=True)
 new_user_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
-change_access_schema = UserSchema(strict=True, exclude=['password', 'registration_time'], partial=['is_approved', 'is_admin'])
+change_access_schema = UserSchema(strict=True, exclude=['id', 'password', 'registration_time'], partial=['is_approved', 'is_admin'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
+
+full_form_schema = FormSchema(strict=True, exclude=['user'])
+forms_schema = FormSchema(strict=True, many=True, exclude=['user'])
+new_form_schema = FormSchema(strict=True, exclude=['id', 'resolved'])
+delete_form_schema = FormSchema(strict=True, only=['id'])
+edit_form_schema = FormSchema(strict=True, partial=True)

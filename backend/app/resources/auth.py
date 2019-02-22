@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from flask import current_app, request, jsonify
 from marshmallow import ValidationError
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 from flask_jwt_extended import *
 
 from . import json_required, limiter
@@ -111,6 +111,7 @@ class Login(Resource):
         }
 
     # PUT -> Change password
+    @json_required
     @jwt_required
     def put(self):
         # Validate and deserialize input

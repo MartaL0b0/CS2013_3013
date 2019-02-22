@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_restful import Api
 from healthcheck import HealthCheck
 
-from resources import limiter, auth
+from resources import limiter, auth, form
 from models import db, validation, User, full_user_schema
 
 app = Flask(__name__)
@@ -61,6 +61,7 @@ api.add_resource(auth.Login, '/auth/login')
 api.add_resource(auth.Token, '/auth/token')
 api.add_resource(auth.Access, '/auth/access')
 api.add_resource(auth.Cleanup, '/auth/cleanup')
+api.add_resource(form.Manage, '/form')
 
 @app.before_first_request
 def create_tables():
