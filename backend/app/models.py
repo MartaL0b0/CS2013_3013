@@ -113,15 +113,32 @@ class FormSchema(validation.ModelSchema):
         model = Form
         exclude = ['user', 'submitter']
 
-    @marshmallow.post_dump(pass_many=True, pass_original=True)
-    def add_submitter_name(self, out_data, many, out):
+    def return_username(self, out_data, out):
         # Return the username for the user who submitted the form
+        out_data['submitter'] = out.user.username
+
+    def return_unix_time(self, out_data, out):
+        # Return the time as a Unix timestamp
+        out_data['time'] = int(out.time.timestamp())
+
+    @marshmallow.post_dump(pass_many=True, pass_original=True)
+    def dump_tweaks(self, out_data, many, out):
+        tweaks = [self.return_username, self.return_unix_time]
         if not many:
-            out_data = [out_data]
-            out = [out]
+            if not out:
+                return out_data
+
+            for t in tweaks:
+                t(out_data, out)
+
+            return out_data
 
         for i, d in enumerate(out_data):
-            d['submitter'] = out[i].user.username
+            if not d:
+                continue
+
+            for t in tweaks:
+                t(d, out[i])
 
         return out_data
 
@@ -129,12 +146,24 @@ class FormSchema(validation.ModelSchema):
     def stringify_amount(self, out_data):
         # Stringify the amount to ensure fixed point precision
         # Python's JSON serializer will refuse to serialize Decimal anyway
-        out_data['amount'] = str(out_data['amount'])
+        if 'amount' in out_data:
+            out_data['amount'] = str(out_data['amount'])
 
     @marshmallow.post_dump
     def stringify_payment_type(self, out_data):
         # Python's JSON serializer will not serialize enums
-        out_data['payment_method'] = out_data['payment_method'].name
+        if 'payment_method' in out_data:
+            out_data['payment_method'] = out_data['payment_method'].name
+
+    @marshmallow.pre_load
+    def parse_unix_time(self, in_data):
+        if 'time' in in_data:
+            t = in_data['time']
+            if type(t) != int or t < 0:
+                raise ValidationError('time must be a valid Unix timestamp')
+
+            # Marshmallow expects DateTime fields to be in ISO string form
+            in_data['time'] = datetime.utcfromtimestamp(t).isoformat()
 
 class UserSchema(validation.ModelSchema):
     class Meta:
