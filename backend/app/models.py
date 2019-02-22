@@ -55,18 +55,21 @@ class Form(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     submitter = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    time = db.Column(db.DateTime, nullable=False)
     customer_name = db.Column(db.String(128), nullable=False)
     course = db.Column(db.String(256), nullable=False)
     payment_method = db.Column(db.Enum(PaymentType), nullable=False)
     amount = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
     receipt = db.Column(db.String(128), nullable=False)
-    resolved = db.Column(db.Boolean, nullable=False)
+    resolved_at = db.Column(db.DateTime)
 
     @classmethod
     def find_by_id(cls, id):
         return cls.query.get(id)
 
     def update(self, other):
+        if other.time != None:
+            self.time = other.time
         if other.customer_name != None:
             self.customer_name = other.customer_name
         if other.course != None:
@@ -77,6 +80,8 @@ class Form(db.Model):
             self.amount = other.amount
         if other.receipt != None:
             self.receipt = other.receipt
+        if other.resolved_at != None:
+            self.resolved_at = other.resolved_at
 
 class RevokedTokenSchema(validation.ModelSchema):
     class Meta:
@@ -157,8 +162,8 @@ change_access_schema = UserSchema(strict=True, exclude=['id', 'password', 'regis
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
 
-full_form_schema = FormSchema(strict=True, exclude=['user'])
-forms_schema = FormSchema(strict=True, many=True, exclude=['user'])
-new_form_schema = FormSchema(strict=True, exclude=['id', 'resolved'])
+full_form_schema = FormSchema(strict=True)
+forms_schema = FormSchema(strict=True, many=True)
+new_form_schema = FormSchema(strict=True, exclude=['id', 'resolved_at'])
 delete_form_schema = FormSchema(strict=True, only=['id'])
-edit_form_schema = FormSchema(strict=True, partial=True)
+edit_form_schema = FormSchema(strict=True, exclude=['resolved_at'], partial=True)

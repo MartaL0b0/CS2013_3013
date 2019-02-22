@@ -11,7 +11,7 @@ class Manage(Resource):
     @admin_required
     def get(self):
         return forms_schema.jsonify(Form.query.all())
-    
+
     # POST -> Submit a new form
     @json_required
     @jwt_required
