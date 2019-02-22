@@ -67,22 +67,6 @@ class Form(db.Model):
     def find_by_id(cls, id):
         return cls.query.get(id)
 
-    def update(self, other):
-        if other.time != None:
-            self.time = other.time
-        if other.customer_name != None:
-            self.customer_name = other.customer_name
-        if other.course != None:
-            self.course = other.course
-        if other.payment_method != None:
-            self.payment_method = other.payment_method
-        if other.amount != None:
-            self.amount = other.amount
-        if other.receipt != None:
-            self.receipt = other.receipt
-        if other.resolved_at != None:
-            self.resolved_at = other.resolved_at
-
 class RevokedTokenSchema(validation.ModelSchema):
     class Meta:
         model = RevokedToken

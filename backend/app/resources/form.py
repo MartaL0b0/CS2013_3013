@@ -49,7 +49,7 @@ class Manage(Resource):
             return {'message': ('You must have either submitted form {} '
                     'or be an admin to update it').format(to_delete.id)}, 401
 
-        to_update.update(update_req)
+        db.session.merge(update_req)
         db.session.commit()
         return old
 
