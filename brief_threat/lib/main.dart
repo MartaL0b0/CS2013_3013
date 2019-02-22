@@ -120,6 +120,8 @@ class _LoginPageState extends State<LoginPage> {
   // handle login, currently just prints what was entered in the text fields
   void _loginPressed () {
     print('The user wants to login with $_user and $_password');
+
+
   }
 
   void showSnackBarErrorMessage (GlobalKey<ScaffoldState> _scaffoldKey, String message) {
