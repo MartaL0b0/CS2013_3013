@@ -24,6 +24,7 @@ app.config.update({
         database = environ['MYSQL_DATABASE']
     ),
     'SECRET_KEY': environ['FLASK_SECRET'],
+    'ROOT_EMAIL': environ['ROOT_EMAIL'],
     'JWT_SECRET_KEY': environ['JWT_SECRET'],
     'JWT_BLACKLIST_ENABLED': True,
     'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
@@ -76,6 +77,7 @@ def create_tables():
         password = passlib.pwd.genword(entropy=256)
         full_user_schema.load({
             'username': 'root',
+            'email': app.config['ROOT_EMAIL'],
             'password': password,
             'registration_time': datetime.utcnow(),
             'is_approved': True,

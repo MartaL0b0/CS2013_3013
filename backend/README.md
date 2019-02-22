@@ -13,6 +13,7 @@ MYSQL_PASSWORD=hunter2
 MYSQL_DATABASE=briefthreat
 FLASK_ENV=development
 FLASK_SECRET=thisshouldbesecret
+ROOT_EMAIL=test@example.com
 JWT_SECRET=thisshouldalsobesecret
 JWT_ACCESS_EXPIRY=900
 JWT_REFRESH_EXPIRY=2592000

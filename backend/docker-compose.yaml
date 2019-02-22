@@ -11,6 +11,7 @@ services:
         environment:
             - FLASK_ENV=${FLASK_ENV}
             - FLASK_SECRET=${FLASK_SECRET}
+            - ROOT_EMAIL=${ROOT_EMAIL}
             - JWT_SECRET=${JWT_SECRET}
             - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY}
             - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY}
