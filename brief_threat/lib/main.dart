@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'FormScreen.dart';
+import 'dart:convert'; //json library for dart
+import 'package:jaguar_jwt/jaguar_jwt.dart';
+
 
 void main() {
   runApp(MaterialApp(
@@ -85,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ],
                               ),
                               ));
-                        _loginPressed();
+                        _loginPressed(_user, _password);
 
 
                         // TODO implement this when we have the login system setup
@@ -118,9 +121,17 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // handle login, currently just prints what was entered in the text fields
-  void _loginPressed () {
-    print('The user wants to login with $_user and $_password');
+  void _loginPressed (String _user, String _password) {
+    print('The user wants to login with username $_user and password $_password');
+    var loginInfo = [
+      {'username':_user},
+      {'password':_password}
+    ];
 
+    var jsonText = jsonEncode(loginInfo);
+    var scores = jsonDecode(jsonText);
+
+    print(scores[1]);
 
   }
 
