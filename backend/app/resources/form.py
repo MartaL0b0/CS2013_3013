@@ -1,6 +1,7 @@
-from flask import request
+from flask import request, current_app, render_template
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, current_user
+import flask_emails as mail
 
 from models import *
 from . import json_required
@@ -95,4 +96,14 @@ class Resolution(Resource):
 
         to_resolve.resolved_at = datetime.utcnow()
         db.session.commit()
+
+        notification = mail.Message(
+                mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+                subject="Form resolved",
+                text=render_template('notification.txt', form=to_resolve),
+                html=render_template('notification.html', form=to_resolve),
+                )
+        notification.config.smtp_options['fail_silently'] = False
+        notification.send(to=to_resolve.user.email)
+
         return full_form_schema.jsonify(to_resolve)
