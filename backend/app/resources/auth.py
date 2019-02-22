@@ -91,7 +91,7 @@ class Login(Resource):
         # Validate and deserialize input
         login_user = User()
         try:
-            new_user_schema.load(request.r_data, instance=login_user)
+            login_schema.load(request.r_data, instance=login_user)
         except ValidationError as err:
             return err.messages, 422
 

@@ -1,4 +1,4 @@
-Hi,
+Hi {{ form.user.first_name }},
 
 Your form (no. {{ form.id }}) has been marked as resolved.
 Here are the details:

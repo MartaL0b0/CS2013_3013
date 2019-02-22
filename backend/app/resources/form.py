@@ -89,7 +89,7 @@ class Resolution(Resource):
 
         to_resolve = Form.find_by_id(resolve_req.id)
         if not to_resolve:
-            return {'message': 'Form with id {} does not exist'.format(del_req.id)}, 400
+            return {'message': 'Form with id {} does not exist'.format(resolve_req.id)}, 400
 
         if to_resolve.resolved_at != None:
             return {'message': 'Form {} is already resolved'.format(to_resolve.id)}, 400

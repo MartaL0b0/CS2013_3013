@@ -86,6 +86,7 @@ def create_tables():
         full_user_schema.load({
             'username': 'root',
             'email': app.config['ROOT_EMAIL'],
+            'first_name': 'Administrator',
             'password': password,
             'registration_time': datetime.utcnow(),
             'is_approved': True,

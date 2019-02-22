@@ -20,6 +20,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(128), unique=True, nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
+    first_name = db.Column(db.String(64), nullable=False)
+    last_name = db.Column(db.String(64))
     password = db.Column(db.String(128), nullable=False)
     registration_time = db.Column(db.DateTime, nullable=False)
     is_approved = db.Column(db.Boolean, nullable=False)
@@ -33,6 +35,13 @@ class User(db.Model):
 
     def verify_password(self, password):
         return sha256.verify(password, self.password)
+
+    @property
+    def full_name(self):
+        if self.last_name != None:
+            return '{} {}'.format(self.first_name, self.last_name)
+
+        return self.first_name
 
 class RevokedToken(db.Model):
     __tablename__ = 'revoked_tokens'
@@ -187,7 +196,8 @@ class UserSchema(validation.ModelSchema):
                 raise ValidationError(str(ex))
 
 full_user_schema = UserSchema(strict=True)
-new_user_schema = UserSchema(strict=True, only=['username', 'password', 'email'])
+new_user_schema = UserSchema(strict=True, only=['username', 'password', 'email', 'first_name', 'last_name'], partial=['last_name'])
+login_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
 change_access_schema = UserSchema(strict=True, only=['username', 'is_approved', 'is_admin'], partial=['is_approved', 'is_admin'])
 
