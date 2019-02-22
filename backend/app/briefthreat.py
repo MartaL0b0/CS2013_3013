@@ -62,6 +62,7 @@ api.add_resource(auth.Token, '/auth/token')
 api.add_resource(auth.Access, '/auth/access')
 api.add_resource(auth.Cleanup, '/auth/cleanup')
 api.add_resource(form.Manage, '/form')
+api.add_resource(form.Resolution, '/form/resolve')
 
 @app.before_first_request
 def create_tables():

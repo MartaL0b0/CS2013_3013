@@ -75,3 +75,24 @@ class Manage(Resource):
         db.session.delete(to_delete)
         db.session.commit()
         return full_form_schema.jsonify(to_delete)
+
+class Resolution(Resource):
+    @json_required
+    @admin_required
+    def put(self):
+        resolve_req = Form()
+        try:
+            resolve_form_schema.load(request.r_data, instance=resolve_req)
+        except ValidationError as err:
+            return err.messages, 422
+
+        to_resolve = Form.find_by_id(resolve_req.id)
+        if not to_resolve:
+            return {'message': 'Form with id {} does not exist'.format(del_req.id)}, 400
+
+        if to_resolve.resolved_at != None:
+            return {'message': 'Form {} is already resolved'.format(to_resolve.id)}, 400
+
+        to_resolve.resolved_at = datetime.utcnow()
+        db.session.commit()
+        return full_form_schema.jsonify(to_resolve)

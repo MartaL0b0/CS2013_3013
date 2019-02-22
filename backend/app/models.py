@@ -97,22 +97,29 @@ class FormSchema(validation.ModelSchema):
         model = Form
         exclude = ['user', 'submitter']
 
+    def __init__(self, *args, **kwargs):
+        super(validation.ModelSchema, self).__init__(*args, **kwargs)
+        self.unix_fields = ['time', 'resolved_at']
+        self.tweaks = [self.return_username, self.return_unix_time]
+
     def return_username(self, out_data, out):
         # Return the username for the user who submitted the form
         out_data['submitter'] = out.user.username
 
     def return_unix_time(self, out_data, out):
         # Return the time as a Unix timestamp
-        out_data['time'] = int(out.time.timestamp())
+        for f in self.unix_fields:
+            d = out.__dict__
+            if d[f]:
+                out_data[f] = int(d[f].timestamp())
 
     @marshmallow.post_dump(pass_many=True, pass_original=True)
     def dump_tweaks(self, out_data, many, out):
-        tweaks = [self.return_username, self.return_unix_time]
         if not many:
             if not out:
                 return out_data
 
-            for t in tweaks:
+            for t in self.tweaks:
                 t(out_data, out)
 
             return out_data
@@ -121,7 +128,7 @@ class FormSchema(validation.ModelSchema):
             if not d:
                 continue
 
-            for t in tweaks:
+            for t in self.tweaks:
                 t(d, out[i])
 
         return out_data
@@ -180,3 +187,4 @@ forms_schema = FormSchema(strict=True, many=True)
 new_form_schema = FormSchema(strict=True, exclude=['id', 'resolved_at'])
 delete_form_schema = FormSchema(strict=True, only=['id'])
 edit_form_schema = FormSchema(strict=True, exclude=['resolved_at'], partial=True)
+resolve_form_schema = FormSchema(strict=True, only=['id', 'resolved_at'])
