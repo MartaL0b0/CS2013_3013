@@ -5,11 +5,12 @@ import 'Tokens/models/AccessToken.dart';
 
 class Requests {
   static Future<RefreshToken> login(String _username, String _password) async {
+    String credentialsAsJson =jsonEncode({"username": _username, "password": _password});
+
     final response = await http.post(
       'https://briefthreat.nul.ie//api/v1/auth/login', 
       headers: {"Content-Type": "application/json"},
-      body: {'username' : '$_username', 'password' : '$_password'});
-
+      body: credentialsAsJson);
     if (response.statusCode == 200) {
       //parse the JSON to get the refresh key
       return RefreshToken.fromJson(jsonDecode(response.body));

@@ -1,6 +1,7 @@
 import 'AccessToken.dart';
 
 class RefreshToken {
+  // backend also generates access token when generating refresh token
   final String refreshToken;
   final AccessToken accessToken;
 
