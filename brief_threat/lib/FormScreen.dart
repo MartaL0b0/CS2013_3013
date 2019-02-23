@@ -21,7 +21,7 @@ class _FormScreen extends State<FormScreen> {
   InputType inputType = InputType.date;
   DateTime _date;
 
-  int _radioValue = 0;
+  bool _radioValue = false;
   //default value for the radio button
   String _currentPaymentMethod = "CASH"; 
 
@@ -97,7 +97,7 @@ class _FormScreen extends State<FormScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       new Radio(
-                        value: 0,
+                        value: false,
                         groupValue: _radioValue,
                         onChanged: _handleRadioChange,
                       ),
@@ -106,7 +106,7 @@ class _FormScreen extends State<FormScreen> {
                         style: new TextStyle(fontSize: 16.0),
                       ),
                       new Radio(
-                        value: 1,
+                        value: true,
                         groupValue: _radioValue,
                         onChanged: _handleRadioChange,
                       ),
@@ -172,18 +172,10 @@ class _FormScreen extends State<FormScreen> {
     );
   }
 
-  void _handleRadioChange(int value) {
+  void _handleRadioChange(bool value) {
     setState(() {
       _radioValue = value;
-  
-      switch (_radioValue) {
-        case 0:
-          _currentPaymentMethod = "CASH";
-          break;
-        case 1:
-          _currentPaymentMethod = "CHEQUE";
-          break;
-      }
+      _currentPaymentMethod = (_radioValue ? "CHEQUE" : "CASH");
     });
   }
 }
