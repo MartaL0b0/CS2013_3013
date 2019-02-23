@@ -9,9 +9,14 @@ from .auth import admin_required
 
 class Manage(Resource):
     # GET -> Return the list of forms
-    @admin_required
+    @jwt_required
     def get(self):
-        return forms_schema.jsonify(Form.query.all())
+        if current_user.is_admin:
+            # Show all forms to admins
+            return forms_schema.jsonify(Form.query.all())
+        else:
+            # Only show forms submitted by non-admins
+            return forms_schema.jsonify(Form.query.filter(Form.user == current_user))
 
     # POST -> Submit a new form
     @json_required
