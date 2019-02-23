@@ -8,6 +8,7 @@ from flask_restful import Api
 from healthcheck import HealthCheck
 
 from resources import limiter, auth, form
+import models
 from models import db, validation, User, full_user_schema
 
 app = Flask(__name__)
@@ -24,6 +25,7 @@ app.config.update({
         database = environ['MYSQL_DATABASE']
     ),
     'SECRET_KEY': environ['FLASK_SECRET'],
+    'PUBLIC_URL': environ['PUBLIC_URL'],
     'ROOT_EMAIL': environ['ROOT_EMAIL'],
     'EMAIL_NAME': environ['EMAIL_NAME'],
     'EMAIL_FROM': environ['EMAIL_FROM'],
@@ -54,7 +56,7 @@ def not_found(e):
     return render_template('404.html'), 404
 
 api = Api(app, prefix='/api/v1')
-db.init_app(app)
+models.init_app(app)
 auth.jwt.init_app(app)
 validation.init_app(app)
 limiter.init_app(app)
@@ -72,6 +74,9 @@ api.add_resource(auth.Access, '/auth/access')
 api.add_resource(auth.Cleanup, '/auth/cleanup')
 api.add_resource(form.Manage, '/form')
 api.add_resource(form.Resolution, '/form/resolve')
+
+# UI routes
+form.init_app(app)
 
 @app.before_first_request
 def create_tables():

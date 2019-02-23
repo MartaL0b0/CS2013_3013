@@ -28,7 +28,24 @@ class Manage(Resource):
         new_form.resolved = False
         db.session.add(new_form)
         db.session.commit()
-        return None, 204
+
+        for admin in User.query.filter(User.is_admin == True):
+            # Create a token the admin can use to mark the form as resolved
+            # This can be validated by its signature
+            resolve_info = UIResolve(username=admin.username, form_id=new_form.id)
+            token = ui_resolve_schema.dump(resolve_info).data
+            resolve_link = '{}/resolve?token={}'.format(current_app.config['PUBLIC_URL'], token)
+
+            notification = mail.Message(
+                    mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+                    subject='Form no. {}'.format(new_form.id),
+                    text=render_template('new_form.txt', form=new_form, admin=admin, resolve_link=resolve_link),
+                    html=render_template('new_form.html', form=new_form, admin=admin, resolve_link=resolve_link),
+                    )
+            notification.config.smtp_options['fail_silently'] = False
+            notification.send(to=(admin.full_name, admin.email))
+
+        return {'id': new_form.id}
 
     # PATCH -> Update a form
     @json_required
@@ -77,6 +94,19 @@ class Manage(Resource):
         db.session.commit()
         return full_form_schema.jsonify(to_delete)
 
+def do_resolve(to_resolve):
+    to_resolve.resolved_at = datetime.utcnow()
+    db.session.commit()
+
+    notification = mail.Message(
+            mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+            subject="Form resolved",
+            text=render_template('notification.txt', form=to_resolve),
+            html=render_template('notification.html', form=to_resolve),
+            )
+    notification.config.smtp_options['fail_silently'] = False
+    notification.send(to=(to_resolve.user.full_name, to_resolve.user.email))
+
 class Resolution(Resource):
     @json_required
     @admin_required
@@ -94,16 +124,22 @@ class Resolution(Resource):
         if to_resolve.resolved_at != None:
             return {'message': 'Form {} is already resolved'.format(to_resolve.id)}, 400
 
-        to_resolve.resolved_at = datetime.utcnow()
-        db.session.commit()
-
-        notification = mail.Message(
-                mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
-                subject="Form resolved",
-                text=render_template('notification.txt', form=to_resolve),
-                html=render_template('notification.html', form=to_resolve),
-                )
-        notification.config.smtp_options['fail_silently'] = False
-        notification.send(to=to_resolve.user.email)
-
+        do_resolve(to_resolve)
         return full_form_schema.jsonify(to_resolve)
+
+def init_app(app):
+    @app.route("/resolve")
+    def ui_resolve_form():
+        # Deserialize and validate token from request params
+        try:
+            resolve_params = ui_resolve_schema.load(request.args).data
+        except ValidationError as ex:
+            message = ex.messages['_schema'][0] if '_schema' in ex.messages else ex
+            return render_template('422.html', message=message), 422
+
+        to_resolve = Form.find_by_id(resolve_params['form_id'])
+        if to_resolve.resolved_at != None:
+            return render_template('400.html', message='Form {} has already been resolved.'.format(to_resolve.id)), 400
+
+        do_resolve(to_resolve)
+        return render_template('resolve_success.html', form=to_resolve)

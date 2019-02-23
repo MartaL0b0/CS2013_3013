@@ -13,6 +13,7 @@ MYSQL_PASSWORD=hunter2
 MYSQL_DATABASE=briefthreat
 FLASK_ENV=development
 FLASK_SECRET=thisshouldbesecret
+PUBLIC_URL=https://localhost
 ROOT_EMAIL=test@example.com
 EMAIL_NAME=BriefThreat
 EMAIL_FROM=briefthreat@example.com

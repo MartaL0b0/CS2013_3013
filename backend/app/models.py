@@ -6,6 +6,7 @@ from email_validator import validate_email, EmailNotValidError, EmailUndeliverab
 import marshmallow
 from marshmallow import ValidationError
 from marshmallow_sqlalchemy import field_for
+from itsdangerous import URLSafeSerializer, BadSignature, BadData
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -13,6 +14,14 @@ from flask_jwt_extended import decode_token
 
 db = SQLAlchemy()
 validation = Marshmallow()
+
+def init_app(app):
+    db.init_app(app)
+
+    global form_resolve_signer
+    # Use Flask's secret key to sign our resolution tokens
+    # The salt is a public value, but should be different for each type of token to prevent re-use
+    form_resolve_signer = URLSafeSerializer(app.config['SECRET_KEY'], salt='form-resolution')
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -195,6 +204,33 @@ class UserSchema(validation.ModelSchema):
             except (EmailNotValidError, EmailUndeliverableError) as ex:
                 raise ValidationError(str(ex))
 
+class UIResolve:
+    def __init__(self, username, form_id):
+        self.username = username
+        self.form_id = form_id
+
+class UIResolveSchema(marshmallow.Schema):
+    username = marshmallow.fields.Str(required=True)
+    form_id = marshmallow.fields.Integer(required=True)
+
+    @marshmallow.pre_load
+    def deserialize(self, in_data):
+        if not 'token' in in_data:
+            raise ValidationError('No token provided')
+
+        try:
+            # Validate and deserialize the token
+            result = form_resolve_signer.loads(in_data['token'])
+        except (BadSignature, BadData) as ex:
+            raise ValidationError(str(ex))
+
+        return result
+
+    @marshmallow.post_dump
+    def serialize(self, out_data):
+        # Return a signed token as the serialized result
+        return form_resolve_signer.dumps(out_data)
+
 full_user_schema = UserSchema(strict=True)
 new_user_schema = UserSchema(strict=True, only=['username', 'password', 'email', 'first_name', 'last_name'], partial=['last_name'])
 login_schema = UserSchema(strict=True, only=['username', 'password'])
@@ -209,3 +245,4 @@ new_form_schema = FormSchema(strict=True, exclude=['id', 'resolved_at'])
 delete_form_schema = FormSchema(strict=True, only=['id'])
 edit_form_schema = FormSchema(strict=True, exclude=['resolved_at'], partial=True)
 resolve_form_schema = FormSchema(strict=True, only=['id', 'resolved_at'])
+ui_resolve_schema = UIResolveSchema(strict=True)

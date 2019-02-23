@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Form resolved{% endblock %}
+{% block content %}
+<h1>Form resolved</h1>
+<p>Form no. {{ form.id }} was resolved successfully.</p>
+<p>The submitter ({{ form.user.full_name }}) has been notified.</p>
+{% endblock %}

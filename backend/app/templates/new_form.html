@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}Form resolved{% endblock %}
+{% block title %}Form no. {{ form.id }}{% endblock %}
 {% block content %}
-<p>Hi {{ form.user.first_name }},</p>
-<p>Your form (no. {{ form.id }}) has been marked as resolved.</p>
+<p>Hi {{ admin.first_name }},</p>
+<p>{{ form.user.full_name }} (<a href="mailto:{{ form.user.email }}">{{ form.user.email }}</a>) has submitted form no. {{ form.id }}.</p>
 <p>Here are the details:</p>
 <ul>
 	<li>Course: {{ form.course }}</li>
@@ -11,4 +11,5 @@
 	<li>Amount: &euro;{{ form.amount }}</li>
 	<li>Receipt number: {{ form.receipt }}</li>
 </ul>
+<p>You can click <a href="{{ resolve_link }}">here</a> here to mark this form as resolved.</p>
 {% endblock %}

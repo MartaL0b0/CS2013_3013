@@ -11,6 +11,7 @@ services:
         environment:
             - FLASK_ENV=${FLASK_ENV}
             - FLASK_SECRET=${FLASK_SECRET}
+            - PUBLIC_URL=${PUBLIC_URL}
             - ROOT_EMAIL=${ROOT_EMAIL}
             - EMAIL_NAME=${EMAIL_NAME}
             - EMAIL_FROM=${EMAIL_FROM}
