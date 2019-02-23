@@ -17,7 +17,7 @@ class _FormScreen extends State<FormScreen> {
     InputType.time: DateFormat("HH:mm"),
   };
 
-  // let the user pick a date and time (for now)
+  // let the user pick a date
   InputType inputType = InputType.date;
   DateTime _date;
 
