@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'FormScreen.dart';
-import 'Tokens/TokenProcessor.dart';
 import 'SnackBarController.dart';
 import 'Tokens/models/RefreshToken.dart';
 import 'Verification.dart';
 import 'Requests.dart';
 import 'dart:async';
-import 'Tokens/models/AccessToken.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -138,10 +136,10 @@ class _LoginPageState extends State<LoginPage> {
       // show error message
       SnackBarController.showSnackBarErrorMessage(key, "Incorrect username or password. Please try again");
       return false;
-    } else {
-      // successful login 
-      key.currentState.hideCurrentSnackBar();
-      return true;
-    }
+    } 
+
+    // successful login 
+    key.currentState.hideCurrentSnackBar();
+    return true;
   }
 }

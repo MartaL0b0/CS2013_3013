@@ -15,10 +15,9 @@ class Requests {
       //parse the JSON to get the refresh key
       return RefreshToken.fromJson(jsonDecode(response.body));
     } 
-    else {
-      // authentification failed
-      return null;
-    }
+
+    // authentification failed
+    return null;
   }
 
   static Future<AccessToken> generateAccessToken(String refreshToken) async {
@@ -30,8 +29,8 @@ class Requests {
       // success, return access token from JSON
       return AccessToken.fromJson(jsonDecode(response.body));
     } 
-    else {
-      return null;
-    }
+
+    // request failed
+    return null;
   }  
 }
