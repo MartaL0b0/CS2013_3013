@@ -117,6 +117,9 @@ class FormSchema(validation.ModelSchema):
         model = Form
         exclude = ['user', 'submitter']
 
+    # We need to make the id required
+    id = marshmallow.fields.Int(required=True)
+
     def __init__(self, *args, **kwargs):
         super(validation.ModelSchema, self).__init__(*args, **kwargs)
         self.unix_fields = ['time', 'resolved_at']
@@ -243,6 +246,6 @@ full_form_schema = FormSchema(strict=True)
 forms_schema = FormSchema(strict=True, many=True)
 new_form_schema = FormSchema(strict=True, exclude=['id', 'resolved_at'])
 delete_form_schema = FormSchema(strict=True, only=['id'])
-edit_form_schema = FormSchema(strict=True, exclude=['resolved_at'], partial=True)
+edit_form_schema = FormSchema(strict=True, exclude=['resolved_at'], partial=('time', 'customer_name', 'course', 'payment_method', 'amount', 'receipt'))
 resolve_form_schema = FormSchema(strict=True, only=['id', 'resolved_at'])
 ui_resolve_schema = UIResolveSchema(strict=True)
