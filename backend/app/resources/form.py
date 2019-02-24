@@ -66,7 +66,7 @@ class Manage(Resource):
         to_update = Form.find_by_id(update_req.id)
         old = full_form_schema.jsonify(to_update)
         if not to_update:
-            return {'message': 'Form with id {} does not exist'.format(update_req.id)}, 400
+            return {'message': 'Form {} does not exist'.format(update_req.id)}, 400
 
         if not current_user.is_admin and to_update.user != current_user:
             return {'message': ('You must have either submitted form {} '
@@ -89,7 +89,7 @@ class Manage(Resource):
 
         to_delete = Form.find_by_id(del_req.id)
         if not to_delete:
-            return {'message': 'Form with id {} does not exist'.format(del_req.id)}, 400
+            return {'message': 'Form {} does not exist'.format(del_req.id)}, 400
 
         if not current_user.is_admin and to_delete.user != current_user:
             return {'message': ('You must have either submitted form {} '
@@ -124,7 +124,7 @@ class Resolution(Resource):
 
         to_resolve = Form.find_by_id(resolve_req.id)
         if not to_resolve:
-            return {'message': 'Form with id {} does not exist'.format(resolve_req.id)}, 400
+            return {'message': 'Form {} does not exist'.format(resolve_req.id)}, 400
 
         if to_resolve.resolved_at != None:
             return {'message': 'Form {} is already resolved'.format(to_resolve.id)}, 400
@@ -143,6 +143,9 @@ def init_app(app):
             return render_template('422.html', message=message), 422
 
         to_resolve = Form.find_by_id(resolve_params['form_id'])
+        if not to_resolve:
+            return render_template('400.html', message='Form {} does not exist. It may have been deleted.'.format(resolve_params['form_id'])), 400
+
         if to_resolve.resolved_at != None:
             return render_template('400.html', message='Form {} has already been resolved.'.format(to_resolve.id)), 400
 
