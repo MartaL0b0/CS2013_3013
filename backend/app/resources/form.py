@@ -68,6 +68,9 @@ class Manage(Resource):
         if not to_update:
             return {'message': 'Form {} does not exist'.format(update_req.id)}, 400
 
+        if to_update.resolved_at != None:
+            return {'message': 'Form {} has been resolved, it can no longer be edited'.format(to_update.id)}, 400
+
         if not current_user.is_admin and to_update.user != current_user:
             return {'message': ('You must have either submitted form {} '
                     'or be an admin to update it').format(to_delete.id)}, 401
