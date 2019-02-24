@@ -1,4 +1,4 @@
-from flask import request, current_app, render_template
+from flask import request, current_app, render_template, jsonify
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, current_user
 import flask_emails as mail
@@ -6,6 +6,13 @@ import flask_emails as mail
 from models import *
 from . import json_required
 from .auth import admin_required
+
+def get_resolve_link(username, form_id):
+    # Create a token the admin can use to mark the form as resolved
+    # This can be validated by its signature
+    resolve_info = UIResolve(username=username, form_id=form_id)
+    token = ui_resolve_schema.dump(resolve_info).data
+    return '{}/resolve?token={}'.format(current_app.config['PUBLIC_URL'], token)
 
 class Manage(Resource):
     # GET -> Return the list of forms
@@ -35,11 +42,7 @@ class Manage(Resource):
         db.session.commit()
 
         for admin in User.query.filter(User.is_admin == True):
-            # Create a token the admin can use to mark the form as resolved
-            # This can be validated by its signature
-            resolve_info = UIResolve(username=admin.username, form_id=new_form.id)
-            token = ui_resolve_schema.dump(resolve_info).data
-            resolve_link = '{}/resolve?token={}'.format(current_app.config['PUBLIC_URL'], token)
+            resolve_link = get_resolve_link(admin.username, new_form.id)
 
             notification = mail.Message(
                     mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
@@ -64,7 +67,6 @@ class Manage(Resource):
             return err.messages, 422
 
         to_update = Form.find_by_id(update_req.id)
-        old = full_form_schema.jsonify(to_update)
         if not to_update:
             return {'message': 'Form {} does not exist'.format(update_req.id)}, 400
 
@@ -75,9 +77,29 @@ class Manage(Resource):
             return {'message': ('You must have either submitted form {} '
                     'or be an admin to update it').format(to_delete.id)}, 401
 
+        to_update.get_changes()
+        old_res = full_form_schema.jsonify(to_update)
         db.session.merge(update_req)
+        changed, new, old = to_update.get_changes()
         db.session.commit()
-        return old
+
+        # We should notify admins _only_ when a form has changed
+        if len(changed) == 0:
+            return None, 204
+
+        for admin in User.query.filter(User.is_admin == True):
+            resolve_link = get_resolve_link(admin.username, to_update.id)
+
+            notification = mail.Message(
+                    mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+                    subject='Form no. {}'.format(to_update.id),
+                    text=render_template('edited_form.txt', form=to_update, changed=changed, old=old, new=new, admin=admin, editor=current_user, resolve_link=resolve_link),
+                    html=render_template('edited_form.html', form=to_update, changed=changed, old=old, new=new, admin=admin, editor=current_user, resolve_link=resolve_link),
+                    )
+            notification.config.smtp_options['fail_silently'] = False
+            notification.send(to=(admin.full_name, admin.email))
+
+        return old_res
 
     # DELETE -> Remove a form from the database (by its ID)
     @json_required

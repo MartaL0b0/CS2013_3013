@@ -8,4 +8,4 @@ Here are the details:
  - Amount: €{{ form.amount }}
  - Receipt number: {{ form.receipt }}
 
-You can click <a href="{{ resolve_link }}">here</a> to mark this form as resolved.</p>
+You can click the following link to mark this form as resolved: {{ resolve_link }}

@@ -3,6 +3,7 @@ from enum import Enum
 
 from passlib.hash import pbkdf2_sha256 as sha256
 from email_validator import validate_email, EmailNotValidError, EmailUndeliverableError
+import sqlalchemy
 import marshmallow
 from marshmallow import ValidationError
 from marshmallow_sqlalchemy import field_for
@@ -66,12 +67,12 @@ class RevokedToken(db.Model):
         query = cls.query.filter_by(jti=jti).first()
         return bool(query)
 
+
+class PaymentType(Enum):
+    cash = 1
+    cheque = 2
 class Form(db.Model):
     __tablename__ = 'forms'
-
-    class PaymentType(Enum):
-        cash = 1
-        cheque = 2
 
     id = db.Column(db.Integer, primary_key=True)
     submitter = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -86,6 +87,29 @@ class Form(db.Model):
     @classmethod
     def find_by_id(cls, id):
         return cls.query.get(id)
+
+    def get_changes(self):
+        # Find what has changed in this object's history
+        changed = set()
+        old = Form()
+        new = Form()
+        for attr in sqlalchemy.inspect(self).attrs:
+            if attr.history.has_changes():
+                # Enum processing is done later in SQLAlchemy later apparently...
+                if attr.key == 'payment_method':
+                    if attr.history.deleted[0].name == attr.history.added[0]:
+                        continue
+
+                    changed.add(attr.key)
+                    old.payment_method = attr.history.deleted[0]
+                    new.payment_method = PaymentType[attr.history.added[0]]
+                    continue
+
+                changed.add(attr.key)
+                old.__dict__[attr.key] = attr.history.deleted[0]
+                new.__dict__[attr.key] = attr.history.added[0]
+
+        return changed, new, old
 
 class RevokedTokenSchema(validation.ModelSchema):
     class Meta:
