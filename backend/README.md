@@ -13,6 +13,13 @@ MYSQL_PASSWORD=hunter2
 MYSQL_DATABASE=briefthreat
 FLASK_ENV=development
 FLASK_SECRET=thisshouldbesecret
+PUBLIC_URL=https://localhost
+ROOT_EMAIL=test@example.com
+EMAIL_NAME=BriefThreat
+EMAIL_FROM=briefthreat@example.com
+SMTP_HOST=mail.example.com
+SMTP_USER=test
+SMTP_PASSWORD=hunter2
 JWT_SECRET=thisshouldalsobesecret
 JWT_ACCESS_EXPIRY=900
 JWT_REFRESH_EXPIRY=2592000
@@ -32,7 +39,8 @@ SSL_CERTS=./ssl
 Note that the filenames must be `key.pem` for the private key and `certificate.crt` for the certificate.
 - The `JWT_*_EXPIRY` variables set how long the JWT access and refresh tokens should be valid for (in seconds)
 - `REGISTRATION_WINDOW` configures how old unapproved registrations must be before being removed (in seconds). This behaviour only occurs when a `DELETE` request reaches `/api/v1/auth/register`, which happens periodically in production.
-- The format for th `RATELIMIT_*` options can be found in the [documentation for `flask-limiter`](https://flask-limiter.readthedocs.io/en/stable/#rate-limit-string-notation)
+- The format for the `RATELIMIT_*` options can be found in the [documentation for `flask-limiter`](https://flask-limiter.readthedocs.io/en/stable/#rate-limit-string-notation)
+- `EMAIL_NAME` and `EMAIL_FROM` set the _metadata_ which is placed in the email header; these have no bearing on the SMTP connection
 
 To start the app, just run `docker-compose up`. Hit CTRL+C to shut it down.
 

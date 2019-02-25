@@ -11,6 +11,13 @@ services:
         environment:
             - FLASK_ENV=${FLASK_ENV}
             - FLASK_SECRET=${FLASK_SECRET}
+            - PUBLIC_URL=${PUBLIC_URL}
+            - ROOT_EMAIL=${ROOT_EMAIL}
+            - EMAIL_NAME=${EMAIL_NAME}
+            - EMAIL_FROM=${EMAIL_FROM}
+            - SMTP_HOST=${SMTP_HOST}
+            - SMTP_USER=${SMTP_USER}
+            - SMTP_PASSWORD=${SMTP_PASSWORD}
             - JWT_SECRET=${JWT_SECRET}
             - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY}
             - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY}

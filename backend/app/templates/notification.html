@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Form resolved{% endblock %}
+{% block content %}
+<p>Hi {{ form.user.first_name }},</p>
+<p>Your form (no. {{ form.id }}) has been marked as resolved.</p>
+<p>Here are the details:</p>
+<ul>
+	<li>Course: {{ form.course }}</li>
+	<li>Time: {{ form.time.strftime('%A %d %B at %H:%M (UTC)') }}</li>
+	<li>Payment method: {{ form.payment_method.name.capitalize() }}</li>
+	<li>Amount: &euro;{{ form.amount }}</li>
+	<li>Receipt number: {{ form.receipt }}</li>
+</ul>
+{% endblock %}

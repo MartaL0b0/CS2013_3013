@@ -7,7 +7,8 @@ from flask import Flask, request, jsonify, render_template
 from flask_restful import Api
 from healthcheck import HealthCheck
 
-from resources import limiter, auth
+from resources import limiter, auth, form
+import models
 from models import db, validation, User, full_user_schema
 
 app = Flask(__name__)
@@ -24,6 +25,16 @@ app.config.update({
         database = environ['MYSQL_DATABASE']
     ),
     'SECRET_KEY': environ['FLASK_SECRET'],
+    'PUBLIC_URL': environ['PUBLIC_URL'],
+    'ROOT_EMAIL': environ['ROOT_EMAIL'],
+    'EMAIL_NAME': environ['EMAIL_NAME'],
+    'EMAIL_FROM': environ['EMAIL_FROM'],
+    'EMAIL_HOST': environ['SMTP_HOST'],
+    'EMAIL_PORT': 587,
+    'EMAIL_HOST_USER': environ['SMTP_USER'],
+    'EMAIL_HOST_PASSWORD': environ['SMTP_PASSWORD'],
+    'EMAIL_USE_TLS': True,
+    'EMAIL_TIMEOUT': 5,
     'JWT_SECRET_KEY': environ['JWT_SECRET'],
     'JWT_BLACKLIST_ENABLED': True,
     'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
@@ -45,7 +56,7 @@ def not_found(e):
     return render_template('404.html'), 404
 
 api = Api(app, prefix='/api/v1')
-db.init_app(app)
+models.init_app(app)
 auth.jwt.init_app(app)
 validation.init_app(app)
 limiter.init_app(app)
@@ -61,6 +72,11 @@ api.add_resource(auth.Login, '/auth/login')
 api.add_resource(auth.Token, '/auth/token')
 api.add_resource(auth.Access, '/auth/access')
 api.add_resource(auth.Cleanup, '/auth/cleanup')
+api.add_resource(form.Manage, '/form')
+api.add_resource(form.Resolution, '/form/resolve')
+
+# UI routes
+form.init_app(app)
 
 @app.before_first_request
 def create_tables():
@@ -74,6 +90,8 @@ def create_tables():
         password = passlib.pwd.genword(entropy=256)
         full_user_schema.load({
             'username': 'root',
+            'email': app.config['ROOT_EMAIL'],
+            'first_name': 'Administrator',
             'password': password,
             'registration_time': datetime.utcnow(),
             'is_approved': True,

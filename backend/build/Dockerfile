@@ -1,8 +1,9 @@
 FROM python:3-alpine
 
 COPY requirements.txt /opt/
-RUN apk --no-cache add curl && \
+RUN apk --no-cache add curl libxml2 libxml2-dev libxslt libxslt-dev gcc musl-dev && \
 	pip install -r /opt/requirements.txt && \
+	apk del gcc musl-dev libxml2-dev libxslt-dev && \
 	mkdir /opt/app
 
 COPY app.sh /opt/
