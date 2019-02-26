@@ -6,8 +6,7 @@ import 'Verification.dart';
 import 'globals.dart' as globals;
 import 'Tokens/TokenProcessor.dart';
 import 'Requests.dart';
-import 'Tokens/models/AccessToken.dart';
-import 'main.dart';
+import 'SnackBarController.dart';
 
 class FormScreen extends StatefulWidget {
   @override
@@ -31,12 +30,13 @@ class _FormScreen extends State<FormScreen> {
   String _currentPaymentMethod = "cash"; 
 
   // controllers and variables for the inputs 
-  final TextEditingController _userNameController = new TextEditingController();
+  final TextEditingController _userNameController = new TextEditingController(text: "hh");
   final TextEditingController _repNameController = new TextEditingController(text: globals.username);
-  final TextEditingController _courseController = new TextEditingController();
-  final TextEditingController _amountController = new TextEditingController();
-  final TextEditingController _receiptController = new TextEditingController();
-  
+  final TextEditingController _courseController = new TextEditingController(text: "ee");
+  final TextEditingController _amountController = new TextEditingController(text: "11");
+  final TextEditingController _receiptController = new TextEditingController(text: "121");
+  final TextEditingController _dateController = new TextEditingController();
+
   String _user = "";
   String _repName = "";
   String _course = "";
@@ -94,6 +94,7 @@ class _FormScreen extends State<FormScreen> {
                       inputType: inputType,
                       format: formats[inputType],
                       editable: false,
+                      controller: _dateController,
                       decoration: InputDecoration(
                         labelText: 'Date/Time', hasFloatingPlaceholder: false),
                         onChanged: (dt) => setState(() => _date = dt),
@@ -185,18 +186,48 @@ class _FormScreen extends State<FormScreen> {
   }
 
   void handleSubmitForm(String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
-    // !await TokenParser.checkTokens()
-    if (true) {
-      // an error occured with the tokens
-      Navigator.popAndPushNamed(context, '/Login');
+    if (!await TokenParser.checkTokens()) {
+      // an error occured with the tokens, means the user no longer has valid tokens 
+      // redirect to login page
+      Navigator.pop(context);
       return;
     }
 
-    bool val = await Requests.postForm(globals.access_token, user, repName, course, amount, receipt, date, paymentMethod);
-    if (val) {
-      print("request success");
-    } else {
-      print("failed");
-    }
-    }
+    int isRequestSend = await Requests.postForm(globals.access_token, user, repName, course, amount, receipt, date, paymentMethod);
+    if (isRequestSend == 0) {
+      SnackBarController.showSnackBarErrorMessage(_formKey, "An error occured. Please try again later.");
+      return;
+    } 
+    
+    // success, clear the fields & show message 
+    _showDialog();
+    _userNameController.clear();
+    _repNameController.clear();
+    _courseController.clear();
+    _amountController.clear();
+    _receiptController.clear();
+    _dateController.clear();
+    setState(() => _date = null);
+  }
+
+  void _showDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Success"),
+          content: new Text("The form has been sent successfully!"),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

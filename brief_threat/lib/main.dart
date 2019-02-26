@@ -33,9 +33,9 @@ class _LoginPageState extends State<LoginPage> {
   String _password = "";
   var hidePassword = true;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
-    final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
     return Scaffold(
       key: _scaffoldKey,
         body: SafeArea(
@@ -119,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                         _passwordController.clear();
 
                         // redirect to new page
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/Form');
                       },
                     )
                   ],
