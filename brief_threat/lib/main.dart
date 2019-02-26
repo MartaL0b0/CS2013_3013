@@ -6,11 +6,17 @@ import 'Verification.dart';
 import 'Requests.dart';
 import 'dart:async';
 import 'RequestAccess.dart';
+import 'globals.dart' as globals;
 
 void main() {
   runApp(MaterialApp(
       title: 'Form app',
       home: LoginPage(),
+      routes: <String, WidgetBuilder> {
+        '/Login': (BuildContext context) => new LoginPage(),
+        '/Form' : (BuildContext context) => new FormScreen(),
+        '/RequestAccess' : (BuildContext context) => new RequestAccess(),
+      },
     ));
 }
 
@@ -107,11 +113,12 @@ class _LoginPageState extends State<LoginPage> {
                         if(!status) {
                           return;
                         }
+
+                        _userNameController.clear();
+                        _passwordController.clear();
+
                         // redirect to new page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => FormScreen()),
-                        );
+                        Navigator.pushNamed(context, '/RequestAccess');
                       },
                     )
                   ],
@@ -123,11 +130,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: Text('Request Access'),
                       onPressed: () async {
                         // redirect to new page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => RequestAccess()),
-                        );
-
+                        Navigator.pushNamed(context, '/Form');
                       },
                     )
                   ],
@@ -154,8 +157,11 @@ class _LoginPageState extends State<LoginPage> {
       SnackBarController.showSnackBarErrorMessage(key, "Incorrect username or password. Please try again");
       return false;
     } 
-
+    globals.access_token = token.accessToken.accessToken;
+    globals.refresh_token = token.refreshToken;
+    globals.username = user;
     // successful login 
+    print(globals.username);
     key.currentState.hideCurrentSnackBar();
     return true;
   }

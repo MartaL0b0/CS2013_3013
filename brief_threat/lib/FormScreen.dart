@@ -3,6 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'SnackBarController.dart';
 import 'Verification.dart';
+import 'globals.dart' as globals;
+import 'Tokens/TokenProcessor.dart';
+import 'Requests.dart';
+import 'Tokens/models/AccessToken.dart';
+import 'main.dart';
 
 class FormScreen extends StatefulWidget {
   @override
@@ -23,15 +28,15 @@ class _FormScreen extends State<FormScreen> {
 
   bool _radioValue = false;
   //default value for the radio button
-  String _currentPaymentMethod = "CASH"; 
+  String _currentPaymentMethod = "cash"; 
 
   // controllers and variables for the inputs 
   final TextEditingController _userNameController = new TextEditingController();
-  final TextEditingController _repNameController = new TextEditingController();
+  final TextEditingController _repNameController = new TextEditingController(text: globals.username);
   final TextEditingController _courseController = new TextEditingController();
   final TextEditingController _amountController = new TextEditingController();
   final TextEditingController _receiptController = new TextEditingController();
-
+  
   String _user = "";
   String _repName = "";
   String _course = "";
@@ -156,10 +161,8 @@ class _FormScreen extends State<FormScreen> {
                             SnackBarController.showSnackBarErrorMessage(_scaffoldKey, printErrorMessage);
                             return;
                           }
-                          if (_receipt.isEmpty) {
-                            print("receipt is empty");
-                          }
-                          print("date : $_date, username : $_user, rep name : $_repName, course : $_course, method : $_currentPaymentMethod, amount : $_amountValue, receipt no : $_receipt");
+                          
+                          handleSubmitForm(_user, _repName, _course, _amountValue, _receipt, _date, _currentPaymentMethod);
                         },
                       )
                     ],
@@ -171,11 +174,36 @@ class _FormScreen extends State<FormScreen> {
       )
     );
   }
-
   void _handleRadioChange(bool value) {
     setState(() {
       _radioValue = value;
-      _currentPaymentMethod = (_radioValue ? "CHEQUE" : "CASH");
+      _currentPaymentMethod = (_radioValue ? "cheque" : "cash");
     });
   }
+
+  void handleSubmitForm(String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
+    if (!await TokenParser.checkTokens()) {
+      // an error occured with the tokens
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    }
+
+    /*if (!TokenParser.validateToken(globals.access_token)) {
+      AccessToken access = await Requests.generateAccessToken(globals.access_token);
+      if (access == null) {
+        // error when generating the access token handle that
+        return;
+      }
+
+      globals.access_token = access.accessToken;
+      */
+      bool val = await Requests.postForm(globals.access_token, user, repName, course, amount, receipt, date, paymentMethod);
+      if (val) {
+        print("request success");
+      } else {
+        print("failed");
+      }
+    }
 }
