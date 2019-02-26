@@ -35,6 +35,7 @@ class Requests {
   }  
 
   static Future<bool> postForm(String accessToken, String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
+    return true;
     String dataAsJson =jsonEncode({
       "customer_name" : user,   
       "course" : course,
@@ -49,9 +50,8 @@ class Requests {
       headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"},
       body: dataAsJson);
 
-    print("hello");
     if (response.statusCode == 200) {
-      // success, return access token from JSON
+      // success
       return true;
     } 
 

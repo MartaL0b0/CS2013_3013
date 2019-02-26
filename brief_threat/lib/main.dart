@@ -98,15 +98,16 @@ class _LoginPageState extends State<LoginPage> {
 
                         // show loading snack bar, close any previous snackbar before showing new one
                          _scaffoldKey.currentState.hideCurrentSnackBar();
-                          _scaffoldKey.currentState.showSnackBar(
-                              new SnackBar(
-                                content: new Row(
-                                children: <Widget>[
-                                  new CircularProgressIndicator(),
-                                  new Text("  Signing-In...")
-                                ],
-                              ),
-                              ));
+                        _scaffoldKey.currentState.showSnackBar(
+                            new SnackBar(
+                              content: new Row(
+                              children: <Widget>[
+                                new CircularProgressIndicator(),
+                                new Text("  Signing-In...")
+                              ],
+                            ),
+                          )
+                        );
                         bool status = await _loginPressed(_user, _password, _scaffoldKey);
                         
                         // don't redirect if login failed
@@ -118,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                         _passwordController.clear();
 
                         // redirect to new page
-                        Navigator.pushNamed(context, '/Form');
+                        Navigator.pop(context);
                       },
                     )
                   ],

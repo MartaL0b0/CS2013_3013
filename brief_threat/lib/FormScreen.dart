@@ -43,14 +43,14 @@ class _FormScreen extends State<FormScreen> {
   String _amount = "";
   String _receipt = "";
 
-  static final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  static final GlobalKey<ScaffoldState> _formKey = new GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return new WillPopScope(
       onWillPop: () => Future.value(false),
       child: Scaffold(
-        key: _scaffoldKey,
+        key: _formKey,
         appBar: AppBar(
           title: Text('Transaction Details'),
             automaticallyImplyLeading: false
@@ -160,7 +160,7 @@ class _FormScreen extends State<FormScreen> {
 
                             String printErrorMessage = Verification.validateFormSubmission(_user, _repName, _course, _amount, _amountValue, _receipt, _date);
                             if (printErrorMessage != null) {
-                              SnackBarController.showSnackBarErrorMessage(_scaffoldKey, printErrorMessage);
+                              SnackBarController.showSnackBarErrorMessage(_formKey, printErrorMessage);
                               return;
                             }
                             
@@ -185,28 +185,18 @@ class _FormScreen extends State<FormScreen> {
   }
 
   void handleSubmitForm(String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
-    if (!await TokenParser.checkTokens()) {
+    // !await TokenParser.checkTokens()
+    if (true) {
       // an error occured with the tokens
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
+      Navigator.popAndPushNamed(context, '/Login');
+      return;
     }
 
-    /*if (!TokenParser.validateToken(globals.access_token)) {
-      AccessToken access = await Requests.generateAccessToken(globals.access_token);
-      if (access == null) {
-        // error when generating the access token handle that
-        return;
-      }
-
-      globals.access_token = access.accessToken;
-      */
-      bool val = await Requests.postForm(globals.access_token, user, repName, course, amount, receipt, date, paymentMethod);
-      if (val) {
-        print("request success");
-      } else {
-        print("failed");
-      }
+    bool val = await Requests.postForm(globals.access_token, user, repName, course, amount, receipt, date, paymentMethod);
+    if (val) {
+      print("request success");
+    } else {
+      print("failed");
+    }
     }
 }
