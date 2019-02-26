@@ -23,7 +23,7 @@ class TokenParser {
     else if(!validateToken(globals.access_token)) {
       // generate new one
       AccessToken token = await Requests.generateAccessToken(globals.refresh_token);
-      print("token");
+
       if (token == null) {
         // an error occured when making a call to regenerate an access token, how should we handle this ?
         // currently the user is sent back to login
