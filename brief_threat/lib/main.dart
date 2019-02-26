@@ -7,7 +7,7 @@ import 'Requests.dart';
 import 'dart:async';
 import 'RequestAccess.dart';
 import 'globals.dart' as globals;
-import 'Tokens/TokenProcessor.dart';
+
 void main() {
   runApp(MaterialApp(
       title: 'Form app',
@@ -161,8 +161,8 @@ class _LoginPageState extends State<LoginPage> {
     globals.access_token = token.accessToken.accessToken;
     globals.refresh_token = token.refreshToken;
     globals.username = user;
+    
     // successful login 
-    print(globals.username);
     key.currentState.hideCurrentSnackBar();
     return true;
   }
