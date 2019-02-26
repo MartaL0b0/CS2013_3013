@@ -59,7 +59,7 @@ class _FormScreen extends State<FormScreen> {
                   TextField(
                     cursorColor: Colors.white,
                     decoration: InputDecoration(
-                      labelText: "Username",
+                      labelText: "Customer Name",
                       filled: true,
                     ),
                     controller: _userNameController,
