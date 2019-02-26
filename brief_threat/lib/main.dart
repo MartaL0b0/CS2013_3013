@@ -161,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
     globals.access_token = token.accessToken.accessToken;
     globals.refresh_token = token.refreshToken;
     globals.username = user;
-    
+
     // successful login 
     key.currentState.hideCurrentSnackBar();
     return true;
