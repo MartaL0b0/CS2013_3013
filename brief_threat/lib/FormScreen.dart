@@ -47,130 +47,133 @@ class _FormScreen extends State<FormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: Text('Transaction Details'),
-          automaticallyImplyLeading: false
-      ),
-      body: SafeArea(
-          child: ListView(
-            padding: EdgeInsets.symmetric(horizontal: 24.0),
-            children: <Widget>[
-              SizedBox(height: 12.0),
-              Column(
-                children: <Widget>[
-                  SizedBox(height: 30.0),
-                  TextField(
-                    cursorColor: Colors.white,
-                    decoration: InputDecoration(
-                      labelText: "Customer Username",
-                      filled: true,
-                    ),
-                    controller: _userNameController,
-                  ),
-                  SizedBox(height: 12.0),
-                  TextField(
-                    cursorColor: Colors.white,
-                    decoration: InputDecoration(
-                      labelText: "Rep Name",
-                      filled: true,
-                    ),
-                    controller: _repNameController,
-                  ),
-                  SizedBox(height: 12.0),       
-                  TextField(
-                    cursorColor: Colors.white,
-                    decoration: InputDecoration(
-                      labelText: "Course",
-                      filled: true,
-                    ),
-                    controller: _courseController,
-                  ),
-                  SizedBox(height: 12.0),
-                  DateTimePickerFormField(
-                    inputType: inputType,
-                    format: formats[inputType],
-                    editable: false,
-                    decoration: InputDecoration(
-                      labelText: 'Date/Time', hasFloatingPlaceholder: false),
-                      onChanged: (dt) => setState(() => _date = dt),
-                  ),
-                  SizedBox(height: 12.0),
-                  Text("Payment Method: "),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      new Radio(
-                        value: false,
-                        groupValue: _radioValue,
-                        onChanged: _handleRadioChange,
+    return new WillPopScope(
+      onWillPop: () => Future.value(false),
+      child: Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(
+          title: Text('Transaction Details'),
+            automaticallyImplyLeading: false
+        ),
+        body: SafeArea(
+            child: ListView(
+              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              children: <Widget>[
+                SizedBox(height: 12.0),
+                Column(
+                  children: <Widget>[
+                    SizedBox(height: 30.0),
+                    TextField(
+                      cursorColor: Colors.white,
+                      decoration: InputDecoration(
+                        labelText: "Customer Username",
+                        filled: true,
                       ),
-                      new Text(
-                        'Cash',
-                        style: new TextStyle(fontSize: 16.0),
+                      controller: _userNameController,
+                    ),
+                    SizedBox(height: 12.0),
+                    TextField(
+                      cursorColor: Colors.white,
+                      decoration: InputDecoration(
+                        labelText: "Rep Name",
+                        filled: true,
                       ),
-                      new Radio(
-                        value: true,
-                        groupValue: _radioValue,
-                        onChanged: _handleRadioChange,
+                      controller: _repNameController,
+                    ),
+                    SizedBox(height: 12.0),       
+                    TextField(
+                      cursorColor: Colors.white,
+                      decoration: InputDecoration(
+                        labelText: "Course",
+                        filled: true,
                       ),
-                      new Text(
-                        'Cheque',
-                        style: new TextStyle(
-                          fontSize: 16.0,
+                      controller: _courseController,
+                    ),
+                    SizedBox(height: 12.0),
+                    DateTimePickerFormField(
+                      inputType: inputType,
+                      format: formats[inputType],
+                      editable: false,
+                      decoration: InputDecoration(
+                        labelText: 'Date/Time', hasFloatingPlaceholder: false),
+                        onChanged: (dt) => setState(() => _date = dt),
+                    ),
+                    SizedBox(height: 12.0),
+                    Text("Payment Method: "),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        new Radio(
+                          value: false,
+                          groupValue: _radioValue,
+                          onChanged: _handleRadioChange,
                         ),
+                        new Text(
+                          'Cash',
+                          style: new TextStyle(fontSize: 16.0),
+                        ),
+                        new Radio(
+                          value: true,
+                          groupValue: _radioValue,
+                          onChanged: _handleRadioChange,
+                        ),
+                        new Text(
+                          'Cheque',
+                          style: new TextStyle(
+                            fontSize: 16.0,
+                          ),
+                        ),
+                      ]
+                    ),
+                    SizedBox(height: 12.0),
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      cursorColor: Colors.white,
+                      decoration: InputDecoration(
+                        labelText: "Amount",
+                        filled: true,
+                        prefixText: '€',
                       ),
-                    ]
-                  ),
-                  SizedBox(height: 12.0),
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    cursorColor: Colors.white,
-                    decoration: InputDecoration(
-                      labelText: "Amount",
-                      filled: true,
-                      prefixText: '€',
+                      controller: _amountController,
                     ),
-                    controller: _amountController,
-                  ),
-                  SizedBox(height: 12.0),
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    cursorColor: Colors.white,
-                    decoration: InputDecoration(
-                      labelText: "Receipt No",
-                      filled: true,
+                    SizedBox(height: 12.0),
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      cursorColor: Colors.white,
+                      decoration: InputDecoration(
+                        labelText: "Receipt No",
+                        filled: true,
+                      ),
+                      controller: _receiptController,
                     ),
-                    controller: _receiptController,
-                  ),
-                  ButtonBar(
-                    children: <Widget>[
-                      FlatButton(
-                        child: Text('SUBMIT'),
-                        onPressed: () async {
-                          _user =_userNameController.text.trim();
-                          _repName =_repNameController.text.trim();
-                          _course =_courseController.text.trim();
-                          _amount =_amountController.text.trim();
-                          _receipt =_receiptController.text.trim();
-                          double _amountValue = Verification.checkForMoneyAmountInput(_amount);
+                    ButtonBar(
+                      children: <Widget>[
+                        FlatButton(
+                          child: Text('SUBMIT'),
+                          onPressed: () async {
+                            _user =_userNameController.text.trim();
+                            _repName =_repNameController.text.trim();
+                            _course =_courseController.text.trim();
+                            _amount =_amountController.text.trim();
+                            _receipt =_receiptController.text.trim();
+                            double _amountValue = Verification.checkForMoneyAmountInput(_amount);
 
-                          String printErrorMessage = Verification.validateFormSubmission(_user, _repName, _course, _amount, _amountValue, _receipt, _date);
-                          if (printErrorMessage != null) {
-                            SnackBarController.showSnackBarErrorMessage(_scaffoldKey, printErrorMessage);
-                            return;
-                          }
-                          
-                          handleSubmitForm(_user, _repName, _course, _amountValue, _receipt, _date, _currentPaymentMethod);
-                        },
-                      )
-                    ],
-                  )
-                ],
-              ),
-            ],
-          )
+                            String printErrorMessage = Verification.validateFormSubmission(_user, _repName, _course, _amount, _amountValue, _receipt, _date);
+                            if (printErrorMessage != null) {
+                              SnackBarController.showSnackBarErrorMessage(_scaffoldKey, printErrorMessage);
+                              return;
+                            }
+                            
+                            handleSubmitForm(_user, _repName, _course, _amountValue, _receipt, _date, _currentPaymentMethod);
+                          },
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              ],
+            )
+        )
       )
     );
   }

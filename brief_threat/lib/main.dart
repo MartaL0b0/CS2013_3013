@@ -118,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
                         _passwordController.clear();
 
                         // redirect to new page
-                        Navigator.pushNamed(context, '/RequestAccess');
+                        Navigator.pushNamed(context, '/Form');
                       },
                     )
                   ],
@@ -130,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: Text('Request Access'),
                       onPressed: () async {
                         // redirect to new page
-                        Navigator.pushNamed(context, '/Form');
+                        Navigator.pushNamed(context, '/RequestAccess');
                       },
                     )
                   ],
