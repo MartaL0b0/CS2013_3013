@@ -116,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                     )
                   ],
                 ),
-                SizedBox(height: 150.0), //spacer
+                SizedBox(height: 90.0), //spacer
                 ButtonBar(
                   children: <Widget>[
                     FlatButton(
