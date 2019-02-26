@@ -49,7 +49,6 @@ class Requests {
       headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"},
       body: dataAsJson);
 
-    print("haha");
     if (response.statusCode == 200) {
       // success, return id
       return jsonDecode(response.body)['id'];

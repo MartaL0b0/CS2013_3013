@@ -30,11 +30,11 @@ class _FormScreen extends State<FormScreen> {
   String _currentPaymentMethod = "cash"; 
 
   // controllers and variables for the inputs 
-  final TextEditingController _userNameController = new TextEditingController(text: "hh");
+  final TextEditingController _userNameController = new TextEditingController();
   final TextEditingController _repNameController = new TextEditingController(text: globals.username);
-  final TextEditingController _courseController = new TextEditingController(text: "ee");
-  final TextEditingController _amountController = new TextEditingController(text: "11");
-  final TextEditingController _receiptController = new TextEditingController(text: "121");
+  final TextEditingController _courseController = new TextEditingController();
+  final TextEditingController _amountController = new TextEditingController();
+  final TextEditingController _receiptController = new TextEditingController();
   final TextEditingController _dateController = new TextEditingController();
 
   String _user = "";
@@ -164,7 +164,6 @@ class _FormScreen extends State<FormScreen> {
                               SnackBarController.showSnackBarErrorMessage(_formKey, printErrorMessage);
                               return;
                             }
-                            
                             handleSubmitForm(_user, _repName, _course, _amountValue, _receipt, _date, _currentPaymentMethod);
                           },
                         )
@@ -193,14 +192,14 @@ class _FormScreen extends State<FormScreen> {
       return;
     }
 
-    int isRequestSend = await Requests.postForm(globals.access_token, user, repName, course, amount, receipt, date, paymentMethod);
-    if (isRequestSend == 0) {
+    int requestId = await Requests.postForm(globals.access_token, user, repName, course, amount, receipt, date, paymentMethod);
+    if (requestId == 0) {
       SnackBarController.showSnackBarErrorMessage(_formKey, "An error occured. Please try again later.");
       return;
     } 
     
     // success, clear the fields & show message 
-    _showDialog();
+    _showDialog(requestId);
     _userNameController.clear();
     _repNameController.clear();
     _courseController.clear();
@@ -210,14 +209,14 @@ class _FormScreen extends State<FormScreen> {
     setState(() => _date = null);
   }
 
-  void _showDialog() {
+  void _showDialog(int id) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         // return object of type Dialog
         return AlertDialog(
           title: new Text("Success"),
-          content: new Text("The form has been sent successfully!"),
+          content: new Text("The form has been sent successfully! id: $id"),
           actions: <Widget>[
             new FlatButton(
               child: new Text("Close"),

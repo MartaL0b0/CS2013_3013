@@ -7,7 +7,7 @@ import 'Requests.dart';
 import 'dart:async';
 import 'RequestAccess.dart';
 import 'globals.dart' as globals;
-
+import 'Tokens/TokenProcessor.dart';
 void main() {
   runApp(MaterialApp(
       title: 'Form app',
@@ -143,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Toggles the password show status
-  void _toggleShowPassword() {
+  void _toggleShowPassword() async {
     setState(() {
       hidePassword = !hidePassword;
     });

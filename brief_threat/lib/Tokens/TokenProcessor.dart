@@ -17,14 +17,16 @@ class TokenParser {
 
   static Future<bool> checkTokens() async {
     if (!validateToken(globals.access_token) && !validateToken(globals.refresh_token)) {
-      // go to login
+      // both token not valid
       return false;
     }
     else if(!validateToken(globals.access_token)) {
       // generate new one
-      AccessToken token = await Requests.generateAccessToken(globals.access_token);
+      AccessToken token = await Requests.generateAccessToken(globals.refresh_token);
+      print("token");
       if (token == null) {
-        // an error occured, do something
+        // an error occured when making a call to regenerate an access token, how should we handle this ?
+        // currently the user is sent back to login
         return false;
       }
       globals.access_token = token.accessToken;
