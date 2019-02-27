@@ -30,6 +30,7 @@ services:
             - REGISTRATION_WINDOW=${REGISTRATION_WINDOW}
             - RATELIMIT_DEFAULT=${RATELIMIT_DEFAULT}
             - RATELIMIT_REGISTRATION=${RATELIMIT_REGISTRATION}
+            - CLEANUP_INTERVAL=${CLEANUP_INTERVAL}
         volumes:
             - ./app:/opt/app:ro
     redis:

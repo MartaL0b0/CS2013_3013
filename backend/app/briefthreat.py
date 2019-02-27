@@ -45,6 +45,8 @@ app.config.update({
     'REGISTRATION_WINDOW': int(environ['REGISTRATION_WINDOW']),
     'RATELIMIT_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
     'RATELIMIT_DEFAULT': environ['RATELIMIT_DEFAULT'],
+    'CLEANUP_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
+    'CLEANUP_INTERVAL': int(environ['CLEANUP_INTERVAL']),
     # We use Redis since there will be load balancing between workers in production,
     # so there must be synchronisation between them!
     # Database 0 is for ratelimiting
@@ -102,7 +104,6 @@ api.add_resource(auth.Registration, '/auth/register')
 api.add_resource(auth.Login, '/auth/login')
 api.add_resource(auth.Token, '/auth/token')
 api.add_resource(auth.Access, '/auth/access')
-api.add_resource(auth.Cleanup, '/auth/cleanup')
 api.add_resource(form.Manage, '/form')
 api.add_resource(form.Resolution, '/form/resolve')
 

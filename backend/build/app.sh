@@ -5,18 +5,16 @@
 export PYTHONUNBUFFERED=1
 
 # start the background tasks worker
-celery worker --workdir /opt/app --app briefthreat.celery &
+celery worker --workdir /opt/app --app briefthreat.celery --loglevel info &
+
+# start the periodic task scheduler
+rm -f /tmp/celerybeat.pid
+celery beat --workdir /opt/app --app briefthreat.celery --loglevel info --pidfile /tmp/celerybeat.pid --schedule /tmp/celerybeat-schedule &
 
 if [ "$FLASK_ENV" == "development" ]; then
 	# use flask debug server in development
 	exec python /opt/app/briefthreat.py
 else
 	# use gunicorn in production
-	gunicorn --workers $GUNICORN_WORKERS --bind :8080 --chdir /opt/app briefthreat:app &
-
-	# in production periodically clean up stale unapproved registrations
-	while true; do
-		sleep 120
-		curl -s -X DELETE http://localhost:8080/api/v1/auth/cleanup > /dev/null
-	done
+	exec gunicorn --workers $GUNICORN_WORKERS --bind :8080 --chdir /opt/app briefthreat:app
 fi
