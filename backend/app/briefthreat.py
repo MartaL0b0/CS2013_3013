@@ -95,7 +95,8 @@ def tasks_ok():
     failed = list(already_failed) + new_failed
     return not failed, {'succeeded': succeeded, 'failed': failed}
 
-health = HealthCheck(app, '/health')
+# Set up health check, don't cache results
+health = HealthCheck(app, '/health', success_ttl=None, failed_ttl=None)
 health.add_check(db_ok)
 health.add_check(tasks_ok)
 
