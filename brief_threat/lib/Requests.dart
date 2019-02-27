@@ -33,4 +33,28 @@ class Requests {
     // request failed
     return null;
   }  
+
+  static Future<int> postForm(String accessToken, String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
+    String dataAsJson =jsonEncode({
+      "customer_name" : user,   
+      "course" : course,
+      "payment_method" : paymentMethod.toLowerCase(),
+      "receipt" : receipt,
+      "time" : (date.millisecondsSinceEpoch / 1000).round(),
+      "amount" : amount
+      });
+
+    final response = await http.post(
+      'https://briefthreat.nul.ie//api/v1/form', 
+      headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"},
+      body: dataAsJson);
+
+    if (response.statusCode == 200) {
+      // success, return id
+      return jsonDecode(response.body)['id'];
+    } 
+
+    // request failed
+    return 0;
+  }  
 }

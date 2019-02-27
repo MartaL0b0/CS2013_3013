@@ -6,11 +6,17 @@ import 'Verification.dart';
 import 'Requests.dart';
 import 'dart:async';
 import 'RequestAccess.dart';
+import 'globals.dart' as globals;
 
 void main() {
   runApp(MaterialApp(
       title: 'Form app',
       home: LoginPage(),
+      routes: <String, WidgetBuilder> {
+        '/Login': (BuildContext context) => new LoginPage(),
+        '/Form' : (BuildContext context) => new FormScreen(),
+        '/RequestAccess' : (BuildContext context) => new RequestAccess(),
+      },
     ));
 }
 
@@ -27,9 +33,9 @@ class _LoginPageState extends State<LoginPage> {
   String _password = "";
   var hidePassword = true;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
-    final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
     return Scaffold(
       key: _scaffoldKey,
         body: SafeArea(
@@ -92,26 +98,28 @@ class _LoginPageState extends State<LoginPage> {
 
                         // show loading snack bar, close any previous snackbar before showing new one
                          _scaffoldKey.currentState.hideCurrentSnackBar();
-                          _scaffoldKey.currentState.showSnackBar(
-                              new SnackBar(
-                                content: new Row(
-                                children: <Widget>[
-                                  new CircularProgressIndicator(),
-                                  new Text("  Signing-In...")
-                                ],
-                              ),
-                              ));
+                        _scaffoldKey.currentState.showSnackBar(
+                            new SnackBar(
+                              content: new Row(
+                              children: <Widget>[
+                                new CircularProgressIndicator(),
+                                new Text("  Signing-In...")
+                              ],
+                            ),
+                          )
+                        );
                         bool status = await _loginPressed(_user, _password, _scaffoldKey);
                         
                         // don't redirect if login failed
                         if(!status) {
                           return;
                         }
+
+                        _userNameController.clear();
+                        _passwordController.clear();
+
                         // redirect to new page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => FormScreen()),
-                        );
+                        Navigator.pushNamed(context, '/Form');
                       },
                     )
                   ],
@@ -123,11 +131,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: Text('Request Access'),
                       onPressed: () async {
                         // redirect to new page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => RequestAccess()),
-                        );
-
+                        Navigator.pushNamed(context, '/RequestAccess');
                       },
                     )
                   ],
@@ -139,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Toggles the password show status
-  void _toggleShowPassword() {
+  void _toggleShowPassword() async {
     setState(() {
       hidePassword = !hidePassword;
     });
@@ -154,6 +158,9 @@ class _LoginPageState extends State<LoginPage> {
       SnackBarController.showSnackBarErrorMessage(key, "Incorrect username or password. Please try again");
       return false;
     } 
+    globals.access_token = token.accessToken.accessToken;
+    globals.refresh_token = token.refreshToken;
+    globals.username = user;
 
     // successful login 
     key.currentState.hideCurrentSnackBar();
