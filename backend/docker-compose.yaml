@@ -35,6 +35,8 @@ services:
     redis:
         image: redis:alpine
         restart: always
+        volumes:
+            - $REDIS_DATA:/data
     db:
         image: mariadb:latest
         restart: always

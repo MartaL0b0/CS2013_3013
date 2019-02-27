@@ -6,11 +6,12 @@ You'll need an up-to-date version of [Docker](https://docs.docker.com/install/) 
 
 Once you have that, create a `.env` file in this directory. This file contains configuration specific to your installation or development environment. Example:
 ```
-MYSQL_DATA=./data
+MYSQL_DATA=./data/mysql
 MYSQL_ROOT_PASSWORD=lolbadpw
 MYSQL_USER=briefthreat
 MYSQL_PASSWORD=hunter2
 MYSQL_DATABASE=briefthreat
+REDIS_DATA=./data/redis
 FLASK_ENV=development
 FLASK_SECRET=thisshouldbesecret
 PUBLIC_URL=https://localhost
