@@ -3,7 +3,9 @@ services:
     briefthreat:
         image: briefthreat/app
         restart: always
-        build: ./build
+        build:
+            context: ./build
+            dockerfile: Dockerfile.app
         init: true
         depends_on:
             - db

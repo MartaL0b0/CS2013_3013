@@ -4,6 +4,9 @@
 # python output buffering breaks stdout in docker
 export PYTHONUNBUFFERED=1
 
+# start the background tasks worker
+celery worker --workdir /opt/app --app briefthreat.celery &
+
 if [ "$FLASK_ENV" == "development" ]; then
 	# use flask debug server in development
 	exec python /opt/app/briefthreat.py

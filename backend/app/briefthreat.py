@@ -6,6 +6,7 @@ from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask, request, jsonify, render_template
 from healthcheck import HealthCheck
 
+import tasks
 from resources import Api, limiter, auth, form
 import models
 from models import db, validation, User, full_user_schema
@@ -42,9 +43,13 @@ app.config.update({
     'REGISTRATION_WINDOW': int(environ['REGISTRATION_WINDOW']),
     'RATELIMIT_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
     'RATELIMIT_DEFAULT': environ['RATELIMIT_DEFAULT'],
-    # We use redis since there will be load balancing between workers in production,
+    # We use Redis since there will be load balancing between workers in production,
     # so there must be synchronisation between them!
-    'RATELIMIT_STORAGE_URL': 'redis://redis:6379'
+    # Database 0 is for ratelimiting
+    'RATELIMIT_STORAGE_URL': 'redis://redis:6379/0',
+    # Database 1 is for background tasks
+    'CELERY_RESULT_BACKEND': 'redis://redis:6379/1',
+    'CELERY_BROKER_URL': 'redis://redis:6379/1',
 })
 
 @app.errorhandler(404)
@@ -59,6 +64,9 @@ models.init_app(app)
 auth.jwt.init_app(app)
 validation.init_app(app)
 limiter.init_app(app)
+tasks.init_app(app)
+
+from tasks import celery
 
 def db_ok():
     return User.query.count() >= 0, "database ok"
