@@ -7,7 +7,7 @@ services:
         init: true
         depends_on:
             - db
-            - memcache
+            - redis
         environment:
             - FLASK_ENV=${FLASK_ENV}
             - FLASK_SECRET=${FLASK_SECRET}
@@ -30,8 +30,8 @@ services:
             - RATELIMIT_REGISTRATION=${RATELIMIT_REGISTRATION}
         volumes:
             - ./app:/opt/app:ro
-    memcache:
-        image: memcached:alpine
+    redis:
+        image: redis:alpine
         restart: always
     db:
         image: mariadb:latest

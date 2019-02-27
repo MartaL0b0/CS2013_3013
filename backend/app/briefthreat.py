@@ -42,9 +42,9 @@ app.config.update({
     'REGISTRATION_WINDOW': int(environ['REGISTRATION_WINDOW']),
     'RATELIMIT_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
     'RATELIMIT_DEFAULT': environ['RATELIMIT_DEFAULT'],
-    # We use memcached since there will be load balancing between workers in production,
+    # We use redis since there will be load balancing between workers in production,
     # so there must be synchronisation between them!
-    'RATELIMIT_STORAGE_URL': 'memcached://memcache:11211'
+    'RATELIMIT_STORAGE_URL': 'redis://redis:6379'
 })
 
 @app.errorhandler(404)
