@@ -6,11 +6,12 @@ You'll need an up-to-date version of [Docker](https://docs.docker.com/install/) 
 
 Once you have that, create a `.env` file in this directory. This file contains configuration specific to your installation or development environment. Example:
 ```
-MYSQL_DATA=./data
+MYSQL_DATA=./data/mysql
 MYSQL_ROOT_PASSWORD=lolbadpw
 MYSQL_USER=briefthreat
 MYSQL_PASSWORD=hunter2
 MYSQL_DATABASE=briefthreat
+REDIS_DATA=./data/redis
 FLASK_ENV=development
 FLASK_SECRET=thisshouldbesecret
 PUBLIC_URL=https://localhost
@@ -26,6 +27,7 @@ JWT_REFRESH_EXPIRY=2592000
 REGISTRATION_WINDOW=86400
 RATELIMIT_DEFAULT=1000/hour;10000/day
 RATELIMIT_REGISTRATION=10/hour;50/day
+CLEANUP_INTERVAL=120
 NGINX_HOST=localhost
 NGINX_HTTP_PORT=8080
 NGINX_HTTPS_PORT=8443
@@ -38,9 +40,10 @@ SSL_CERTS=./ssl
 `openssl req -x509 -subj '/CN=localhost' -newkey rsa:4096 -keyout key.pem -nodes -out certificate.crt -days 365`
 Note that the filenames must be `key.pem` for the private key and `certificate.crt` for the certificate.
 - The `JWT_*_EXPIRY` variables set how long the JWT access and refresh tokens should be valid for (in seconds)
-- `REGISTRATION_WINDOW` configures how old unapproved registrations must be before being removed (in seconds). This behaviour only occurs when a `DELETE` request reaches `/api/v1/auth/register`, which happens periodically in production.
+- `REGISTRATION_WINDOW` configures how old unapproved registrations must be before being removed (in seconds)
 - The format for the `RATELIMIT_*` options can be found in the [documentation for `flask-limiter`](https://flask-limiter.readthedocs.io/en/stable/#rate-limit-string-notation)
 - `EMAIL_NAME` and `EMAIL_FROM` set the _metadata_ which is placed in the email header; these have no bearing on the SMTP connection
+- `CLEANUP_INTERVAL` specifies the interval for which the cleanup task should be executed. Note that this will only run in production.
 
 To start the app, just run `docker-compose up`. Hit CTRL+C to shut it down.
 

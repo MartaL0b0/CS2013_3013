@@ -1,11 +1,11 @@
 from flask import request, current_app, render_template, jsonify
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, current_user
-import flask_emails as mail
 
 from models import *
 from . import json_required
 from .auth import admin_required
+import tasks
 
 def get_resolve_link(username, form_id):
     # Create a token the admin can use to mark the form as resolved
@@ -44,14 +44,13 @@ class Manage(Resource):
         for admin in User.query.filter(User.is_admin == True):
             resolve_link = get_resolve_link(admin.username, new_form.id)
 
-            notification = mail.Message(
-                    mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+            tasks.send_email.delay(
+                    from_=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+                    to=(admin.full_name, admin.email),
                     subject='Form no. {}'.format(new_form.id),
                     text=render_template('new_form.txt', form=new_form, admin=admin, resolve_link=resolve_link),
-                    html=render_template('new_form.html', form=new_form, admin=admin, resolve_link=resolve_link),
+                    html=render_template('new_form.html', form=new_form, admin=admin, resolve_link=resolve_link)
                     )
-            notification.config.smtp_options['fail_silently'] = False
-            notification.send(to=(admin.full_name, admin.email))
 
         return {'id': new_form.id}
 
@@ -90,14 +89,13 @@ class Manage(Resource):
         for admin in User.query.filter(User.is_admin == True):
             resolve_link = get_resolve_link(admin.username, to_update.id)
 
-            notification = mail.Message(
-                    mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+            tasks.send_email.delay(
+                    from_=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+                    to=(admin.full_name, admin.email),
                     subject='Form no. {}'.format(to_update.id),
                     text=render_template('edited_form.txt', form=to_update, changed=changed, old=old, new=new, admin=admin, editor=current_user, resolve_link=resolve_link),
-                    html=render_template('edited_form.html', form=to_update, changed=changed, old=old, new=new, admin=admin, editor=current_user, resolve_link=resolve_link),
+                    html=render_template('edited_form.html', form=to_update, changed=changed, old=old, new=new, admin=admin, editor=current_user, resolve_link=resolve_link)
                     )
-            notification.config.smtp_options['fail_silently'] = False
-            notification.send(to=(admin.full_name, admin.email))
 
         return old_res
 
@@ -128,14 +126,13 @@ def do_resolve(to_resolve):
     to_resolve.resolved_at = datetime.utcnow()
     db.session.commit()
 
-    notification = mail.Message(
-            mail_from=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
-            subject="Form resolved",
+    tasks.send_email.delay(
+            to=(to_resolve.user.full_name, to_resolve.user.email),
+            from_=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+            subject='Form no. {}'.format(to_resolve.id),
             text=render_template('notification.txt', form=to_resolve),
-            html=render_template('notification.html', form=to_resolve),
+            html=render_template('notification.html', form=to_resolve)
             )
-    notification.config.smtp_options['fail_silently'] = False
-    notification.send(to=(to_resolve.user.full_name, to_resolve.user.email))
 
 class Resolution(Resource):
     @json_required

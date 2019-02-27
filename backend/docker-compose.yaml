@@ -3,11 +3,13 @@ services:
     briefthreat:
         image: briefthreat/app
         restart: always
-        build: ./build
+        build:
+            context: ./build
+            dockerfile: Dockerfile.app
         init: true
         depends_on:
             - db
-            - memcache
+            - redis
         environment:
             - FLASK_ENV=${FLASK_ENV}
             - FLASK_SECRET=${FLASK_SECRET}
@@ -28,11 +30,14 @@ services:
             - REGISTRATION_WINDOW=${REGISTRATION_WINDOW}
             - RATELIMIT_DEFAULT=${RATELIMIT_DEFAULT}
             - RATELIMIT_REGISTRATION=${RATELIMIT_REGISTRATION}
+            - CLEANUP_INTERVAL=${CLEANUP_INTERVAL}
         volumes:
             - ./app:/opt/app:ro
-    memcache:
-        image: memcached:alpine
+    redis:
+        image: redis:alpine
         restart: always
+        volumes:
+            - $REDIS_DATA:/data
     db:
         image: mariadb:latest
         restart: always

@@ -4,10 +4,12 @@ from datetime import datetime
 import passlib.pwd
 from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask, request, jsonify, render_template
-from flask_restful import Api
+import redis
+from celery.result import AsyncResult as CeleryResult
 from healthcheck import HealthCheck
 
-from resources import limiter, auth, form
+import tasks
+from resources import Api, limiter, auth, form
 import models
 from models import db, validation, User, full_user_schema
 
@@ -43,9 +45,15 @@ app.config.update({
     'REGISTRATION_WINDOW': int(environ['REGISTRATION_WINDOW']),
     'RATELIMIT_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
     'RATELIMIT_DEFAULT': environ['RATELIMIT_DEFAULT'],
-    # We use memcached since there will be load balancing between workers in production,
+    'CLEANUP_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
+    'CLEANUP_INTERVAL': int(environ['CLEANUP_INTERVAL']),
+    # We use Redis since there will be load balancing between workers in production,
     # so there must be synchronisation between them!
-    'RATELIMIT_STORAGE_URL': 'memcached://memcache:11211'
+    # Database 0 is for ratelimiting
+    'RATELIMIT_STORAGE_URL': 'redis://redis:6379/0',
+    # Database 1 is for background tasks
+    'CELERY_RESULT_BACKEND': 'redis://redis:6379/1',
+    'CELERY_BROKER_URL': 'redis://redis:6379/1',
 })
 
 @app.errorhandler(404)
@@ -60,18 +68,43 @@ models.init_app(app)
 auth.jwt.init_app(app)
 validation.init_app(app)
 limiter.init_app(app)
+tasks.init_app(app)
+
+from tasks import celery
 
 def db_ok():
     return User.query.count() >= 0, "database ok"
-health = HealthCheck(app, '/health')
+def tasks_ok():
+    # Convert to int, Redis always returns bytes
+    succeeded = int(celery_redis.get('succeeded'))
+    # Redis returns bytes...
+    already_failed = set(map(lambda id: id.decode('utf8'), celery_redis.lrange('failed', 0, -1)))
+    new_failed = []
+    for task_id in map(lambda key: key.decode('utf8')[len('celery-task-meta-'):], celery_redis.scan_iter(match='celery-task-meta-*')):
+        result = CeleryResult(task_id, app=celery)
+        if result.successful():
+            succeeded += 1
+            result.forget()
+        elif result.failed() and not task_id in already_failed:
+            new_failed.append(task_id)
+
+    celery_redis.set('succeeded', succeeded)
+    if new_failed:
+        # Store the newly failed tasks in Redis
+        celery_redis.lpush('failed', *new_failed)
+    failed = list(already_failed) + new_failed
+    return not failed, {'succeeded': succeeded, 'failed': failed}
+
+# Set up health check, don't cache results
+health = HealthCheck(app, '/health', success_ttl=None, failed_ttl=None)
 health.add_check(db_ok)
+health.add_check(tasks_ok)
 
 # Mount our API endpoints
 api.add_resource(auth.Registration, '/auth/register')
 api.add_resource(auth.Login, '/auth/login')
 api.add_resource(auth.Token, '/auth/token')
 api.add_resource(auth.Access, '/auth/access')
-api.add_resource(auth.Cleanup, '/auth/cleanup')
 api.add_resource(form.Manage, '/form')
 api.add_resource(form.Resolution, '/form/resolve')
 
@@ -79,7 +112,7 @@ api.add_resource(form.Resolution, '/form/resolve')
 form.init_app(app)
 
 @app.before_first_request
-def create_tables():
+def init_db():
     # Create the tables (does nothing if they already exist)
     db.create_all()
 
@@ -103,6 +136,14 @@ def create_tables():
 
         print('**** ROOT USER CREATED ****')
         print('PASSWORD: {}'.format(password))
+
+@app.before_first_request
+def connect_redis():
+    # So we can list the completed Celery tasks
+    global celery_redis
+    celery_redis = redis.Redis(host='redis', db=1)
+    if not celery_redis.exists('succeeded'):
+        celery_redis.set('succeeded', '0')
 
 if __name__ == "__main__":
     # If we are started directly, run the Flask development server

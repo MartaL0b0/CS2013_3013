@@ -1,4 +1,4 @@
-FROM python:3-alpine
+FROM python:3.6-alpine
 
 COPY requirements.txt /opt/
 RUN apk --no-cache add curl libxml2 libxml2-dev libxslt libxslt-dev gcc musl-dev && \
@@ -8,6 +8,7 @@ RUN apk --no-cache add curl libxml2 libxml2-dev libxslt libxslt-dev gcc musl-dev
 
 COPY app.sh /opt/
 
+USER nobody:nogroup
 ENV GUNICORN_WORKERS=4
 EXPOSE 8080/tcp
 HEALTHCHECK --start-period=5s --interval=10s --retries=5 \
