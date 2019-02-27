@@ -4,10 +4,9 @@ from datetime import datetime
 import passlib.pwd
 from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask, request, jsonify, render_template
-from flask_restful import Api
 from healthcheck import HealthCheck
 
-from resources import limiter, auth, form
+from resources import Api, limiter, auth, form
 import models
 from models import db, validation, User, full_user_schema
 
