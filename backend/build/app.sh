@@ -12,7 +12,7 @@ if [ "$FLASK_ENV" == "development" ]; then
 	exec python /opt/app/briefthreat.py
 else
 	# use gunicorn in production
-	gunicorn --workers $GUNICORN_WORKERS --bind :8080 --chdir /opt/app --user nobody --group nogroup briefthreat:app &
+	gunicorn --workers $GUNICORN_WORKERS --bind :8080 --chdir /opt/app briefthreat:app &
 
 	# in production periodically clean up stale unapproved registrations
 	while true; do

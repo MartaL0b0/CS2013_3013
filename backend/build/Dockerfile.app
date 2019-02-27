@@ -8,7 +8,7 @@ RUN apk --no-cache add curl libxml2 libxml2-dev libxslt libxslt-dev gcc musl-dev
 
 COPY app.sh /opt/
 
-USER nobody
+USER nobody:nogroup
 ENV GUNICORN_WORKERS=4
 EXPOSE 8080/tcp
 HEALTHCHECK --start-period=5s --interval=10s --retries=5 \
