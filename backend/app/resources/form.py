@@ -1,4 +1,4 @@
-from flask import request, current_app, render_template, jsonify
+from flask import request, current_app, render_template, jsonify, url_for
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, current_user
 
@@ -12,7 +12,7 @@ def get_resolve_link(username, form_id):
     # This can be validated by its signature
     resolve_info = UIResolve(username=username, form_id=form_id)
     token = ui_resolve_schema.dump(resolve_info).data
-    return '{}/resolve?token={}'.format(current_app.config['PUBLIC_URL'], token)
+    return url_for('ui_resolve_form', token=token, _external=True)
 
 class Manage(Resource):
     # GET -> Return the list of forms

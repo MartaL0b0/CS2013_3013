@@ -2,8 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 
 <head>
-  <title> Form no. {{ form.id }}
-  </title>
+  <title> Form no. {{ form.id }} </title>
   <!--[if !mso]><!-- -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!--<![endif]-->
@@ -60,7 +59,6 @@
       @-ms-viewport {
         width: 320px;
       }
-
       @viewport {
         width: 320px;
       }
@@ -82,10 +80,8 @@
         <![endif]-->
   <!--[if !mso]><!-->
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
-  <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700" rel="stylesheet" type="text/css">
   <style type="text/css">
     @import url(https://fonts.googleapis.com/css?family=Roboto:300,400,500,700);
-    @import url(https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700);
   </style>
   <!--<![endif]-->
   <style type="text/css">
@@ -97,10 +93,17 @@
     }
   </style>
   <style type="text/css">
+    @media only screen and (max-width:480px) {
+      table.full-width-mobile {
+        width: 100% !important;
+      }
+      td.full-width-mobile {
+        width: auto !important;
+      }
+    }
   </style>
   <style type="text/css">
     @media (min-width:480px) {
-
       p,
       ul {
         font-size: 16px;
@@ -135,17 +138,22 @@
               <div class="mj-column-per-100 outlook-group-fix" style="font-size:13px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
                 <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
                   <tr>
-                    <td align="center" class="text" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                      <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:35px;line-height:1;text-align:center;color:#000000;"> BriefThreat </div>
+                    <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                      <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
+                        <tbody>
+                          <tr>
+                            <td style="width:256px;"> <img height="auto" src="{{ url_for('static', filename='logo.svg', _external=True) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;" width="256" /> </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </td>
                   </tr>
                   <tr>
                     <td style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                      <p style="border-top:solid 4px #212121;font-size:1;margin:0px auto;width:100%;">
-                      </p>
+                      <p style="border-top:solid 4px #ef5350;font-size:1;margin:0px auto;width:100%;"> </p>
                       <!--[if mso | IE]>
         <table
-           align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 4px #212121;font-size:1;margin:0px auto;width:550px;" role="presentation" width="550px"
+           align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 4px #ef5350;font-size:1;margin:0px auto;width:550px;" role="presentation" width="550px"
         >
           <tr>
             <td style="height:0;line-height:0;">
@@ -158,7 +166,7 @@
                   </tr>
                   <tr>
                     <td align="left" class="text-scaling" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                      <div style="font-family:Roboto, sans-serif;font-size:13px;line-height:1;text-align:left;color:#212121;">
+                      <div style="font-family:Roboto, sans-serif;font-size:13px;line-height:1;text-align:left;color:#b61827;">
                         <p>Hi {{ form.user.first_name }},</p>
                         <p>Your form (no. {{ form.id }}) has been marked as resolved.</p>
                         <p>Here are the details:</p>
