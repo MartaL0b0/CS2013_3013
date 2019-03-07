@@ -1,0 +1,53 @@
+<mjml>
+  <mj-head>
+    <mj-title>Form no. {{ form.id }}</mj-title>
+    <mj-attributes>
+      <mj-class name="text" font-family="Roboto, sans-serif" color="#b61827"/>
+    </mj-attributes>
+    <mj-style>
+      @media (min-width:480px) {
+      	p, ul {
+      		font-size: 16px;
+      	}
+      }
+      a {
+      	text-decoration: none;
+      	color: #0D47A1;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-image width="256px" src="{{ url_for('static', filename='logo.svg', _external=True) }}" />
+
+        <mj-divider border-color="#ef5350"></mj-divider>
+
+        <mj-text mj-class="text" css-class="text-scaling">
+          <p>Hi {{ admin.first_name }},</p>
+          <p>{{ editor.full_name }} (<a href="mailto:{{ editor.email }}">{{ editor.email }}</a>) has edited form no. {{ form.id }}{% if editor.username != form.user.username %} (original submitter was {{ form.user.full_name }}){% endif %}.</p>
+          <p>Here's what changed:</p>
+          <ul>
+          {% if 'course' in changed %}
+            <li>Course: {{ new.course }} (was {{ old.course }})</li>
+          {% endif %}
+          {% if 'time' in changed %}
+            <li>Time: {{ new.time.strftime('%A %d %B at %H:%M (UTC)') }} (was {{ old.time.strftime('%A %d %B at %H:%M (UTC)') }})</li>
+          {% endif %}
+          {% if 'payment_method' in changed %}
+          <li>Payment method: {{ new.payment_method.name.capitalize() }} (was {{ old.payment_method.name.capitalize() }})</li>
+          {% endif %}
+          {% if 'amount' in changed %}
+            <li>Amount: &euro;{{ new.amount }} (was &euro;{{ old.amount }})</li>
+          {% endif %}
+          {% if 'receipt' in changed %}
+            <li>Receipt number: {{ new.receipt }} (was {{ old.receipt }})</li>
+          {% endif %}
+          </ul>
+        </mj-text>
+
+        <mj-button font-family="Roboto, sans-serif" font-size="22px" href="{{ resolve_link }}" background-color="#43A047">Resolve</mj-button>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
