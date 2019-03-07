@@ -2,11 +2,15 @@ from datetime import datetime, timedelta
 
 from celery import Celery
 from celery.utils.log import get_task_logger
+import celery.states as celery_states
 
 from flask import current_app
 import flask_emails as mail
 
 from models import db, User, RevokedToken
+
+EXCEPTION_STATES = celery_states.EXCEPTION_STATES
+SUCCESS_STATES = celery_states.READY_STATES - EXCEPTION_STATES
 
 # We want certain tasks to run in the background
 # (so they don't block request handlers for too long)
@@ -53,6 +57,10 @@ def send_email(*, from_, to, subject, html, text=None):
     message.send(to=to)
 
 def cleanup():
+    # Make sure the tables are initialized - we could be called
+    # before @app.before_first_request
+    db.create_all()
+
     # Clean up registrations that have gone unapproved for more than `REGISTRATION_WINDOW`
     cutoff = datetime.utcnow() - timedelta(seconds=current_app.config['REGISTRATION_WINDOW'])
     reg_removed = User.query.filter(User.registration_time < cutoff, User.is_approved == False).delete()
