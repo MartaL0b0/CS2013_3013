@@ -119,22 +119,14 @@ class RevokedTokenSchema(validation.ModelSchema):
     username = field_for(User, 'username', dump_only=False)
 
     @marshmallow.pre_load
-    def extract_jti(self, in_data):
-        if not 'token' in in_data:
-            raise ValidationError('No token provided')
+    def extract_jti(self, token):
+        # Convert the token's dict to one that looks like our schema
+        token['username'] = token['identity']
+        del token['identity']
+        token['expiry'] = datetime.utcfromtimestamp(token['exp']).isoformat()
+        del token['exp']
 
-        # Load the username and jti from the token we have been asked to revoke
-        try:
-            token = decode_token(in_data['token'])
-        except Exception as ex:
-            raise ValidationError('Invalid token provided: {}'.format(ex))
-
-        in_data['username'] = token['identity']
-        in_data['jti'] = token['jti']
-        in_data['expiry'] = datetime.utcfromtimestamp(token['exp']).isoformat()
-        del in_data['token']
-
-        return in_data
+        return token
 
 class FormSchema(validation.ModelSchema):
     class Meta:

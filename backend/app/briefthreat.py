@@ -1,11 +1,11 @@
 from os import environ
 from datetime import datetime
+import json
 
 import passlib.pwd
 from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask, request, jsonify, render_template
 import redis
-from celery.result import AsyncResult as CeleryResult
 from healthcheck import HealthCheck
 
 import tasks
@@ -81,12 +81,17 @@ def tasks_ok():
     # Redis returns bytes...
     already_failed = set(map(lambda id: id.decode('utf8'), celery_redis.lrange('failed', 0, -1)))
     new_failed = []
-    for task_id in map(lambda key: key.decode('utf8')[len('celery-task-meta-'):], celery_redis.scan_iter(match='celery-task-meta-*')):
-        result = CeleryResult(task_id, app=celery)
-        if result.successful():
+    for meta_key in map(lambda key: key.decode('utf8'), celery_redis.scan_iter(match='celery-task-meta-*')):
+        # HACK: Celery can't deserialize SQLAlchemy exceptions correctly
+        # (https://github.com/celery/celery/issues/5057)
+        # So we deserialize the JSON ourselves (instead of using AsyncResult)
+        meta = json.loads(celery_redis.get(meta_key).decode('utf8'))
+        task_id = meta['task_id']
+        status = meta['status']
+        if status in tasks.SUCCESS_STATES:
             succeeded += 1
-            result.forget()
-        elif result.failed() and not task_id in already_failed:
+            celery_redis.delete(meta_key)
+        elif status in tasks.EXCEPTION_STATES and not task_id in already_failed:
             new_failed.append(task_id)
 
     celery_redis.set('succeeded', succeeded)
