@@ -27,7 +27,8 @@ app.config.update({
         database = environ['MYSQL_DATABASE']
     ),
     'SECRET_KEY': environ['FLASK_SECRET'],
-    'PUBLIC_URL': environ['PUBLIC_URL'],
+    'SERVER_NAME': environ['PUBLIC_HOST'],
+    'PREFERRED_URL_SCHEME': 'https',
     'ROOT_EMAIL': environ['ROOT_EMAIL'],
     'EMAIL_NAME': environ['EMAIL_NAME'],
     'EMAIL_FROM': environ['EMAIL_FROM'],
