@@ -6,6 +6,7 @@ from flask import current_app, request, jsonify
 from marshmallow import ValidationError
 from flask_restful import Resource
 from flask_jwt_extended import *
+from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError, WrongTokenError
 
 from . import json_required, limiter
 from models import *
@@ -51,7 +52,17 @@ def admin_required(f):
         if not current_user.is_admin:
             return {'message': 'This endpoint requires admin status'}, 401
         return f(*args, **kwargs)
+    return decorated_function
 
+def jwt_access_or_refresh(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            verify_jwt_in_request()
+        except (NoAuthorizationError, InvalidHeaderError, WrongTokenError):
+            # No valid access token, what about a refresh token?
+            verify_jwt_refresh_token_in_request()
+        return f(*args, **kwargs)
     return decorated_function
 
 class Registration(Resource):
@@ -135,19 +146,12 @@ class Token(Resource):
     # Tokens cannot be removed as they are valid until expired.
     # Instead we add them to a revocation list and check against it.
     # This is done for access and refresh tokens.
-    @json_required
-    @jwt_required
+    @jwt_access_or_refresh
     def delete(self):
-        # Validate and deserialize input
         to_revoke = RevokedToken()
-        try:
-            revoked_token_schema.load(request.r_data, instance=to_revoke)
-        except ValidationError as err:
-            return err.messages, 422
-
-        # Don't allow users to revoke tokens other than their own!
-        if to_revoke.username != current_user.username:
-            return {'message': 'You may only revoke your own tokens!'}
+        # The token we want to revoke will be the access / refresh token provided
+        # in the Authorization header
+        revoked_token_schema.load(get_raw_jwt(), instance=to_revoke)
 
         existing = RevokedToken.is_revoked(to_revoke.jti)
         if existing:
