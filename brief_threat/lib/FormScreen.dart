@@ -14,7 +14,7 @@ class FormScreen extends StatefulWidget {
 }
 
 class _FormScreen extends State<FormScreen> {
-  //define type of date input needed, all of them are here now because I am unsure wether we need the time or not yet :)
+  //define type of date input needed, all of them are here now because I am unsure whether we need the time or not yet :)
   final formats = {
     InputType.both: DateFormat("EEEE, MMMM d, yyyy 'at' h:mma"),
     InputType.date: DateFormat('yyyy-MM-dd'),

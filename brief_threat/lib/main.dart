@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'FormScreen.dart';
 import 'SnackBarController.dart';
 import 'Tokens/models/RefreshToken.dart';
@@ -29,6 +31,7 @@ class _LoginPageState extends State<LoginPage> {
   // text input controllers & variables
   final TextEditingController _userNameController = new TextEditingController();
   final TextEditingController _passwordController = new TextEditingController();
+  final secureStorage = globals.secureStorage;
   String _user = "";
   String _password = "";
   var hidePassword = true;
@@ -135,6 +138,24 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     )
                   ],
+                ),
+                SizedBox(height: 90.0), //spacer
+                ButtonBar(
+                  children: <Widget>[
+                    FlatButton(
+                      child: Text('Use Fingerprint'),
+                      onPressed: () async {
+                        if (await canUseBiometricAuthenticate()) {
+                          if (await biometricAuthenticate(_scaffoldKey)){
+                            Navigator.pushNamed(context, '/Form');
+                          }
+                        } else {
+                          SnackBarController.showSnackBarErrorMessage(_scaffoldKey,
+                              "Unable to check biometrics");
+                        }
+                      },
+                    )
+                  ],
                 )
               ],
             )
@@ -149,19 +170,57 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  Future<bool> canUseBiometricAuthenticate() async {
+    var localAuth = LocalAuthentication();
+    return await localAuth.canCheckBiometrics;
+  }
+
+  Future<bool> biometricAuthenticate(GlobalKey<ScaffoldState> key) async {
+    print("User tried  to authenticate with biometrics");
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    var localAuth = LocalAuthentication();
+    bool didAuthenticate = await localAuth.authenticateWithBiometrics(
+        localizedReason: 'Please authenticate to Login');
+
+    if (didAuthenticate) {
+      String user = preferences.getString('username');
+      String password = await secureStorage.read(key: user);
+      if (password.isEmpty) {
+        SnackBarController.showSnackBarErrorMessage(key, "No details associated with fingerprint");
+        return false;
+      }
+      RefreshToken token = await Requests.login(user, password);
+      if (token == null) {
+        SnackBarController.showSnackBarErrorMessage(key, "Incorrect details associated with fingerprint");
+        return false;
+      } else {
+        globals.access_token = token.accessToken.accessToken;
+        globals.refresh_token = token.refreshToken;
+        globals.username = user;
+        key.currentState.hideCurrentSnackBar();
+        return true;
+      }
+    } else {
+      SnackBarController.showSnackBarErrorMessage(key, "Unable to authenticate with biometrics");
+      return false;
+    }
+  }
+
   // handle login, currently just prints what was entered in the text fields
   Future<bool> _loginPressed (String user, String password, GlobalKey<ScaffoldState> key) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
     print('The user wants to login with $_user and $_password');
     RefreshToken token = await Requests.login(_user, _password);
     if (token == null) {
       // show error message
       SnackBarController.showSnackBarErrorMessage(key, "Incorrect username or password. Please try again");
       return false;
-    } 
+    }
     globals.access_token = token.accessToken.accessToken;
     globals.refresh_token = token.refreshToken;
     globals.username = user;
-
+    preferences.setString('username', user);
+    await secureStorage.write(key: user, value: password);
     // successful login 
     key.currentState.hideCurrentSnackBar();
     return true;
