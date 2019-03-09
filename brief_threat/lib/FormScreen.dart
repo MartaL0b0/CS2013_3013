@@ -310,5 +310,6 @@ class barButtonOptions {
 
 // list of choices on the side menu, add a line here to add another option
  const List<barButtonOptions> options = const <barButtonOptions>[
-  const barButtonOptions(title: 'Log Out', icon: Icons.photo_camera),
+   // we don't use the icons as of now
+  const barButtonOptions(title: 'Log Out', icon: null),
 ];
