@@ -231,7 +231,25 @@ class _FormScreen extends State<FormScreen> {
   }
 
   void _logout() async {
-    print("user wants to log out");
+    // delete tokens if they are valid
+    if (TokenParser.validateToken(globals.access_token) && ! (await Requests.deleteToken(globals.access_token))) {
+      // if we go here, the access token is valid but the call to delete it failed (probably a backend error)
+      print("access token deletion failed");
+    }
+
+    if (TokenParser.validateToken(globals.refresh_token) && !(await Requests.deleteToken(globals.refresh_token))) {
+      // if we go here, the refresh token is valid but the call to delete it failed (probably a backend error)
+      print("refresh token deletion failed");
+    }
+
+    // remove them from local storage
+    globals.access_token = "";
+    globals.refresh_token = "";
+
+    // pop popup message
+    Navigator.of(context).pop();
+    // pop form screen
+    Navigator.of(context).pop();
   }
 
   void _showDialog(int id) {
