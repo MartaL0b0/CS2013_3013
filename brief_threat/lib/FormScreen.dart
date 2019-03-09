@@ -6,7 +6,6 @@ import 'Verification.dart';
 import 'globals.dart' as globals;
 import 'Tokens/TokenProcessor.dart';
 import 'Requests.dart';
-import 'SnackBarController.dart';
 
 class FormScreen extends StatefulWidget {
   @override
@@ -53,7 +52,20 @@ class _FormScreen extends State<FormScreen> {
         key: _formKey,
         appBar: AppBar(
           title: Text('Transaction Details'),
-            automaticallyImplyLeading: false
+          automaticallyImplyLeading: false,
+          actions: <Widget>[
+            PopupMenuButton<barButtonOptions>(
+              onSelected: _select,
+              itemBuilder: (BuildContext context) {
+                return options.map((barButtonOptions options) {
+                  return PopupMenuItem<barButtonOptions>(
+                    value: options,
+                    child: Text(options.title),
+                  );
+                }).toList();
+              },
+            ),
+          ],
         ),
         body: SafeArea(
             child: ListView(
@@ -158,7 +170,6 @@ class _FormScreen extends State<FormScreen> {
                             _amount =_amountController.text.trim();
                             _receipt =_receiptController.text.trim();
                             double _amountValue = Verification.checkForMoneyAmountInput(_amount);
-
                             String printErrorMessage = Verification.validateFormSubmission(_user, _repName, _course, _amount, _amountValue, _receipt, _date);
                             if (printErrorMessage != null) {
                               SnackBarController.showSnackBarErrorMessage(_formKey, printErrorMessage);
@@ -209,6 +220,38 @@ class _FormScreen extends State<FormScreen> {
     setState(() => _date = null);
   }
 
+  void _select(barButtonOptions options) {
+    switch (options.title) {
+      case "Log Out":
+        _showLogOutDialog();
+        break;
+      default:
+        // shoudln't come here
+    }
+  }
+
+  void _logout() async {
+    // delete tokens if they are valid
+    if (TokenParser.validateToken(globals.access_token) && ! (await Requests.deleteToken(globals.access_token))) {
+      // if we go here, the access token is valid but the call to delete it failed (probably a backend error)
+      print("access token deletion failed");
+    }
+
+    if (TokenParser.validateToken(globals.refresh_token) && !(await Requests.deleteToken(globals.refresh_token))) {
+      // if we go here, the refresh token is valid but the call to delete it failed (probably a backend error)
+      print("refresh token deletion failed");
+    }
+
+    // remove them from local storage
+    globals.access_token = "";
+    globals.refresh_token = "";
+
+    // pop popup message
+    Navigator.of(context).pop();
+    // pop form screen
+    Navigator.of(context).pop();
+  }
+
   void _showDialog(int id) {
     showDialog(
       context: context,
@@ -229,4 +272,44 @@ class _FormScreen extends State<FormScreen> {
       },
     );
   }
+
+   void _showLogOutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Do you want to log out ?"),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Confirm"),
+              onPressed: () {
+                _logout();
+              },
+            ),
+            new FlatButton(
+              child: new Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
+
+// class used to represent buttons
+class barButtonOptions {
+  const barButtonOptions({this.title, this.icon});
+
+  final String title;
+  final IconData icon;
+}
+
+// list of choices on the side menu, add a line here to add another option
+ const List<barButtonOptions> options = const <barButtonOptions>[
+   // we don't use the icons as of now
+  const barButtonOptions(title: 'Log Out', icon: null),
+];

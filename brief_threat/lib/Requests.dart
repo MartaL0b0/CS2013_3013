@@ -11,6 +11,7 @@ class Requests {
       'https://briefthreat.nul.ie//api/v1/auth/login', 
       headers: {"Content-Type": "application/json"},
       body: credentialsAsJson);
+
     if (response.statusCode == 200) {
       //parse the JSON to get the refresh key
       return RefreshToken.fromJson(jsonDecode(response.body));
@@ -56,5 +57,17 @@ class Requests {
 
     // request failed
     return 0;
+  }
+
+  static Future<bool> deleteToken(String token) async {
+    final response = await http.delete(
+      'https://briefthreat.nul.ie//api/v1/auth/token', 
+      headers: {"Authorization": "Bearer $token"});
+
+    if(response.statusCode == 204) {
+      return true;
+    }
+
+    return false;
   }  
 }

@@ -151,7 +151,6 @@ class _LoginPageState extends State<LoginPage> {
 
   // handle login, currently just prints what was entered in the text fields
   Future<bool> _loginPressed (String user, String password, GlobalKey<ScaffoldState> key) async {
-    print('The user wants to login with $_user and $_password');
     RefreshToken token = await Requests.login(_user, _password);
     if (token == null) {
       // show error message
