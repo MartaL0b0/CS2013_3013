@@ -25,86 +25,117 @@ class _Register extends State <Register> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _registerScaffold,
-      appBar: AppBar(
-          title: Text('Create a new user'),
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
-          children: <Widget>[
-            Column(
-              children: <Widget>[
-                SizedBox(height: 25.0),
-                TextField(
-                  decoration: InputDecoration(
-                  labelText: "First Name",
-                  filled: true,
-                  ),
-                  controller: _firstNameController,
-                ),
-                SizedBox(height: 15.0),
-                TextField(
-                  decoration: InputDecoration(
-                  labelText: "Last Name",
-                  filled: true,
-                  ),
-                  controller: _lastNameController,
-                ),
-                SizedBox(height: 15.0),
-                TextField(
-                  decoration: InputDecoration(
-                  labelText: "Username",
-                  filled: true,
-                  ),
-                  controller: _userNameController,
-                ),
-                SizedBox(height: 15.0),
-                TextField(
-                  decoration: InputDecoration(
-                  labelText: "email",
-                  filled: true,
-                  ),
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                SizedBox(height: 15.0),
-                TextField(
-                  decoration: InputDecoration(
-                  labelText: "Confirm email address",
-                  filled: true,
-                  ),
-                  controller: _emailConfirmationController,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-              SizedBox(height: 12.0), //spacer
-              ButtonBar(
+    return WillPopScope(
+      onWillPop: _checkFieldsAreEmpty,
+      child: Scaffold(
+        key: _registerScaffold,
+        appBar: AppBar(
+            title: Text('Create a new user'),
+        ),
+        body: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
+            children: <Widget>[
+              Column(
                 children: <Widget>[
-                  FlatButton(
-                    child: Text('Create user'),
-                    onPressed: () async {
-                      _user =_userNameController.text.trim();
-                      _firstName =_firstNameController.text.trim();
-                      _lastName =_lastNameController.text.trim();
-                      _email =_emailController.text.trim();
-                      _emailConfirmed =_emailConfirmationController.text.trim();
+                  SizedBox(height: 25.0),
+                  TextField(
+                    decoration: InputDecoration(
+                    labelText: "First Name",
+                    filled: true,
+                    ),
+                    controller: _firstNameController,
+                  ),
+                  SizedBox(height: 15.0),
+                  TextField(
+                    decoration: InputDecoration(
+                    labelText: "Last Name",
+                    filled: true,
+                    ),
+                    controller: _lastNameController,
+                  ),
+                  SizedBox(height: 15.0),
+                  TextField(
+                    decoration: InputDecoration(
+                    labelText: "Username",
+                    filled: true,
+                    ),
+                    controller: _userNameController,
+                  ),
+                  SizedBox(height: 15.0),
+                  TextField(
+                    decoration: InputDecoration(
+                    labelText: "email",
+                    filled: true,
+                    ),
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  SizedBox(height: 15.0),
+                  TextField(
+                    decoration: InputDecoration(
+                    labelText: "Confirm email address",
+                    filled: true,
+                    ),
+                    controller: _emailConfirmationController,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                SizedBox(height: 12.0), //spacer
+                ButtonBar(
+                  children: <Widget>[
+                    FlatButton(
+                      child: Text('Create user'),
+                      onPressed: () async {
+                        String printErrorMessage = Verification.validateNewUserFields(_user, _firstName, _lastName, _email, _emailConfirmed);
+                        if (printErrorMessage != null) {
+                          SnackBarController.showSnackBarErrorMessage(_registerScaffold, printErrorMessage);
+                          return;
+                        }
 
-                      String printErrorMessage = Verification.validateNewUserFields(_user, _firstName, _lastName, _email, _emailConfirmed);
-                      if (printErrorMessage != null) {
-                        SnackBarController.showSnackBarErrorMessage(_registerScaffold, printErrorMessage);
-                        return;
-                      }
+                        print("creating user with details : $_user, $_firstName, $_lastName, $_email, $_emailConfirmed");
+                      },
+                    )
+                  ],
+                )
+              ],
+            )
+          ]),
+        ),
+      )
+    );
+  }
 
-                      print("creating user with details : $_user, $_firstName, $_lastName, $_email, $_emailConfirmed");
-                    },
-                  )
-                ],
+  Future<bool> _checkFieldsAreEmpty() {
+    setVariablesFromControllers();
+    if (!Verification.isAnyFilled([_user, _firstName, _lastName, _email, _emailConfirmed])){
+      Navigator.pop(context, true); 
+    } else {
+      return showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Cancel registration?"),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Yes"),
+                onPressed: () async {
+                  Navigator.pop(context, true);
+                },
+              ),
+              FlatButton(
+                child: Text("Cancel"),
+                onPressed: () => Navigator.pop(context, false),
               )
             ],
           )
-        ]),
-      ),
-    );
+      );
+    }
+  }
+
+  void setVariablesFromControllers () {
+    _user =_userNameController.text.trim();
+    _firstName =_firstNameController.text.trim();
+    _lastName =_lastNameController.text.trim();
+    _email =_emailController.text.trim();
+    _emailConfirmed =_emailConfirmationController.text.trim();
   }
 }

@@ -35,6 +35,16 @@ class Verification {
     return false;
   }
 
+  // checks that a list of elements (strings) contain no empty strings
+  static bool isAnyFilled(List<String> s) {
+    for(int i = 0; i < s.length; i++){
+      if(s[i].isNotEmpty) {
+        return true;
+      }
+    }
+    return false;
+  }
+
     // return the error message to display or null if all is well 
   static String validateFormSubmission (String user, String repName, String course, String amount, double amountVal, String receipt, DateTime date){
     // input data checks, woho
