@@ -241,6 +241,10 @@ class _FormScreen extends State<FormScreen> {
       case "Log Out":
         _showLogOutDialog();
         break;
+      case "Add new user":
+        Navigator.pushNamed(context, '/register');
+        print("executed");
+        break;
       default:
         // shoudln't come here
     }
@@ -336,5 +340,6 @@ class barButtonOptions {
 // list of choices on the side menu, add a line here to add another option
  const List<barButtonOptions> options = const <barButtonOptions>[
    // we don't use the icons as of now
-  const barButtonOptions(title: 'Log Out', icon: null),
+  const barButtonOptions(title: 'Log out', icon: null),
+  const barButtonOptions(title: 'Add new user', icon: null),
 ];

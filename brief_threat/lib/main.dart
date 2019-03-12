@@ -8,7 +8,7 @@ import 'dart:async';
 import 'RequestAccess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Tokens/TokenProcessor.dart';
-
+import 'Register.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -17,6 +17,7 @@ void main() {
       routes: <String, WidgetBuilder> {
         '/Login': (BuildContext context) => new LoginPage(),
         '/RequestAccess' : (BuildContext context) => new RequestAccess(),
+        '/register' : (BuildContext context) => new Register(),
       },
     ));
 }
@@ -28,8 +29,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   // text input controllers & variables
-  final TextEditingController _userNameController = new TextEditingController();
-  final TextEditingController _passwordController = new TextEditingController();
+  final TextEditingController _userNameController = new TextEditingController(text: "root");
+  final TextEditingController _passwordController = new TextEditingController(text: "tinder4cats2k19");
   String _user = "";
   String _password = "";
   var hidePassword = true;
@@ -128,7 +129,6 @@ class _LoginPageState extends State<LoginPage> {
 
                         // redirect to new page
                         Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
-
                       },
                     )
                   ],
