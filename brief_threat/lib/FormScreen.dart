@@ -92,7 +92,6 @@ class _FormScreen extends State<FormScreen> {
                   children: <Widget>[
                     SizedBox(height: 30.0),
                     TextField(
-                      cursorColor: Colors.white,
                       decoration: InputDecoration(
                         labelText: "Rep Name",
                         filled: true,
@@ -101,7 +100,6 @@ class _FormScreen extends State<FormScreen> {
                     ),
                     SizedBox(height: 12.0),
                     TextField(
-                      cursorColor: Colors.white,
                       decoration: InputDecoration(
                         labelText: "Customer Username",
                         filled: true,
@@ -110,7 +108,6 @@ class _FormScreen extends State<FormScreen> {
                     ),
                     SizedBox(height: 12.0),       
                     TextField(
-                      cursorColor: Colors.white,
                       decoration: InputDecoration(
                         labelText: "Course",
                         filled: true,
@@ -157,7 +154,6 @@ class _FormScreen extends State<FormScreen> {
                     SizedBox(height: 12.0),
                     TextField(
                       keyboardType: TextInputType.number,
-                      cursorColor: Colors.white,
                       decoration: InputDecoration(
                         labelText: "Amount",
                         filled: true,
@@ -168,7 +164,6 @@ class _FormScreen extends State<FormScreen> {
                     SizedBox(height: 12.0),
                     TextField(
                       keyboardType: TextInputType.number,
-                      cursorColor: Colors.white,
                       decoration: InputDecoration(
                         labelText: "Receipt No",
                         filled: true,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'SnackBarController.dart';
+import 'Verification.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -36,7 +38,6 @@ class _Register extends State <Register> {
               children: <Widget>[
                 SizedBox(height: 25.0),
                 TextField(
-                  cursorColor: Colors.white,
                   decoration: InputDecoration(
                   labelText: "First Name",
                   filled: true,
@@ -45,7 +46,6 @@ class _Register extends State <Register> {
                 ),
                 SizedBox(height: 15.0),
                 TextField(
-                  cursorColor: Colors.white,
                   decoration: InputDecoration(
                   labelText: "Last Name",
                   filled: true,
@@ -54,7 +54,6 @@ class _Register extends State <Register> {
                 ),
                 SizedBox(height: 15.0),
                 TextField(
-                  cursorColor: Colors.white,
                   decoration: InputDecoration(
                   labelText: "Username",
                   filled: true,
@@ -63,21 +62,21 @@ class _Register extends State <Register> {
                 ),
                 SizedBox(height: 15.0),
                 TextField(
-                  cursorColor: Colors.white,
                   decoration: InputDecoration(
                   labelText: "email",
                   filled: true,
                   ),
                   controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                 ),
                 SizedBox(height: 15.0),
                 TextField(
-                  cursorColor: Colors.white,
                   decoration: InputDecoration(
                   labelText: "Confirm email address",
                   filled: true,
                   ),
                   controller: _emailConfirmationController,
+                  keyboardType: TextInputType.emailAddress,
                 ),
               SizedBox(height: 12.0), //spacer
               ButtonBar(
@@ -85,8 +84,19 @@ class _Register extends State <Register> {
                   FlatButton(
                     child: Text('Create user'),
                     onPressed: () async {
-                    _user =_userNameController.text;
-                    print("sent request to access : $_user");
+                      _user =_userNameController.text.trim();
+                      _firstName =_firstNameController.text.trim();
+                      _lastName =_lastNameController.text.trim();
+                      _email =_emailController.text.trim();
+                      _emailConfirmed =_emailConfirmationController.text.trim();
+
+                      String printErrorMessage = Verification.validateNewUserFields(_user, _firstName, _lastName, _email, _emailConfirmed);
+                      if (printErrorMessage != null) {
+                        SnackBarController.showSnackBarErrorMessage(_registerScaffold, printErrorMessage);
+                        return;
+                      }
+
+                      print("creating user with details : $_user, $_firstName, $_lastName, $_email, $_emailConfirmed");
                     },
                   )
                 ],

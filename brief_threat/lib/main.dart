@@ -64,7 +64,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 SizedBox(height: 120.0),
                 TextField(
-                  cursorColor: Colors.white,
                   decoration: InputDecoration(
                     labelText: "Username",
                     filled: true,
