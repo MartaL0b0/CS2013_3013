@@ -78,19 +78,19 @@ class _FormScreen extends State<FormScreen> {
                     TextField(
                       cursorColor: Colors.white,
                       decoration: InputDecoration(
-                        labelText: "Customer Username",
+                        labelText: "Rep Name",
                         filled: true,
                       ),
-                      controller: _userNameController,
+                      controller: _repNameController,
                     ),
                     SizedBox(height: 12.0),
                     TextField(
                       cursorColor: Colors.white,
                       decoration: InputDecoration(
-                        labelText: "Rep Name",
+                        labelText: "Customer Username",
                         filled: true,
                       ),
-                      controller: _repNameController,
+                      controller: _userNameController,
                     ),
                     SizedBox(height: 12.0),       
                     TextField(
