@@ -1,10 +1,10 @@
 import 'package:corsac_jwt/corsac_jwt.dart';
-import 'package:brief_threat/globals.dart' as globals;
 import 'package:brief_threat/Requests.dart';
 import 'models/AccessToken.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenParser {
-  // for now just checks for the time
+  // returns true if token is valid
   static bool validateToken (String token) {
     if (token.isEmpty) return false;
     var decodedToken = new JWT.parse(token);
@@ -15,22 +15,23 @@ class TokenParser {
     return val > now;
   }
 
-  static Future<bool> checkTokens() async {
-    if (!validateToken(globals.access_token) && !validateToken(globals.refresh_token)) {
+  static Future<String> checkTokens(String access, String refresh, SharedPreferences prefs) async {
+    AccessToken token;
+    if (!validateToken(access) && !validateToken(refresh)) {
       // both token not valid
-      return false;
+      return null;
     }
-    else if(!validateToken(globals.access_token)) {
+    else if(!validateToken(access)) {
       // generate new one
-      AccessToken token = await Requests.generateAccessToken(globals.refresh_token);
+      token = await Requests.generateAccessToken(refresh);
+      await prefs.setString('access', token.accessToken);
 
       if (token == null) {
         // an error occured when making a call to regenerate an access token, how should we handle this ?
         // currently the user is sent back to login
-        return false;
+        return null;
       }
-      globals.access_token = token.accessToken;
     }
-    return true;
+    return token == null ? access : token.accessToken;
   }
 }
