@@ -250,9 +250,6 @@ class _FormScreen extends State<FormScreen> {
     _repName = await (this.prefs.get('username') ?? '');
     refreshToken = await (this.prefs.get('refresh') ?? '');
     accessToken = await (this.prefs.get('access' ?? ''));
-
-    print(refreshToken);
-    print(accessToken);
     setState(() {
       _repNameController.text =_repName;
     });
