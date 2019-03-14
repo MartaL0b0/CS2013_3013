@@ -153,15 +153,15 @@ class _LoginPageState extends State<LoginPage> {
 
   void _getPreferences() async {
     prefs = await SharedPreferences.getInstance();
-    if (TokenParser.validateToken((await prefs.getString('refresh') ??  ''))){
-      // already logged in
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
-      return;
-    }
     if ((_user = await prefs.get('username') ?? '') != '') {
       setState(() {
         _userNameController.text =_user;
       });
+    }
+    if (TokenParser.validateToken((await prefs.getString('refresh') ??  ''))){
+      // already logged in
+      Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
+      return;
     }
   }
   // Toggles the password show status
