@@ -3,16 +3,32 @@ import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'SnackBarController.dart';
 import 'Verification.dart';
-import 'globals.dart' as globals;
 import 'Tokens/TokenProcessor.dart';
 import 'Requests.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FormScreen extends StatefulWidget {
+  final SharedPreferences prefs;
+
+  FormScreen({Key key, @required this.prefs}) : super(key: key);
   @override
-  State createState() => _FormScreen();
+  State createState() => _FormScreen(prefs);
 }
 
 class _FormScreen extends State<FormScreen> {
+ 
+  final SharedPreferences prefs;
+  _FormScreen(this. prefs);  //constructor
+
+  String _user = "";
+  String _repName = "";
+  String _course = "";
+  String _amount = "";
+  String _receipt = "";
+
+  String accessToken = "";
+  String refreshToken = "";
+
   //define type of date input needed, all of them are here now because I am unsure wether we need the time or not yet :)
   final formats = {
     InputType.both: DateFormat("EEEE, MMMM d, yyyy 'at' h:mma"),
@@ -27,22 +43,22 @@ class _FormScreen extends State<FormScreen> {
   bool _radioValue = false;
   //default value for the radio button
   String _currentPaymentMethod = "cash"; 
-
+  
   // controllers and variables for the inputs 
   final TextEditingController _userNameController = new TextEditingController();
-  final TextEditingController _repNameController = new TextEditingController(text: globals.username);
   final TextEditingController _courseController = new TextEditingController();
   final TextEditingController _amountController = new TextEditingController();
   final TextEditingController _receiptController = new TextEditingController();
   final TextEditingController _dateController = new TextEditingController();
-
-  String _user = "";
-  String _repName = "";
-  String _course = "";
-  String _amount = "";
-  String _receipt = "";
-
+  final TextEditingController _repNameController = new TextEditingController();
+  
   static final GlobalKey<ScaffoldState> _formKey = new GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTokensAndRepName();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -196,14 +212,14 @@ class _FormScreen extends State<FormScreen> {
   }
 
   void handleSubmitForm(String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
-    if (!await TokenParser.checkTokens()) {
+    if ((accessToken = await TokenParser.checkTokens(accessToken, refreshToken, this.prefs)) == null) {
       // an error occured with the tokens, means the user no longer has valid tokens 
       // redirect to login page
       Navigator.pop(context);
       return;
     }
 
-    int requestId = await Requests.postForm(globals.access_token, user, repName, course, amount, receipt, date, paymentMethod);
+    int requestId = await Requests.postForm(accessToken, user, repName, course, amount, receipt, date, paymentMethod);
     if (requestId == 0) {
       SnackBarController.showSnackBarErrorMessage(_formKey, "An error occured. Please try again later.");
       return;
@@ -230,21 +246,30 @@ class _FormScreen extends State<FormScreen> {
     }
   }
 
+  void _loadTokensAndRepName() async {
+    _repName = await (this.prefs.get('username') ?? '');
+    refreshToken = await (this.prefs.get('refresh') ?? '');
+    accessToken = await (this.prefs.get('access' ?? ''));
+    setState(() {
+      _repNameController.text =_repName;
+    });
+  }
+
   void _logout() async {
     // delete tokens if they are valid
-    if (TokenParser.validateToken(globals.access_token) && ! (await Requests.deleteToken(globals.access_token))) {
+    if (TokenParser.validateToken(accessToken) && ! (await Requests.deleteToken(accessToken))) {
       // if we go here, the access token is valid but the call to delete it failed (probably a backend error)
       print("access token deletion failed");
     }
 
-    if (TokenParser.validateToken(globals.refresh_token) && !(await Requests.deleteToken(globals.refresh_token))) {
+    if (TokenParser.validateToken(refreshToken) && !(await Requests.deleteToken(refreshToken))) {
       // if we go here, the refresh token is valid but the call to delete it failed (probably a backend error)
       print("refresh token deletion failed");
     }
 
     // remove them from local storage
-    globals.access_token = "";
-    globals.refresh_token = "";
+    await this.prefs.remove('access');
+    await this.prefs.remove('refresh');
 
     // pop popup message
     Navigator.of(context).pop();

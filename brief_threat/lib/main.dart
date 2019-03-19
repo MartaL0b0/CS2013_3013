@@ -6,7 +6,9 @@ import 'Verification.dart';
 import 'Requests.dart';
 import 'dart:async';
 import 'RequestAccess.dart';
-import 'globals.dart' as globals;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'Tokens/TokenProcessor.dart';
+
 
 void main() {
   runApp(MaterialApp(
@@ -14,7 +16,6 @@ void main() {
       home: LoginPage(),
       routes: <String, WidgetBuilder> {
         '/Login': (BuildContext context) => new LoginPage(),
-        '/Form' : (BuildContext context) => new FormScreen(),
         '/RequestAccess' : (BuildContext context) => new RequestAccess(),
       },
     ));
@@ -32,6 +33,14 @@ class _LoginPageState extends State<LoginPage> {
   String _user = "";
   String _password = "";
   var hidePassword = true;
+  SharedPreferences prefs;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _getPreferences();
+  }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   @override
@@ -115,11 +124,11 @@ class _LoginPageState extends State<LoginPage> {
                           return;
                         }
 
-                        _userNameController.clear();
                         _passwordController.clear();
 
                         // redirect to new page
-                        Navigator.pushNamed(context, '/Form');
+                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
+
                       },
                     )
                   ],
@@ -142,6 +151,19 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _getPreferences() async {
+    prefs = await SharedPreferences.getInstance();
+    if ((_user = await prefs.get('username') ?? '') != '') {
+      setState(() {
+        _userNameController.text =_user;
+      });
+    }
+    if (TokenParser.validateToken((await prefs.getString('refresh') ??  ''))){
+      // already logged in
+      Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
+      return;
+    }
+  }
   // Toggles the password show status
   void _toggleShowPassword() async {
     setState(() {
@@ -157,9 +179,10 @@ class _LoginPageState extends State<LoginPage> {
       SnackBarController.showSnackBarErrorMessage(key, "Incorrect username or password. Please try again");
       return false;
     } 
-    globals.access_token = token.accessToken.accessToken;
-    globals.refresh_token = token.refreshToken;
-    globals.username = user;
+
+    await prefs.setString('username', user);
+    await prefs.setString('refresh', token.refreshToken);
+    await prefs.setString('access', token.accessToken.accessToken);
 
     // successful login 
     key.currentState.hideCurrentSnackBar();
