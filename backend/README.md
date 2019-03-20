@@ -24,9 +24,8 @@ SMTP_PASSWORD=hunter2
 JWT_SECRET=thisshouldalsobesecret
 JWT_ACCESS_EXPIRY=900
 JWT_REFRESH_EXPIRY=2592000
-REGISTRATION_WINDOW=86400
+PW_RESET_WINDOW=86400
 RATELIMIT_DEFAULT=1000/hour;10000/day
-RATELIMIT_REGISTRATION=10/hour;50/day
 CLEANUP_INTERVAL=120
 NGINX_HOST=localhost
 NGINX_HTTP_PORT=8080
@@ -40,7 +39,6 @@ SSL_CERTS=./ssl
 `openssl req -x509 -subj '/CN=localhost' -newkey rsa:4096 -keyout key.pem -nodes -out certificate.crt -days 365`
 Note that the filenames must be `key.pem` for the private key and `certificate.crt` for the certificate.
 - The `JWT_*_EXPIRY` variables set how long the JWT access and refresh tokens should be valid for (in seconds)
-- `REGISTRATION_WINDOW` configures how old unapproved registrations must be before being removed (in seconds)
 - The format for the `RATELIMIT_*` options can be found in the [documentation for `flask-limiter`](https://flask-limiter.readthedocs.io/en/stable/#rate-limit-string-notation)
 - `EMAIL_NAME` and `EMAIL_FROM` set the _metadata_ which is placed in the email header; these have no bearing on the SMTP connection
 - `CLEANUP_INTERVAL` specifies the interval for which the cleanup task should be executed. Note that this will only run in production.

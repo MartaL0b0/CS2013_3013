@@ -154,7 +154,7 @@ class Resolution(Resource):
         do_resolve(to_resolve)
         return full_form_schema.jsonify(to_resolve)
 
-def init_app(app):
+def add_ui_routes(app):
     @app.route("/resolve")
     def ui_resolve_form():
         # Deserialize and validate token from request params

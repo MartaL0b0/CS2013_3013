@@ -2,7 +2,7 @@ from os import environ
 from functools import wraps
 from datetime import datetime
 
-from flask import current_app, request, jsonify
+from flask import current_app, request, jsonify, render_template
 from marshmallow import ValidationError
 from flask_restful import Resource
 from flask_jwt_extended import *
@@ -66,8 +66,6 @@ def jwt_access_or_refresh(f):
     return decorated_function
 
 class Registration(Resource):
-    decorators = [limiter.limit(environ['RATELIMIT_REGISTRATION'])]
-
     # POST -> Create a new user account
     @json_required
     @admin_required
@@ -84,6 +82,7 @@ class Registration(Resource):
 
         # New users should not be admins
         new_user.is_admin = False
+        new_user.current_pw_token = 0
         new_user.registration_time = datetime.now()
 
         # Save the new user into the database
@@ -191,3 +190,39 @@ class Access(Resource):
         db.session.commit()
 
         return None, 204
+
+def add_ui_routes(app):
+    @app.route('/reset-password', methods=['GET'])
+    def ui_reset_password():
+        try:
+            reset_info = ui_pw_reset_schema.load(request.args).data
+        except ValidationError as ex:
+            message = ex.messages['_schema'][0] if '_schema' in ex.messages else ex
+            return render_template('422.html', message=message), 422
+
+        user = User.find_by_username(reset_info['username'])
+        title = 'Reset your password' if user.password else 'Set your password'
+        return render_template('pw_reset.html', title=title, token=request.args['token'])
+
+    @app.route('/reset-password', methods=['POST'])
+    def ui_complete_reset_password():
+        try:
+            reset_info = ui_pw_reset_schema.load(request.form).data
+        except ValidationError as ex:
+            message = ex.messages['_schema'][0] if '_schema' in ex.messages else ex
+            return render_template('422.html', message=message), 422
+
+        user = User.find_by_username(reset_info['username'])
+        extra = ' You may now log in.' if not user.password else ''
+
+        pw_change = User()
+        change_pw_schema.load({
+            'username': user.username,
+            'password': request.form['password']
+        }, instance=pw_change)
+
+        user.password = pw_change.password
+        user.current_pw_token += 1
+        db.session.commit()
+
+        return render_template('pw_reset_success.html', extra=extra)

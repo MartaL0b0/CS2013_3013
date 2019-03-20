@@ -7,7 +7,7 @@ import sqlalchemy
 import marshmallow
 from marshmallow import ValidationError
 from marshmallow_sqlalchemy import field_for
-from itsdangerous import URLSafeSerializer, BadSignature, BadData
+from itsdangerous import URLSafeSerializer, URLSafeTimedSerializer, BadSignature, BadData
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -19,11 +19,16 @@ validation = Marshmallow()
 def init_app(app):
     db.init_app(app)
 
-    global form_resolve_signer
     # Use Flask's secret key to sign our resolution tokens
     # The salt is a public value, but should be different for each type of token to prevent re-use
     form_resolve_signer = URLSafeSerializer(app.config['SECRET_KEY'], salt='form-resolution')
-    reset_pw_signer = URLSafeSerializer(app.config['SECRET_KEY'], salt='password-reset')
+    pw_reset_signer = URLSafeTimedSerializer(app.config['SECRET_KEY'], salt='password-reset')
+
+    ui_resolve_schema.itsd_signer = form_resolve_signer
+    ui_pw_reset_schema.itsd_signer = pw_reset_signer
+    ui_pw_reset_schema.itsd_max_age = app.config['PW_RESET_WINDOW']
+
+    print(ui_pw_reset_schema.dump({'username': 'dude', 'token_id': 0}))
 
 class DumpTweaksMixin:
     def __init__(self):
@@ -60,6 +65,7 @@ class User(db.Model):
     password = db.Column(db.String(128))
     registration_time = db.Column(db.DateTime, nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False)
+    current_pw_token = db.Column(db.Integer, nullable=False)
     revoked_tokens = db.relationship('RevokedToken', backref='user')
     forms = db.relationship('Form', backref='user')
 
@@ -68,6 +74,8 @@ class User(db.Model):
         return cls.query.filter_by(username=username).first()
 
     def verify_password(self, password):
+        if not password or not self.password:
+            return False
         return sha256.verify(password, self.password)
 
     @property
@@ -236,14 +244,11 @@ class UserSchema(validation.ModelSchema, DumpTweaksMixin):
         # Return the registration time as a Unix timestamp
         out_data['registration_time'] = int(out.registration_time.timestamp())
 
-class UIResolve:
-    def __init__(self, username, form_id):
-        self.username = username
-        self.form_id = form_id
-
-class UIResolveSchema(marshmallow.Schema):
-    username = marshmallow.fields.Str(required=True)
-    form_id = marshmallow.fields.Integer(required=True)
+class ItsDangerousSchema(marshmallow.Schema):
+    def __init__(self, signer, *args, max_age=None, **kwargs):
+        marshmallow.Schema.__init__(self, *args, **kwargs)
+        self.itsd_signer = signer
+        self.itsd_max_age = max_age
 
     @marshmallow.pre_load
     def deserialize(self, in_data):
@@ -252,7 +257,10 @@ class UIResolveSchema(marshmallow.Schema):
 
         try:
             # Validate and deserialize the token
-            result = form_resolve_signer.loads(in_data['token'])
+            if self.itsd_max_age:
+                result = self.itsd_signer.loads(in_data['token'], max_age=self.itsd_max_age)
+            else:
+                result = self.itsd_signer.loads(in_data['token'])
         except (BadSignature, BadData) as ex:
             raise ValidationError(str(ex))
 
@@ -261,16 +269,41 @@ class UIResolveSchema(marshmallow.Schema):
     @marshmallow.post_dump
     def serialize(self, out_data):
         # Return a signed token as the serialized result
-        return form_resolve_signer.dumps(out_data)
+        return self.itsd_signer.dumps(out_data)
+
+class UIResolveSchema(ItsDangerousSchema):
+    username = marshmallow.fields.Str(required=True)
+    form_id = marshmallow.fields.Integer(required=True)
+
+    def __init__(self, *args, **kwargs):
+        ItsDangerousSchema.__init__(self, None, *args, **kwargs)
+
+class UIPasswordResetSchema(ItsDangerousSchema):
+    username = marshmallow.fields.Str(required=True)
+    token_id = marshmallow.fields.Integer(required=True)
+
+    def __init__(self, *args, **kwargs):
+        ItsDangerousSchema.__init__(self, None, *args, **kwargs)
+
+    @marshmallow.post_load
+    def ensure_latest_token(self, data):
+        user = User.find_by_username(data['username'])
+        # We increment this value every time a new reset request is made,
+        # invalidating the previous one(s)
+        if data['token_id'] != user.current_pw_token:
+            raise ValidationError('This token has already been used')
+
+        return data
 
 full_user_schema = UserSchema(strict=True)
 new_user_schema = UserSchema(strict=True, only=['username', 'email', 'is_admin', 'first_name', 'last_name'], partial=['last_name'])
 login_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
 change_access_schema = UserSchema(strict=True, only=['username', 'is_admin'], partial=['is_admin'])
-user_info_schema = UserSchema(strict=True, exclude=['password', 'revoked_tokens'])
+user_info_schema = UserSchema(strict=True, exclude=['password', 'current_pw_token', 'revoked_tokens'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
+ui_pw_reset_schema = UIPasswordResetSchema(strict=True)
 
 full_form_schema = FormSchema(strict=True)
 forms_schema = FormSchema(strict=True, many=True)

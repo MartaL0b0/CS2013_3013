@@ -27,9 +27,8 @@ services:
             - MYSQL_USER=${MYSQL_USER}
             - MYSQL_PASSWORD=${MYSQL_PASSWORD}
             - MYSQL_DATABASE=${MYSQL_DATABASE}
-            - REGISTRATION_WINDOW=${REGISTRATION_WINDOW}
+            - PW_RESET_WINDOW=${PW_RESET_WINDOW}
             - RATELIMIT_DEFAULT=${RATELIMIT_DEFAULT}
-            - RATELIMIT_REGISTRATION=${RATELIMIT_REGISTRATION}
             - CLEANUP_INTERVAL=${CLEANUP_INTERVAL}
         volumes:
             - ./app:/opt/app:ro
