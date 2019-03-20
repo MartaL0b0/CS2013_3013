@@ -24,6 +24,30 @@ def init_app(app):
     # The salt is a public value, but should be different for each type of token to prevent re-use
     form_resolve_signer = URLSafeSerializer(app.config['SECRET_KEY'], salt='form-resolution')
 
+class DumpTweaksMixin:
+    def __init__(self):
+        self._tweaks = []
+
+    @marshmallow.post_dump(pass_many=True, pass_original=True)
+    def _dump_tweaks(self, out_data, many, out):
+        if not many:
+            if not out:
+                return out_data
+
+            for t in self._tweaks:
+                t(out_data, out)
+
+            return out_data
+
+        for i, d in enumerate(out_data):
+            if not d:
+                continue
+
+            for t in self._tweaks:
+                t(d, out[i])
+
+        return out_data
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -128,7 +152,7 @@ class RevokedTokenSchema(validation.ModelSchema):
 
         return token
 
-class FormSchema(validation.ModelSchema):
+class FormSchema(validation.ModelSchema, DumpTweaksMixin):
     class Meta:
         model = Form
         exclude = ['user', 'submitter']
@@ -137,9 +161,10 @@ class FormSchema(validation.ModelSchema):
     id = marshmallow.fields.Int(required=True)
 
     def __init__(self, *args, **kwargs):
-        super(validation.ModelSchema, self).__init__(*args, **kwargs)
+        validation.ModelSchema.__init__(self, *args, **kwargs)
+        DumpTweaksMixin.__init__(self)
+        self._tweaks = [self.return_username, self.return_unix_time]
         self.unix_fields = ['time', 'resolved_at']
-        self.tweaks = [self.return_username, self.return_unix_time]
 
     def return_username(self, out_data, out):
         # Return the username for the user who submitted the form
@@ -151,26 +176,6 @@ class FormSchema(validation.ModelSchema):
             d = out.__dict__
             if d[f]:
                 out_data[f] = int(d[f].timestamp())
-
-    @marshmallow.post_dump(pass_many=True, pass_original=True)
-    def dump_tweaks(self, out_data, many, out):
-        if not many:
-            if not out:
-                return out_data
-
-            for t in self.tweaks:
-                t(out_data, out)
-
-            return out_data
-
-        for i, d in enumerate(out_data):
-            if not d:
-                continue
-
-            for t in self.tweaks:
-                t(d, out[i])
-
-        return out_data
 
     @marshmallow.post_dump
     def stringify_amount(self, out_data):
@@ -195,14 +200,18 @@ class FormSchema(validation.ModelSchema):
             # Marshmallow expects DateTime fields to be in ISO string form
             in_data['time'] = datetime.utcfromtimestamp(t).isoformat()
 
-class UserSchema(validation.ModelSchema):
+class UserSchema(validation.ModelSchema, DumpTweaksMixin):
     class Meta:
         model = User
         # Users shouldn't be able to supply a list of revoked tokens
         dump_only = ["revoked_tokens"]
 
     revoked_tokens = validation.Nested(RevokedTokenSchema, many=True)
-    forms = validation.Nested(FormSchema, many=True)
+
+    def __init__(self, *args, **kwargs):
+        validation.ModelSchema.__init__(self, *args, **kwargs)
+        DumpTweaksMixin.__init__(self)
+        self._tweaks = [self.return_unix_time]
 
     @marshmallow.pre_load
     def hash_password(self, in_data):
@@ -222,6 +231,10 @@ class UserSchema(validation.ModelSchema):
                 in_data['email'] = result['email']
             except (EmailNotValidError, EmailUndeliverableError) as ex:
                 raise ValidationError(str(ex))
+
+    def return_unix_time(self, out_data, out):
+        # Return the registration time as a Unix timestamp
+        out_data['registration_time'] = int(out.registration_time.timestamp())
 
 class UIResolve:
     def __init__(self, username, form_id):
@@ -255,6 +268,7 @@ new_user_schema = UserSchema(strict=True, only=['username', 'password', 'email',
 login_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
 change_access_schema = UserSchema(strict=True, only=['username', 'is_approved', 'is_admin'], partial=['is_approved', 'is_admin'])
+user_info_schema = UserSchema(strict=True, exclude=['password', 'revoked_tokens'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
 

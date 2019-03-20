@@ -93,6 +93,11 @@ class Registration(Resource):
         return None, 204
 
 class Login(Resource):
+    # GET -> User info
+    @jwt_required
+    def get(self):
+        return user_info_schema.jsonify(current_user)
+
     # POST -> Log in
     @json_required
     def post(self):
