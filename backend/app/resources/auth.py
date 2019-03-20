@@ -80,6 +80,8 @@ class Registration(Resource):
 
         if User.find_by_username(new_user.username):
             return {'message': 'User {} already exists'.format(new_user.username)}, 400
+        if User.find_by_email(new_user.email):
+            return {'message': 'A user with email {} already exists'.format(new_user.email)}, 400
 
         # New users should not be admins
         new_user.is_admin = False

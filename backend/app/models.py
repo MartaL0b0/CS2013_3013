@@ -71,6 +71,10 @@ class User(db.Model):
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
 
+    @classmethod
+    def find_by_email(cls, email):
+        return cls.query.filter_by(email=email).first()
+
     def verify_password(self, password):
         if not password or not self.password:
             return False
