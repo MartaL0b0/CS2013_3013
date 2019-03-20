@@ -23,6 +23,7 @@ def init_app(app):
     # Use Flask's secret key to sign our resolution tokens
     # The salt is a public value, but should be different for each type of token to prevent re-use
     form_resolve_signer = URLSafeSerializer(app.config['SECRET_KEY'], salt='form-resolution')
+    reset_pw_signer = URLSafeSerializer(app.config['SECRET_KEY'], salt='password-reset')
 
 class DumpTweaksMixin:
     def __init__(self):
@@ -56,9 +57,8 @@ class User(db.Model):
     email = db.Column(db.String(128), unique=True, nullable=False)
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64))
-    password = db.Column(db.String(128), nullable=False)
+    password = db.Column(db.String(128))
     registration_time = db.Column(db.DateTime, nullable=False)
-    is_approved = db.Column(db.Boolean, nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False)
     revoked_tokens = db.relationship('RevokedToken', backref='user')
     forms = db.relationship('Form', backref='user')
@@ -264,10 +264,10 @@ class UIResolveSchema(marshmallow.Schema):
         return form_resolve_signer.dumps(out_data)
 
 full_user_schema = UserSchema(strict=True)
-new_user_schema = UserSchema(strict=True, only=['username', 'password', 'email', 'first_name', 'last_name'], partial=['last_name'])
+new_user_schema = UserSchema(strict=True, only=['username', 'email', 'is_admin', 'first_name', 'last_name'], partial=['last_name'])
 login_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
-change_access_schema = UserSchema(strict=True, only=['username', 'is_approved', 'is_admin'], partial=['is_approved', 'is_admin'])
+change_access_schema = UserSchema(strict=True, only=['username', 'is_admin'], partial=['is_admin'])
 user_info_schema = UserSchema(strict=True, exclude=['password', 'revoked_tokens'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
