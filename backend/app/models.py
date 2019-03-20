@@ -28,8 +28,6 @@ def init_app(app):
     ui_pw_reset_schema.itsd_signer = pw_reset_signer
     ui_pw_reset_schema.itsd_max_age = app.config['PW_RESET_WINDOW']
 
-    print(ui_pw_reset_schema.dump({'username': 'dude', 'token_id': 0}))
-
 class DumpTweaksMixin:
     def __init__(self):
         self._tweaks = []

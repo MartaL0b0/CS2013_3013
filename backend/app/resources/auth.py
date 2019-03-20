@@ -2,7 +2,7 @@ from os import environ
 from functools import wraps
 from datetime import datetime
 
-from flask import current_app, request, jsonify, render_template
+from flask import current_app, request, jsonify, url_for, render_template
 from marshmallow import ValidationError
 from flask_restful import Resource
 from flask_jwt_extended import *
@@ -10,6 +10,7 @@ from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderErr
 
 from . import json_required, limiter
 from models import *
+import tasks
 
 jwt = JWTManager()
 
@@ -84,6 +85,17 @@ class Registration(Resource):
         new_user.is_admin = False
         new_user.current_pw_token = 0
         new_user.registration_time = datetime.now()
+
+        # Dispatch an email to the user to set their initial password
+        token = ui_pw_reset_schema.dump({'username': new_user.username, 'token_id': new_user.current_pw_token}).data
+        set_link = url_for('ui_reset_password', token=token, _external=True)
+        tasks.send_email.delay(
+            to=(new_user.full_name, new_user.email),
+            from_=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+            subject='BriefThreat registration',
+            text=render_template('new_user.txt', user=new_user, set_link=set_link),
+            html=render_template('new_user.html', user=new_user, set_link=set_link)
+            )
 
         # Save the new user into the database
         db.session.add(new_user)
