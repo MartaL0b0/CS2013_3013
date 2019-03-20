@@ -2,7 +2,7 @@ version: '3.7'
 services:
     briefthreat:
         image: briefthreat/app
-        restart: always
+        restart: on-failure
         build:
             context: ./build
             dockerfile: Dockerfile.app
@@ -35,12 +35,12 @@ services:
             - ./app:/opt/app:ro
     redis:
         image: redis:alpine
-        restart: always
+        restart: on-failure
         volumes:
             - $REDIS_DATA:/data
     db:
         image: mariadb:latest
-        restart: always
+        restart: on-failure
         environment:
             - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
             - MYSQL_USER=${MYSQL_USER}
@@ -50,7 +50,7 @@ services:
             - $MYSQL_DATA:/var/lib/mysql
     nginx:
         image: briefthreat/nginx
-        restart: always
+        restart: on-failure
         build:
             context: ./build
             dockerfile: Dockerfile.nginx
