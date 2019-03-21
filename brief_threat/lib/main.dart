@@ -5,7 +5,7 @@ import 'Tokens/models/RefreshToken.dart';
 import 'Verification.dart';
 import 'Requests.dart';
 import 'dart:async';
-import 'RequestAccess.dart';
+import 'ForgotPassword.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Tokens/TokenProcessor.dart';
 
@@ -15,8 +15,8 @@ void main() {
       title: 'Form app',
       home: LoginPage(),
       routes: <String, WidgetBuilder> {
-        '/Login': (BuildContext context) => new LoginPage(),
-        '/RequestAccess' : (BuildContext context) => new RequestAccess(),
+        '/login': (BuildContext context) => new LoginPage(),
+        '/password' : (BuildContext context) => new ForgotPassword(),
       },
     ));
 }
@@ -133,14 +133,14 @@ class _LoginPageState extends State<LoginPage> {
                     )
                   ],
                 ),
-                SizedBox(height: 90.0), //spacer
+                SizedBox(height: 60.0), //spacer
                 ButtonBar(
                   children: <Widget>[
                     FlatButton(
-                      child: Text('Request Access'),
+                      child: Text('Forgot your password?'),
                       onPressed: () async {
                         // redirect to new page
-                        Navigator.pushNamed(context, '/RequestAccess');
+                        Navigator.pushNamed(context, '/password');
                       },
                     )
                   ],

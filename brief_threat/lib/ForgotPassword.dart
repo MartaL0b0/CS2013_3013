@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class RequestAccess extends StatefulWidget {
+class ForgotPassword extends StatefulWidget {
   @override
-  State createState() => _RequestAccess();
+  State createState() => _ForgotPassword();
 }
 
-class _RequestAccess extends State <RequestAccess> {
+class _ForgotPassword extends State <ForgotPassword> {
 // text input controllers & variables
   final TextEditingController _userNameController = new TextEditingController();
   String _user = "";
