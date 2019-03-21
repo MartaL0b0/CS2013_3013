@@ -16,7 +16,7 @@ class FormScreen extends StatefulWidget {
   State createState() => _FormScreen(prefs);
 }
 
-class _FormScreen extends State<FormScreen> {
+class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
  
   final SharedPreferences prefs;
   _FormScreen(this. prefs);  //constructor
@@ -59,19 +59,18 @@ class _FormScreen extends State<FormScreen> {
   void initState() {
     super.initState();
     _loadTokensAndRepName();
+    WidgetsBinding.instance.addObserver(this);
   }
 
-  void _biometricAuth () async {
-    var localAuth = LocalAuthentication();
-    bool didAuthenticate = await localAuth.authenticateWithBiometrics(
-        localizedReason: 'Please authenticate to Login', useErrorDialogs: false);
-    if (!didAuthenticate) {
-      _logout();
-    }
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed){
+    if (state == AppLifecycleState.resumed && prefs.getBool("isBiometricsEnabled")) {
       _biometricAuth();
     }
   }
@@ -345,6 +344,15 @@ class _FormScreen extends State<FormScreen> {
     );
   }
 
+  void _biometricAuth () async {
+    var localAuth = LocalAuthentication();
+    bool didAuthenticate = await localAuth.authenticateWithBiometrics(
+        localizedReason: 'Please authenticate to Login', useErrorDialogs: false);
+    if (!didAuthenticate) {
+      _logout();
+    }
+  }
+
   void _toggleBiometrics() {
     String question = "";
     bool isOptionEnabled = prefs.getBool("isBiometricsEnabled");
@@ -381,10 +389,7 @@ class _FormScreen extends State<FormScreen> {
         );
       },
     );
-
   }
-
-
 }
 
 // class used to represent buttons
