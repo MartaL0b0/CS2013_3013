@@ -157,7 +157,7 @@ class _Register extends State <Register> {
       await this.prefs.remove('access');
       await this.prefs.remove('refresh');
       await this.prefs.remove('is_admin');
-
+      SnackBarController.showSnackBarErrorMessage(_registerScaffold, "You are no longer logged in.");
       Navigator.pop(context);
       Navigator.pop(context);
     }

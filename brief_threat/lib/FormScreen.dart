@@ -249,7 +249,6 @@ class _FormScreen extends State<FormScreen> {
         break;
       case "Add new user":
         Navigator.push(context, new MaterialPageRoute(builder: (context) => new Register(prefs:prefs)));
-        print("executed");
         break;
       default:
         // shoudln't come here
