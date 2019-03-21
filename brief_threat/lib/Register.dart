@@ -152,6 +152,7 @@ class _Register extends State <Register> {
 
   void _createNewUser () async {
     accessToken = await TokenParser.checkTokens(accessToken, refreshToken, prefs);
+    accessToken = null;
     if (accessToken == null) {
       // no longer logged in, pop both screens back to login screen & remove prefs
       await this.prefs.remove('access');
@@ -160,6 +161,7 @@ class _Register extends State <Register> {
       SnackBarController.showSnackBarErrorMessage(_registerScaffold, "You are no longer logged in.");
       Navigator.pop(context);
       Navigator.pop(context);
+      return;
     }
     String status = await Requests.register(_user, _email, isAdmin, _firstName, _lastName, accessToken);
     _showMessageDialog(status == null ? "Registration for user $_user was successful!" : "An error occured.", status == null ? '' : status);
