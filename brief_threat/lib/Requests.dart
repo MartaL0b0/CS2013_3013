@@ -21,9 +21,25 @@ class Requests {
     return null;
   }
 
+  // returns true if user is an admin
+  static Future<bool> isUserAdmin(String accessToken) async {
+    final response = await http.get(
+      'https://briefthreat.nul.ie/api/v1/auth/login', 
+      headers: {"Authorization": "Bearer $accessToken"});
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> json =jsonDecode(response.body);
+      // success, return access token from JSON
+      return json['is_admin'];
+    } 
+
+    // request failed
+    return false;
+  }
+
   static Future<AccessToken> generateAccessToken(String refreshToken) async {
     final response = await http.post(
-      'https://briefthreat.nul.ie//api/v1/auth/token', 
+      'https://briefthreat.nul.ie/api/v1/auth/token', 
       headers: {"Authorization": "Bearer $refreshToken"});
 
     if (response.statusCode == 200) {
@@ -46,7 +62,7 @@ class Requests {
       });
 
     final response = await http.post(
-      'https://briefthreat.nul.ie//api/v1/form', 
+      'https://briefthreat.nul.ie/api/v1/form', 
       headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"},
       body: dataAsJson);
 
@@ -61,7 +77,7 @@ class Requests {
 
   static Future<bool> deleteToken(String token) async {
     final response = await http.delete(
-      'https://briefthreat.nul.ie//api/v1/auth/token', 
+      'https://briefthreat.nul.ie/api/v1/auth/token', 
       headers: {"Authorization": "Bearer $token"});
 
     if(response.statusCode == 204) {
@@ -69,5 +85,17 @@ class Requests {
     }
 
     return false;
+  }
+
+  // register new user, returns boolean status reflecting success / failure
+  static Future<String> register(String username, String email, bool isAdmin, String firstName, String lastName, String accessToken) async {
+    String dataAsJson =jsonEncode({"username": username, "email": email, "is_admin":isAdmin, "first_name":firstName, "last_name":lastName});
+
+    final response = await http.post(
+      'https://briefthreat.nul.ie/api/v1/auth/register', 
+      headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"},
+      body: dataAsJson);
+
+    return response.statusCode == 204 ? null : jsonDecode(response.body)['message'];
   }  
 }

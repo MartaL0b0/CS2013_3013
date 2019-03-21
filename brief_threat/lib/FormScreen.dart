@@ -6,19 +6,26 @@ import 'Verification.dart';
 import 'Tokens/TokenProcessor.dart';
 import 'Requests.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'Register.dart';
 
 class FormScreen extends StatefulWidget {
   final SharedPreferences prefs;
+  final bool isAdmin;
 
-  FormScreen({Key key, @required this.prefs}) : super(key: key);
+  FormScreen({Key key, @required this.prefs, this.isAdmin}) : super(key: key);
   @override
-  State createState() => _FormScreen(prefs);
+  State createState() => _FormScreen(prefs, isAdmin);
 }
 
 class _FormScreen extends State<FormScreen> {
- 
+ // list of choices on the side menu, add a line here to add another option
+ final List<barButtonOptions> options = <barButtonOptions>[
+   // we don't use the icons as of now
+  const barButtonOptions(title: 'Log Out', icon: null)
+  ];
   final SharedPreferences prefs;
-  _FormScreen(this. prefs);  //constructor
+  final bool isAdmin;
+  _FormScreen(this.prefs, this.isAdmin);  //constructor
 
   String _user = "";
   String _repName = "";
@@ -58,7 +65,11 @@ class _FormScreen extends State<FormScreen> {
   void initState() {
     super.initState();
     _loadTokensAndRepName();
+    if (this.isAdmin) {
+      options.add(const barButtonOptions(title: 'Add new user', icon: null));
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +248,7 @@ class _FormScreen extends State<FormScreen> {
         _showLogOutDialog();
         break;
       case "Add new user":
-        Navigator.pushNamed(context, '/register');
+        Navigator.push(context, new MaterialPageRoute(builder: (context) => new Register(prefs:prefs)));
         print("executed");
         break;
       default:
@@ -269,6 +280,7 @@ class _FormScreen extends State<FormScreen> {
     // remove them from local storage
     await this.prefs.remove('access');
     await this.prefs.remove('refresh');
+    await this.prefs.remove('is_admin');
 
     // pop popup message
     Navigator.of(context).pop();
@@ -331,10 +343,3 @@ class barButtonOptions {
   final String title;
   final IconData icon;
 }
-
-// list of choices on the side menu, add a line here to add another option
- const List<barButtonOptions> options = const <barButtonOptions>[
-   // we don't use the icons as of now
-  const barButtonOptions(title: 'Log out', icon: null),
-  const barButtonOptions(title: 'Add new user', icon: null),
-];

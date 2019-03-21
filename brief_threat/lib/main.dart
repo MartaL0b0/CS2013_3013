@@ -8,7 +8,6 @@ import 'dart:async';
 import 'RequestAccess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Tokens/TokenProcessor.dart';
-import 'Register.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -17,7 +16,6 @@ void main() {
       routes: <String, WidgetBuilder> {
         '/Login': (BuildContext context) => new LoginPage(),
         '/RequestAccess' : (BuildContext context) => new RequestAccess(),
-        '/register' : (BuildContext context) => new Register(),
       },
     ));
 }
@@ -29,12 +27,13 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   // text input controllers & variables
-  final TextEditingController _userNameController = new TextEditingController(text: "root");
-  final TextEditingController _passwordController = new TextEditingController(text: "tinder4cats2k19");
+  final TextEditingController _userNameController = new TextEditingController();
+  final TextEditingController _passwordController = new TextEditingController();
   String _user = "";
   String _password = "";
   var hidePassword = true;
   SharedPreferences prefs;
+  bool isAdmin;
 
 
   @override
@@ -106,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
                         }
 
                         // show loading snack bar, close any previous snackbar before showing new one
-                         _scaffoldKey.currentState.hideCurrentSnackBar();
+                        _scaffoldKey.currentState.hideCurrentSnackBar();
                         _scaffoldKey.currentState.showSnackBar(
                             new SnackBar(
                               content: new Row(
@@ -125,9 +124,8 @@ class _LoginPageState extends State<LoginPage> {
                         }
 
                         _passwordController.clear();
-
                         // redirect to new page
-                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
+                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs, isAdmin: isAdmin)));
                       },
                     )
                   ],
@@ -152,14 +150,16 @@ class _LoginPageState extends State<LoginPage> {
 
   void _getPreferences() async {
     prefs = await SharedPreferences.getInstance();
-    if ((_user = await prefs.get('username') ?? '') != '') {
+    if ((_user = prefs.getString('username') ?? '') != '') {
       setState(() {
         _userNameController.text =_user;
       });
     }
-    if (TokenParser.validateToken((await prefs.getString('refresh') ??  ''))){
+    isAdmin = prefs.getBool('is_admin') ?? false;
+
+    if (TokenParser.validateToken((prefs.getString('refresh') ??  ''))){
       // already logged in
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
+      Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs, isAdmin: isAdmin)));
       return;
     }
   }
@@ -178,10 +178,12 @@ class _LoginPageState extends State<LoginPage> {
       SnackBarController.showSnackBarErrorMessage(key, "Incorrect username or password. Please try again");
       return false;
     } 
-
     await prefs.setString('username', user);
     await prefs.setString('refresh', token.refreshToken);
     await prefs.setString('access', token.accessToken.accessToken);
+
+    isAdmin = await Requests.isUserAdmin(token.accessToken.accessToken);
+    await prefs.setBool('is_admin', isAdmin);
 
     // successful login 
     key.currentState.hideCurrentSnackBar();

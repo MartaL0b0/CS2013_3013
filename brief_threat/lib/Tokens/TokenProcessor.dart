@@ -15,6 +15,7 @@ class TokenParser {
     return val > now;
   }
 
+  // returns a valid access token (null when refresh token expired)
   static Future<String> checkTokens(String access, String refresh, SharedPreferences prefs) async {
     AccessToken token;
     if (!validateToken(access) && !validateToken(refresh)) {
