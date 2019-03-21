@@ -2,7 +2,7 @@ version: '3.7'
 services:
     briefthreat:
         image: briefthreat/app
-        restart: always
+        restart: on-failure
         build:
             context: ./build
             dockerfile: Dockerfile.app
@@ -27,20 +27,21 @@ services:
             - MYSQL_USER=${MYSQL_USER}
             - MYSQL_PASSWORD=${MYSQL_PASSWORD}
             - MYSQL_DATABASE=${MYSQL_DATABASE}
-            - REGISTRATION_WINDOW=${REGISTRATION_WINDOW}
+            - PW_RESET_WINDOW=${PW_RESET_WINDOW}
             - RATELIMIT_DEFAULT=${RATELIMIT_DEFAULT}
-            - RATELIMIT_REGISTRATION=${RATELIMIT_REGISTRATION}
             - CLEANUP_INTERVAL=${CLEANUP_INTERVAL}
         volumes:
             - ./app:/opt/app:ro
     redis:
         image: redis:alpine
-        restart: always
+        restart: on-failure
         volumes:
             - $REDIS_DATA:/data
     db:
         image: mariadb:latest
-        restart: always
+        restart: on-failure
+        command:
+            - --wait_timeout=28800
         environment:
             - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
             - MYSQL_USER=${MYSQL_USER}
@@ -50,7 +51,7 @@ services:
             - $MYSQL_DATA:/var/lib/mysql
     nginx:
         image: briefthreat/nginx
-        restart: always
+        restart: on-failure
         build:
             context: ./build
             dockerfile: Dockerfile.nginx

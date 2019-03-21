@@ -43,7 +43,7 @@ app.config.update({
     'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
     'JWT_ACCESS_TOKEN_EXPIRES': int(environ['JWT_ACCESS_EXPIRY']),
     'JWT_REFRESH_TOKEN_EXPIRES': int(environ['JWT_REFRESH_EXPIRY']),
-    'REGISTRATION_WINDOW': int(environ['REGISTRATION_WINDOW']),
+    'PW_RESET_WINDOW': int(environ['PW_RESET_WINDOW']),
     'RATELIMIT_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
     'RATELIMIT_DEFAULT': environ['RATELIMIT_DEFAULT'],
     'CLEANUP_ENABLED': True if environ['FLASK_ENV'] == 'production' else False,
@@ -115,7 +115,8 @@ api.add_resource(form.Manage, '/form')
 api.add_resource(form.Resolution, '/form/resolve')
 
 # UI routes
-form.init_app(app)
+auth.add_ui_routes(app)
+form.add_ui_routes(app)
 
 @app.before_first_request
 def init_db():
@@ -133,7 +134,7 @@ def init_db():
             'first_name': 'Administrator',
             'password': password,
             'registration_time': datetime.utcnow(),
-            'is_approved': True,
+            'current_pw_token': 0,
             'is_admin': True
         }, instance=root)
 

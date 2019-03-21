@@ -7,7 +7,7 @@ import sqlalchemy
 import marshmallow
 from marshmallow import ValidationError
 from marshmallow_sqlalchemy import field_for
-from itsdangerous import URLSafeSerializer, BadSignature, BadData
+from itsdangerous import URLSafeSerializer, URLSafeTimedSerializer, BadSignature, BadData
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -19,10 +19,38 @@ validation = Marshmallow()
 def init_app(app):
     db.init_app(app)
 
-    global form_resolve_signer
     # Use Flask's secret key to sign our resolution tokens
     # The salt is a public value, but should be different for each type of token to prevent re-use
     form_resolve_signer = URLSafeSerializer(app.config['SECRET_KEY'], salt='form-resolution')
+    pw_reset_signer = URLSafeTimedSerializer(app.config['SECRET_KEY'], salt='password-reset')
+
+    ui_resolve_schema.itsd_signer = form_resolve_signer
+    ui_pw_reset_schema.itsd_signer = pw_reset_signer
+    ui_pw_reset_schema.itsd_max_age = app.config['PW_RESET_WINDOW']
+
+class DumpTweaksMixin:
+    def __init__(self):
+        self._tweaks = []
+
+    @marshmallow.post_dump(pass_many=True, pass_original=True)
+    def _dump_tweaks(self, out_data, many, out):
+        if not many:
+            if not out:
+                return out_data
+
+            for t in self._tweaks:
+                t(out_data, out)
+
+            return out_data
+
+        for i, d in enumerate(out_data):
+            if not d:
+                continue
+
+            for t in self._tweaks:
+                t(d, out[i])
+
+        return out_data
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -32,10 +60,10 @@ class User(db.Model):
     email = db.Column(db.String(128), unique=True, nullable=False)
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64))
-    password = db.Column(db.String(128), nullable=False)
+    password = db.Column(db.String(128))
     registration_time = db.Column(db.DateTime, nullable=False)
-    is_approved = db.Column(db.Boolean, nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False)
+    current_pw_token = db.Column(db.Integer, nullable=False)
     revoked_tokens = db.relationship('RevokedToken', backref='user')
     forms = db.relationship('Form', backref='user')
 
@@ -43,7 +71,13 @@ class User(db.Model):
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
 
+    @classmethod
+    def find_by_email(cls, email):
+        return cls.query.filter_by(email=email).first()
+
     def verify_password(self, password):
+        if not password or not self.password:
+            return False
         return sha256.verify(password, self.password)
 
     @property
@@ -128,7 +162,7 @@ class RevokedTokenSchema(validation.ModelSchema):
 
         return token
 
-class FormSchema(validation.ModelSchema):
+class FormSchema(validation.ModelSchema, DumpTweaksMixin):
     class Meta:
         model = Form
         exclude = ['user', 'submitter']
@@ -137,9 +171,10 @@ class FormSchema(validation.ModelSchema):
     id = marshmallow.fields.Int(required=True)
 
     def __init__(self, *args, **kwargs):
-        super(validation.ModelSchema, self).__init__(*args, **kwargs)
+        validation.ModelSchema.__init__(self, *args, **kwargs)
+        DumpTweaksMixin.__init__(self)
+        self._tweaks = [self.return_username, self.return_unix_time]
         self.unix_fields = ['time', 'resolved_at']
-        self.tweaks = [self.return_username, self.return_unix_time]
 
     def return_username(self, out_data, out):
         # Return the username for the user who submitted the form
@@ -151,26 +186,6 @@ class FormSchema(validation.ModelSchema):
             d = out.__dict__
             if d[f]:
                 out_data[f] = int(d[f].timestamp())
-
-    @marshmallow.post_dump(pass_many=True, pass_original=True)
-    def dump_tweaks(self, out_data, many, out):
-        if not many:
-            if not out:
-                return out_data
-
-            for t in self.tweaks:
-                t(out_data, out)
-
-            return out_data
-
-        for i, d in enumerate(out_data):
-            if not d:
-                continue
-
-            for t in self.tweaks:
-                t(d, out[i])
-
-        return out_data
 
     @marshmallow.post_dump
     def stringify_amount(self, out_data):
@@ -195,14 +210,18 @@ class FormSchema(validation.ModelSchema):
             # Marshmallow expects DateTime fields to be in ISO string form
             in_data['time'] = datetime.utcfromtimestamp(t).isoformat()
 
-class UserSchema(validation.ModelSchema):
+class UserSchema(validation.ModelSchema, DumpTweaksMixin):
     class Meta:
         model = User
         # Users shouldn't be able to supply a list of revoked tokens
         dump_only = ["revoked_tokens"]
 
     revoked_tokens = validation.Nested(RevokedTokenSchema, many=True)
-    forms = validation.Nested(FormSchema, many=True)
+
+    def __init__(self, *args, **kwargs):
+        validation.ModelSchema.__init__(self, *args, **kwargs)
+        DumpTweaksMixin.__init__(self)
+        self._tweaks = [self.return_unix_time]
 
     @marshmallow.pre_load
     def hash_password(self, in_data):
@@ -223,14 +242,15 @@ class UserSchema(validation.ModelSchema):
             except (EmailNotValidError, EmailUndeliverableError) as ex:
                 raise ValidationError(str(ex))
 
-class UIResolve:
-    def __init__(self, username, form_id):
-        self.username = username
-        self.form_id = form_id
+    def return_unix_time(self, out_data, out):
+        # Return the registration time as a Unix timestamp
+        out_data['registration_time'] = int(out.registration_time.timestamp())
 
-class UIResolveSchema(marshmallow.Schema):
-    username = marshmallow.fields.Str(required=True)
-    form_id = marshmallow.fields.Integer(required=True)
+class ItsDangerousSchema(marshmallow.Schema):
+    def __init__(self, signer, *args, max_age=None, **kwargs):
+        marshmallow.Schema.__init__(self, *args, **kwargs)
+        self.itsd_signer = signer
+        self.itsd_max_age = max_age
 
     @marshmallow.pre_load
     def deserialize(self, in_data):
@@ -239,7 +259,10 @@ class UIResolveSchema(marshmallow.Schema):
 
         try:
             # Validate and deserialize the token
-            result = form_resolve_signer.loads(in_data['token'])
+            if self.itsd_max_age:
+                result = self.itsd_signer.loads(in_data['token'], max_age=self.itsd_max_age)
+            else:
+                result = self.itsd_signer.loads(in_data['token'])
         except (BadSignature, BadData) as ex:
             raise ValidationError(str(ex))
 
@@ -248,15 +271,42 @@ class UIResolveSchema(marshmallow.Schema):
     @marshmallow.post_dump
     def serialize(self, out_data):
         # Return a signed token as the serialized result
-        return form_resolve_signer.dumps(out_data)
+        return self.itsd_signer.dumps(out_data)
+
+class UIResolveSchema(ItsDangerousSchema):
+    username = marshmallow.fields.Str(required=True)
+    form_id = marshmallow.fields.Integer(required=True)
+
+    def __init__(self, *args, **kwargs):
+        ItsDangerousSchema.__init__(self, None, *args, **kwargs)
+
+class UIPasswordResetSchema(ItsDangerousSchema):
+    username = marshmallow.fields.Str(required=True)
+    token_id = marshmallow.fields.Integer(required=True)
+
+    def __init__(self, *args, **kwargs):
+        ItsDangerousSchema.__init__(self, None, *args, **kwargs)
+
+    @marshmallow.post_load
+    def ensure_latest_token(self, data):
+        user = User.find_by_username(data['username'])
+        # We increment this value every time a new reset request is made,
+        # invalidating the previous one(s)
+        if data['token_id'] != user.current_pw_token:
+            raise ValidationError('This token has already been used')
+
+        return data
 
 full_user_schema = UserSchema(strict=True)
-new_user_schema = UserSchema(strict=True, only=['username', 'password', 'email', 'first_name', 'last_name'], partial=['last_name'])
+new_user_schema = UserSchema(strict=True, only=['username', 'email', 'is_admin', 'first_name', 'last_name'], partial=['last_name'])
 login_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
-change_access_schema = UserSchema(strict=True, only=['username', 'is_approved', 'is_admin'], partial=['is_approved', 'is_admin'])
+change_access_schema = UserSchema(strict=True, only=['username', 'is_admin'], partial=['is_admin'])
+user_info_schema = UserSchema(strict=True, exclude=['password', 'current_pw_token', 'revoked_tokens'])
+pw_reset_schema = UserSchema(strict=True, only=['username'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
+ui_pw_reset_schema = UIPasswordResetSchema(strict=True)
 
 full_form_schema = FormSchema(strict=True)
 forms_schema = FormSchema(strict=True, many=True)
