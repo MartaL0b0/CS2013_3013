@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'colors.dart' as colors;
 
 class RequestAccess extends StatefulWidget {
   @override
@@ -42,7 +43,8 @@ class _RequestAccess extends State <RequestAccess> {
                 ButtonBar(
                   children: <Widget>[
                     FlatButton(
-                      child: Text('Submit'),
+                      color: colors.buttonColor,
+                      child: Text('Submit', style : TextStyle(color: Colors.white)),
                       onPressed: () async {
                         _user =_userNameController.text;
                         print("sent request to access : $_user");
