@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'Requests.dart';
 
 class ForgotPassword extends StatefulWidget {
   @override
@@ -14,24 +15,17 @@ class _ForgotPassword extends State <ForgotPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Reset your password"),
+      ),
       key: _second,
         body: SafeArea(
             child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 24.0),
               children: <Widget>[
-                SizedBox(height: 80.0),
-                Column(
-                  children: <Widget>[
-                    SizedBox(height: 40.0),
-                    Text('Request Access:',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
-                    ),
-                  ],
-                ),
                 SizedBox(height: 120.0),
                 TextField(
-                  cursorColor: Colors.white,
+                  autofocus: true,
                   decoration: InputDecoration(
                     labelText: "Username",
                     filled: true,
@@ -42,10 +36,10 @@ class _ForgotPassword extends State <ForgotPassword> {
                 ButtonBar(
                   children: <Widget>[
                     FlatButton(
-                      child: Text('Submit'),
+                      child: Text('Reset'),
                       onPressed: () async {
                         _user =_userNameController.text;
-                        print("sent request to access : $_user");
+                        _resetPassword();
                       },
                     )
                   ],
@@ -53,6 +47,36 @@ class _ForgotPassword extends State <ForgotPassword> {
               ],
             )
         )
+    );
+  }
+
+  void _resetPassword () async {
+    String status = await Requests.resetPassword(_user);
+    if (status == null) {
+      // return to login screen on success
+      Navigator.pop(context);
+    }
+    status == null ? _showDialog("Success", "An email will be sent to you shortly.") : _showDialog("An error occured.", status);
+  }
+
+    void _showDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text(title),
+          content: new Text(message),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

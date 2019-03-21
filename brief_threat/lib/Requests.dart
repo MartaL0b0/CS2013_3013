@@ -70,4 +70,15 @@ class Requests {
 
     return false;
   }  
+
+  static Future<String> resetPassword (String username) async {
+    String data = jsonEncode({"username": username});
+
+    final response = await http.patch(
+      'https://briefthreat.nul.ie//api/v1/auth/login', 
+      headers: {"Content-Type": "application/json"},
+      body: data);
+
+    return response.statusCode == 204 ? null : jsonDecode(response.body)['message'];
+  }
 }
