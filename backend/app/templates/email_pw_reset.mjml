@@ -1,6 +1,6 @@
 <mjml>
   <mj-head>
-    <mj-title>BriefThreat registration</mj-title>
+    <mj-title>BriefThreat password reset</mj-title>
     <mj-attributes>
       <mj-class name="text" font-family="Roboto, sans-serif" color="#b61827"/>
     </mj-attributes>
@@ -25,10 +25,10 @@
 
         <mj-text mj-class="text" css-class="text-scaling">
           <p>Hi {{ user.first_name }},</p>
-          <p>Your BriefThreat account has been created (username {{ user.username }}). Before you can login you must set your password, you can do this by clicking the button below.</p>
+          <p>A request was made to reset your password. You can do this by clicking the button below.</p>
         </mj-text>
 
-        <mj-button font-family="Roboto, sans-serif" font-size="22px" href="{{ reset_link }}" background-color="#43A047">Set my password</mj-button>
+        <mj-button font-family="Roboto, sans-serif" font-size="22px" href="{{ reset_link }}" background-color="#43A047">Reset my password</mj-button>
       </mj-column>
     </mj-section>
   </mj-body>

@@ -303,6 +303,7 @@ login_schema = UserSchema(strict=True, only=['username', 'password'])
 change_pw_schema = UserSchema(strict=True, only=['password'])
 change_access_schema = UserSchema(strict=True, only=['username', 'is_admin'], partial=['is_admin'])
 user_info_schema = UserSchema(strict=True, exclude=['password', 'current_pw_token', 'revoked_tokens'])
+pw_reset_schema = UserSchema(strict=True, only=['username'])
 
 revoked_token_schema = RevokedTokenSchema(strict=True)
 ui_pw_reset_schema = UIPasswordResetSchema(strict=True)

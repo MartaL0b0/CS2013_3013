@@ -66,6 +66,25 @@ def jwt_access_or_refresh(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def send_pw_reset_email(user, initial):
+    token = ui_pw_reset_schema.dump({'username': user.username, 'token_id': user.current_pw_token}).data
+    reset_link = url_for('ui_reset_password', token=token, _external=True)
+
+    if initial:
+        template = 'new_user'
+        subject = 'BriefThreat registration'
+    else:
+        template = 'email_pw_reset'
+        subject = 'BriefThreat password reset'
+
+    tasks.send_email.delay(
+        to=(user.full_name, user.email),
+        from_=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+        subject=subject,
+        text=render_template('{}.txt'.format(template), user=user, reset_link=reset_link),
+        html=render_template('{}.html'.format(template), user=user, reset_link=reset_link)
+    )
+
 class Registration(Resource):
     # POST -> Create a new user account
     @json_required
@@ -89,15 +108,7 @@ class Registration(Resource):
         new_user.registration_time = datetime.now()
 
         # Dispatch an email to the user to set their initial password
-        token = ui_pw_reset_schema.dump({'username': new_user.username, 'token_id': new_user.current_pw_token}).data
-        set_link = url_for('ui_reset_password', token=token, _external=True)
-        tasks.send_email.delay(
-            to=(new_user.full_name, new_user.email),
-            from_=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
-            subject='BriefThreat registration',
-            text=render_template('new_user.txt', user=new_user, set_link=set_link),
-            html=render_template('new_user.html', user=new_user, set_link=set_link)
-            )
+        send_pw_reset_email(new_user, True)
 
         # Save the new user into the database
         db.session.add(new_user)
@@ -147,12 +158,33 @@ class Login(Resource):
         # Validate and deserialize input
         pw_change = User()
         try:
-            change_pw_schema.load(request.r_data, instance=pw_change)
+            reset_pw_schema.load(request.r_data, instance=pw_change)
         except ValidationError as err:
             return err.messages, 422
 
         current_user.password = pw_change.password
         db.session.commit()
+        return None, 204
+
+    # PATCH -> Reset password
+    @json_required
+    def patch(self):
+        # Validate and deserialize input
+        pw_reset = User()
+        try:
+            pw_reset_schema.load(request.r_data, instance=pw_reset)
+        except ValidationError as err:
+            return err.messages, 422
+
+        user = User.find_by_username(pw_reset.username)
+        if not user:
+            return {'message': 'User {} does not exist'.format(pw_reset.username)}, 400
+        if not user.password:
+            return {'message': 'User {}\'s password has not been set'.format(pw_reset.username)}, 400
+
+        # Dispatch an email to the user to reset their password
+        send_pw_reset_email(user, False)
+
         return None, 204
 
 class Token(Resource):

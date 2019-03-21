@@ -2,4 +2,4 @@ Hi {{ user.first_name }},
 
 Your BriefThreat account has been created (username {{ user.username }}).
 Before you can login you must set your password, you can do this by following the link below.
-{{ set_link }}
+{{ reset_link }}
