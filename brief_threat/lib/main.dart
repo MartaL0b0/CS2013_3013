@@ -16,7 +16,6 @@ void main() {
       home: LoginPage(),
       routes: <String, WidgetBuilder> {
         '/login': (BuildContext context) => new LoginPage(),
-        '/password' : (BuildContext context) => new ForgotPassword(),
       },
     ));
 }
@@ -139,8 +138,9 @@ class _LoginPageState extends State<LoginPage> {
                     FlatButton(
                       child: Text('Forgot your password?'),
                       onPressed: () async {
+                        _user =_userNameController.text;
                         // redirect to new page
-                        Navigator.pushNamed(context, '/password');
+                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ForgotPassword(originalUsername:_user)));
                       },
                     )
                   ],

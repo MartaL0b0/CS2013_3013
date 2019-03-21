@@ -2,16 +2,27 @@ import 'package:flutter/material.dart';
 import 'Requests.dart';
 
 class ForgotPassword extends StatefulWidget {
+  final String originalUsername;
+
+  ForgotPassword({Key key, @required this.originalUsername}) : super(key: key);
+
   @override
-  State createState() => _ForgotPassword();
+  State createState() => _ForgotPassword(originalUsername);
 }
 
 class _ForgotPassword extends State <ForgotPassword> {
+  String _user = "";
+
+  _ForgotPassword(this._user);  //constructor
 // text input controllers & variables
   final TextEditingController _userNameController = new TextEditingController();
-  String _user = "";
   static final GlobalKey<ScaffoldState> _second = new GlobalKey<ScaffoldState>();
 
+  @override
+  void initState() {
+    super.initState();
+    _userNameController.text =_user;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
