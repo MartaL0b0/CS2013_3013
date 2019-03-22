@@ -19,25 +19,14 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 # Configuration is provided through environment variables by Docker Compose
 app.config.update({
+    'TEST_MODE': 'TEST_MODE' in environ and environ['TEST_MODE'].lower() == 'true',
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-    'SQLALCHEMY_DATABASE_URI': 'mysql+mysqlconnector://{user}:{password}@{host}/{database}'.format(
-        user = environ['MYSQL_USER'],
-        password = environ['MYSQL_PASSWORD'],
-        host = environ['MYSQL_HOST'],
-        database = environ['MYSQL_DATABASE']
-    ),
     'SECRET_KEY': environ['FLASK_SECRET'],
     'SERVER_NAME': environ['PUBLIC_HOST'],
     'PREFERRED_URL_SCHEME': 'https',
     'ROOT_EMAIL': environ['ROOT_EMAIL'],
     'EMAIL_NAME': environ['EMAIL_NAME'],
     'EMAIL_FROM': environ['EMAIL_FROM'],
-    'EMAIL_HOST': environ['SMTP_HOST'],
-    'EMAIL_PORT': 587,
-    'EMAIL_HOST_USER': environ['SMTP_USER'],
-    'EMAIL_HOST_PASSWORD': environ['SMTP_PASSWORD'],
-    'EMAIL_USE_TLS': True,
-    'EMAIL_TIMEOUT': 5,
     'JWT_SECRET_KEY': environ['JWT_SECRET'],
     'JWT_BLACKLIST_ENABLED': True,
     'JWT_BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
@@ -56,6 +45,25 @@ app.config.update({
     'CELERY_RESULT_BACKEND': 'redis://redis:6379/1',
     'CELERY_BROKER_URL': 'redis://redis:6379/1',
 })
+if app.config['TEST_MODE']:
+    app.config.update({
+        'SQLALCHEMY_DATABASE_URI': 'sqlite://',
+    })
+else:
+    app.config.update({
+        'SQLALCHEMY_DATABASE_URI': 'mysql+mysqlconnector://{user}:{password}@{host}/{database}'.format(
+            user = environ['MYSQL_USER'],
+            password = environ['MYSQL_PASSWORD'],
+            host = environ['MYSQL_HOST'],
+            database = environ['MYSQL_DATABASE']
+        ),
+        'EMAIL_HOST': environ['SMTP_HOST'],
+        'EMAIL_PORT': 587,
+        'EMAIL_HOST_USER': environ['SMTP_USER'],
+        'EMAIL_HOST_PASSWORD': environ['SMTP_PASSWORD'],
+        'EMAIL_USE_TLS': True,
+        'EMAIL_TIMEOUT': 5,
+    })
 
 @app.errorhandler(404)
 def not_found(e):
@@ -127,7 +135,7 @@ def init_db():
     root = User.find_by_username('root')
     if not root:
         root = User()
-        password = passlib.pwd.genword(entropy=256)
+        password = 'root' if app.config['TEST_MODE'] else passlib.pwd.genword(entropy=256)
         full_user_schema.load({
             'username': 'root',
             'email': app.config['ROOT_EMAIL'],
