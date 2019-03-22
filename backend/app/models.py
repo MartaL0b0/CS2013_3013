@@ -217,6 +217,7 @@ class UserSchema(validation.ModelSchema, DumpTweaksMixin):
         dump_only = ["revoked_tokens"]
 
     revoked_tokens = validation.Nested(RevokedTokenSchema, many=True)
+    password = marshmallow.fields.Str(required=True)
 
     def __init__(self, *args, **kwargs):
         validation.ModelSchema.__init__(self, *args, **kwargs)
