@@ -1,0 +1,60 @@
+---
+test_name: Check invalid credentials
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: False
+
+stages:
+  - name: Log in without parameters
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+    response:
+      status_code: 400
+      body:
+        message: No input data provided
+  - name: Log in with missing parameters
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{user}"
+    response:
+      status_code: 422
+      body:
+        password:
+          - Missing data for required field.
+  - name: Log in with a non-existent user
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: joe
+        password: lol
+    response:
+      status_code: 401
+      body:
+        message: Invalid credentials
+  - name: Log in with an incorrect password
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: joe
+        password: lol
+    response:
+      status_code: 401
+      body:
+        message: Invalid credentials
+
+---
+test_name: Check login works
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+
+strict: True
+stages:
+  - type: ref
+    id: login
