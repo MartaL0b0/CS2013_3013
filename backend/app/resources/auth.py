@@ -102,8 +102,6 @@ class Registration(Resource):
         if User.find_by_email(new_user.email):
             return {'message': 'A user with email {} already exists'.format(new_user.email)}, 400
 
-        # New users should not be admins
-        new_user.is_admin = False
         new_user.current_pw_token = 0
         new_user.registration_time = datetime.now()
 
