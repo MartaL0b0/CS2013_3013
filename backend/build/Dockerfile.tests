@@ -1,0 +1,6 @@
+FROM python:3.6-alpine
+
+RUN pip install tavern
+COPY test.sh /opt/
+
+CMD [ "/opt/test.sh" ]

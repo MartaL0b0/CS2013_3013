@@ -1,0 +1,10 @@
+---
+
+name: Common variables / stages
+description:
+    Shared test variables and functionality
+variables:
+    base: http://briefthreat:8080
+    base_api: http://briefthreat:8080/api/v1
+    user: root
+    password: root
