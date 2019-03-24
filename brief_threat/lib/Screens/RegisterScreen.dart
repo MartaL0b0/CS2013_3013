@@ -175,7 +175,7 @@ class _Register extends State <Register> {
   }
 
   void _createNewUser () async {
-    accessToken = await TokenParser.checkTokens(accessToken, refreshToken, prefs);
+    accessToken = await TokenProcessor.checkTokens(accessToken, refreshToken, prefs);
     if (accessToken == null) {
       // no longer logged in, pop both screens back to login screen & remove prefs
       await this.prefs.remove('access');

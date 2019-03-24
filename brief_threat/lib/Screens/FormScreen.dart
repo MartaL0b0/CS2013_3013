@@ -156,7 +156,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
   }
 
   void updateAccessToken () async {
-    accessToken = await TokenParser.checkTokens(accessToken, refreshToken, this.prefs);
+    accessToken = await TokenProcessor.checkTokens(accessToken, refreshToken, this.prefs);
   }
 
   @override
@@ -358,7 +358,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
   }
 
   void handleSubmitForm(String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
-    if ((accessToken = await TokenParser.checkTokens(accessToken, refreshToken, this.prefs)) == null) {
+    if ((accessToken = await TokenProcessor.checkTokens(accessToken, refreshToken, this.prefs)) == null) {
       // an error occured with the tokens, means the user no longer has valid tokens 
       // redirect to login page
       Navigator.pop(context);
@@ -366,7 +366,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     }
 
     int requestId = await Requests.postForm(accessToken, user, repName, course, amount, receipt, date, paymentMethod);
-    if (requestId == 0) {
+    if (requestId == -1) {
       SnackBarController.showSnackBarErrorMessage(_formKey, "An error occured. Please try again later.");
       return;
     } 
@@ -442,12 +442,12 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
 
   void _logout() async {
     // delete tokens if they are valid
-    if (TokenParser.validateToken(accessToken) && ! (await Requests.deleteToken(accessToken))) {
+    if (TokenProcessor.validateToken(accessToken) && ! (await Requests.deleteToken(accessToken))) {
       // if we go here, the access token is valid but the call to delete it failed (probably a backend error)
       print("access token deletion failed");
     }
 
-    if (TokenParser.validateToken(refreshToken) && !(await Requests.deleteToken(refreshToken))) {
+    if (TokenProcessor.validateToken(refreshToken) && !(await Requests.deleteToken(refreshToken))) {
       // if we go here, the refresh token is valid but the call to delete it failed (probably a backend error)
       print("refresh token deletion failed");
     }

@@ -153,7 +153,7 @@ class _LoginScreen extends State<LoginScreen> {
     }
     isAdmin = prefs.getBool('is_admin') ?? false;
 
-    if (TokenParser.validateToken((prefs.getString('refresh') ??  ''))){
+    if (TokenProcessor.validateToken((prefs.getString('refresh') ??  ''))){
       // already logged in
       if (!(prefs.getBool("isBiometricsEnabled") ?? false) || ((prefs.getBool("isBiometricsEnabled") ?? false) && await _biometricAuth()) ) {
         Navigator.push(context, new MaterialPageRoute(

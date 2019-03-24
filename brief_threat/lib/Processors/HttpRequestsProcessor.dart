@@ -1,3 +1,7 @@
+/*
+  This file handles all of the requests made to the backend
+ */
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:brief_threat/Models/RefreshToken.dart';
@@ -7,6 +11,8 @@ import 'package:brief_threat/Processors/TokenProcessor.dart';
 import 'package:brief_threat/Models/request.dart';
 
 class Requests {
+
+  // logs in a user, returns both tokens on success, null on error
   static Future<RefreshToken> login(String _username, String _password) async {
     String credentialsAsJson =jsonEncode({"username": _username, "password": _password});
 
@@ -24,10 +30,10 @@ class Requests {
     return null;
   }
 
-    // get forms from user
+    // get forms from as a list of 'Request' classes, returns null on error
     static Future<List<Request>> getForms(SharedPreferences prefs) async {
     String accessToken = prefs.getString('access');
-    accessToken = await TokenParser.checkTokens(accessToken, prefs.getString('refresh'), prefs);
+    accessToken = await TokenProcessor.checkTokens(accessToken, prefs.getString('refresh'), prefs);
     if (accessToken == null) return null;
 
     final response = await http.get(
@@ -46,7 +52,7 @@ class Requests {
   // get all data from user
   static Future<Map<String, dynamic>> getUser(SharedPreferences prefs) async {
     String accessToken = prefs.getString('access');
-    accessToken = await TokenParser.checkTokens(accessToken, prefs.getString('refresh'), prefs);
+    accessToken = await TokenProcessor.checkTokens(accessToken, prefs.getString('refresh'), prefs);
     if (accessToken == null) return null;
 
     final response = await http.get(
@@ -73,6 +79,7 @@ class Requests {
     return json['is_admin'];
   }
 
+  // gets a refresh token and returns an access token
   static Future<AccessToken> generateAccessToken(String refreshToken) async {
     final response = await http.post(
       'https://briefthreat.nul.ie/api/v1/auth/token', 
@@ -87,6 +94,7 @@ class Requests {
     return null;
   }  
 
+  // post a form, return id on success and -1 on error
   static Future<int> postForm(String accessToken, String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
     String dataAsJson =jsonEncode({
       "customer_name" : user,   
@@ -108,10 +116,10 @@ class Requests {
     } 
 
     // request failed
-    return 0;
+    return -1;
   }
 
-  // used to delete a token & log user out
+  // used to delete a token (log user out)
   static Future<bool> deleteToken(String token) async {
     final response = await http.delete(
       'https://briefthreat.nul.ie/api/v1/auth/token', 
@@ -124,15 +132,17 @@ class Requests {
     return false;
   }
 
+  // updates an access token & store the new token in shared preferences
   static Future<String> updateAccessToken (SharedPreferences prefs) async {
     String accessToken = prefs.getString('access');
-    accessToken = await TokenParser.checkTokens(accessToken, prefs.getString('refresh'), prefs);
+    accessToken = await TokenProcessor.checkTokens(accessToken, prefs.getString('refresh'), prefs);
     return accessToken;
   }
 
 
-  // used to delete a token & log user out
+  // only used by admins, can send a request to approve a request
   static Future<bool> approveRequest(int id, SharedPreferences prefs) async {
+    // make sure access token is valid
     String accessToken = await updateAccessToken(prefs);
     if (accessToken == null) return null;
 

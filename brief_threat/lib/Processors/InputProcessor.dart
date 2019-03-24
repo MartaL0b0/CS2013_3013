@@ -1,8 +1,10 @@
 class Verification {
+  // returns null if the string contains a special char, otherwise the original string is returned
   static String checkForSpecialChars (String s) {
     return RegExp(r'[.,<>§£$°^!@#<>?":_`~;[\]\\|=+)(*&^%-]').hasMatch(s) ? null : s;
   }
 
+  // checks if the amount entered is a valid double
   static double checkForMoneyAmountInput (String s) {
     // not ideal but does the job
     s = s.replaceAll(',', '.');
@@ -13,14 +15,17 @@ class Verification {
     }
   }
 
+  // returns true if string is an email
   static bool isStringAnEmail (String email) {
     return RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(email);
   }
 
+  // checks if a string is only composed of numbers
   static String checkForNumbersOnly (String s) {
     return RegExp('[^0-9]').hasMatch(s) ? null : s;
   }
-  
+
+  // returns true if the strings has a special character
   static bool hasSpecialChar(String s) {
     return RegExp(r'[.,<>§£$°^!@#<>?":_`~;[\]\\|=+)(*&^%-]').hasMatch(s);
   }
@@ -45,7 +50,7 @@ class Verification {
     return false;
   }
 
-    // return the error message to display or null if all is well 
+  //check the inputs of a form submission, return the error message to display or null if all is well
   static String validateFormSubmission (String user, String repName, String course, String amount, double amountVal, String receipt, DateTime date){
     // input data checks, woho
     if(areAllFilled([user, repName, course, amount, receipt]) || date == null){
@@ -64,7 +69,7 @@ class Verification {
     return null;
   }
 
-    // return the error message to display or null if all is well 
+    // check the inputs of the login page, return the error message to display or null if all is well
   static String validateLoginSubmission(String _user, String _password) {
     if(areAllFilled([_user, _password])){
       return "Please fill in all fields";
@@ -76,7 +81,7 @@ class Verification {
     return null;
   }
 
-  // return the error message to display or null if all is well 
+  // check the input fields of a new user form submission, return the error message to display or null if all is well
   static String validateNewUserFields (String username, String firstName, String lastName, String email, String confirmEmail) {
     print(isStringAnEmail(email));
     print("printed");
