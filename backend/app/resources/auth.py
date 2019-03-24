@@ -260,10 +260,10 @@ def add_ui_routes(app):
         extra = ' You may now log in.' if not user.password else ''
 
         pw_change = User()
-        change_pw_schema.load({
-            'username': user.username,
-            'password': request.form['password']
-        }, instance=pw_change)
+        try:
+            change_pw_schema.load(dict(request.form), instance=pw_change)
+        except ValidationError as ex:
+            return render_template('422.html', message=ex), 422
 
         user.password = pw_change.password
         user.current_pw_token += 1
