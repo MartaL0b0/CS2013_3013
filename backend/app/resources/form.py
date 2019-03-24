@@ -10,8 +10,7 @@ import tasks
 def get_resolve_link(username, form_id):
     # Create a token the admin can use to mark the form as resolved
     # This can be validated by its signature
-    resolve_info = UIResolve(username=username, form_id=form_id)
-    token = ui_resolve_schema.dump(resolve_info).data
+    token = ui_resolve_schema.dump({'username': username, 'form_id': form_id}).data
     return url_for('ui_resolve_form', token=token, _external=True)
 
 class Manage(Resource):
@@ -154,7 +153,7 @@ class Resolution(Resource):
         do_resolve(to_resolve)
         return full_form_schema.jsonify(to_resolve)
 
-def init_app(app):
+def add_ui_routes(app):
     @app.route("/resolve")
     def ui_resolve_form():
         # Deserialize and validate token from request params

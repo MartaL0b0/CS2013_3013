@@ -61,16 +61,10 @@ def cleanup():
     # before @app.before_first_request
     db.create_all()
 
-    # Clean up registrations that have gone unapproved for more than `REGISTRATION_WINDOW`
-    cutoff = datetime.utcnow() - timedelta(seconds=current_app.config['REGISTRATION_WINDOW'])
-    reg_removed = User.query.filter(User.registration_time < cutoff, User.is_approved == False).delete()
-
     # Clean up revoked tokens that have expired
     tokens_removed = RevokedToken.query.filter(RevokedToken.expiry < datetime.utcnow()).delete()
 
     db.session.commit()
 
-    if reg_removed > 0:
-        logger.info('cleaned up {} stale registrations'.format(reg_removed))
     if tokens_removed > 0:
         logger.info('cleaned up {} expired revoked tokens'.format(tokens_removed))

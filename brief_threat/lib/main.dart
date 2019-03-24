@@ -5,7 +5,7 @@ import 'Tokens/models/RefreshToken.dart';
 import 'Verification.dart';
 import 'Requests.dart';
 import 'dart:async';
-import 'RequestAccess.dart';
+import 'ForgotPassword.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
 import 'Tokens/TokenProcessor.dart';
@@ -16,8 +16,7 @@ void main() {
       title: 'Form app',
       home: LoginPage(),
       routes: <String, WidgetBuilder> {
-        '/Login': (BuildContext context) => new LoginPage(),
-        '/RequestAccess' : (BuildContext context) => new RequestAccess(),
+        '/login': (BuildContext context) => new LoginPage(),
       },
       theme : buildTheme()
     ));
@@ -58,8 +57,7 @@ class _LoginPageState extends State<LoginPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
-    return
-      Scaffold(
+    return Scaffold(
       key: _scaffoldKey,
         body: SafeArea(
             child: ListView(
@@ -74,7 +72,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 TextField(
                   decoration: InputDecoration(
-                    //border: OutlineInputBorder(),
                     labelText: "Username",
                     filled: true,
                   ),
@@ -106,10 +103,11 @@ class _LoginPageState extends State<LoginPage> {
                 ButtonBar(
                   children: <Widget>[
                     FlatButton(
-                      child: Text('Request Access'),
+                      child: Text('Forgot your password?'),
                       onPressed: () async {
+                        _user =_userNameController.text;
                         // redirect to new page
-                        Navigator.pushNamed(context, '/RequestAccess');
+                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ForgotPassword(originalUsername:_user)));
                       },
                     ),
                     RaisedButton(
@@ -153,7 +151,6 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     )
                   ],
-
                 ),
               ],
             )
@@ -183,7 +180,6 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
   }
-
   // Toggles the password show status
   void _toggleShowPassword() async {
     setState(() {
@@ -213,5 +209,4 @@ class _LoginPageState extends State<LoginPage> {
     key.currentState.hideCurrentSnackBar();
     return true;
   }
-
 }

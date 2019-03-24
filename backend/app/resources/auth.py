@@ -2,7 +2,7 @@ from os import environ
 from functools import wraps
 from datetime import datetime
 
-from flask import current_app, request, jsonify
+from flask import current_app, request, jsonify, url_for, render_template
 from marshmallow import ValidationError
 from flask_restful import Resource
 from flask_jwt_extended import *
@@ -10,6 +10,7 @@ from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderErr
 
 from . import json_required, limiter
 from models import *
+import tasks
 
 jwt = JWTManager()
 
@@ -65,11 +66,29 @@ def jwt_access_or_refresh(f):
         return f(*args, **kwargs)
     return decorated_function
 
-class Registration(Resource):
-    decorators = [limiter.limit(environ['RATELIMIT_REGISTRATION'])]
+def send_pw_reset_email(user, initial):
+    token = ui_pw_reset_schema.dump({'username': user.username, 'token_id': user.current_pw_token}).data
+    reset_link = url_for('ui_reset_password', token=token, _external=True)
 
+    if initial:
+        template = 'new_user'
+        subject = 'BriefThreat registration'
+    else:
+        template = 'email_pw_reset'
+        subject = 'BriefThreat password reset'
+
+    tasks.send_email.delay(
+        to=(user.full_name, user.email),
+        from_=(current_app.config['EMAIL_NAME'], current_app.config['EMAIL_FROM']),
+        subject=subject,
+        text=render_template('{}.txt'.format(template), user=user, reset_link=reset_link),
+        html=render_template('{}.html'.format(template), user=user, reset_link=reset_link)
+    )
+
+class Registration(Resource):
     # POST -> Create a new user account
     @json_required
+    @admin_required
     def post(self):
         # Validate and deserialize input
         new_user = User()
@@ -80,10 +99,16 @@ class Registration(Resource):
 
         if User.find_by_username(new_user.username):
             return {'message': 'User {} already exists'.format(new_user.username)}, 400
+        if User.find_by_email(new_user.email):
+            return {'message': 'A user with email {} already exists'.format(new_user.email)}, 400
 
-        # New users should not be approved or admins
-        new_user.is_approved = new_user.is_admin = False
+        # New users should not be admins
+        new_user.is_admin = False
+        new_user.current_pw_token = 0
         new_user.registration_time = datetime.now()
+
+        # Dispatch an email to the user to set their initial password
+        send_pw_reset_email(new_user, True)
 
         # Save the new user into the database
         db.session.add(new_user)
@@ -93,6 +118,11 @@ class Registration(Resource):
         return None, 204
 
 class Login(Resource):
+    # GET -> User info
+    @jwt_required
+    def get(self):
+        return user_info_schema.jsonify(current_user)
+
     # POST -> Log in
     @json_required
     def post(self):
@@ -108,12 +138,12 @@ class Login(Resource):
 
         # Find the existing user and validate the input password against the saved hash
         user = User.find_by_username(login_user.username)
-        if not user or not user.verify_password(password):
+        if not user:
             return {'message': 'Invalid credentials'}, 401
-
-        # User should be approved before being able to log in
-        if not user.is_approved:
-            return {'message': 'Your account is not approved'}, 401
+        if not user.password:
+            return {'message': 'Your password is not set'}, 400
+        if not user.verify_password(password):
+            return {'message': 'Invalid credentials'}, 401
 
         # Create a new refresh token (and access token for convenience)
         return {
@@ -128,12 +158,33 @@ class Login(Resource):
         # Validate and deserialize input
         pw_change = User()
         try:
-            change_pw_schema.load(request.r_data, instance=pw_change)
+            reset_pw_schema.load(request.r_data, instance=pw_change)
         except ValidationError as err:
             return err.messages, 422
 
         current_user.password = pw_change.password
         db.session.commit()
+        return None, 204
+
+    # PATCH -> Reset password
+    @json_required
+    def patch(self):
+        # Validate and deserialize input
+        pw_reset = User()
+        try:
+            pw_reset_schema.load(request.r_data, instance=pw_reset)
+        except ValidationError as err:
+            return err.messages, 422
+
+        user = User.find_by_username(pw_reset.username)
+        if not user:
+            return {'message': 'User {} does not exist'.format(pw_reset.username)}, 400
+        if not user.password:
+            return {'message': 'User {}\'s password has not been set'.format(pw_reset.username)}, 400
+
+        # Dispatch an email to the user to reset their password
+        send_pw_reset_email(user, False)
+
         return None, 204
 
 class Token(Resource):
@@ -164,7 +215,7 @@ class Token(Resource):
         return None, 204
 
 class Access(Resource):
-    # PATCH -> Set a user's approval / admin status
+    # PATCH -> Set a user's admin status
     @json_required
     @admin_required
     def patch(self):
@@ -179,17 +230,45 @@ class Access(Resource):
         if not user:
             return {'message': 'User \'{}\' does not exist'.format(change_access.username)}, 400
 
-        if change_access.is_approved != None:
-            user.is_approved = change_access.is_approved
         if change_access.is_admin != None:
             user.is_admin = change_access.is_admin
-            if user.is_admin:
-                # `is_admin` should always mean approval
-                user.is_approved = True
-        if not user.is_approved and user.is_admin:
-            # If we set `is_approved` to false, `is_admin` should be false
-            user.is_admin = False
 
         db.session.commit()
 
         return None, 204
+
+def add_ui_routes(app):
+    @app.route('/reset-password', methods=['GET'])
+    def ui_reset_password():
+        try:
+            reset_info = ui_pw_reset_schema.load(request.args).data
+        except ValidationError as ex:
+            message = ex.messages['_schema'][0] if '_schema' in ex.messages else ex
+            return render_template('422.html', message=message), 422
+
+        user = User.find_by_username(reset_info['username'])
+        title = 'Reset your password' if user.password else 'Set your password'
+        return render_template('pw_reset.html', title=title, token=request.args['token'])
+
+    @app.route('/reset-password', methods=['POST'])
+    def ui_complete_reset_password():
+        try:
+            reset_info = ui_pw_reset_schema.load(request.form).data
+        except ValidationError as ex:
+            message = ex.messages['_schema'][0] if '_schema' in ex.messages else ex
+            return render_template('422.html', message=message), 422
+
+        user = User.find_by_username(reset_info['username'])
+        extra = ' You may now log in.' if not user.password else ''
+
+        pw_change = User()
+        change_pw_schema.load({
+            'username': user.username,
+            'password': request.form['password']
+        }, instance=pw_change)
+
+        user.password = pw_change.password
+        user.current_pw_token += 1
+        db.session.commit()
+
+        return render_template('pw_reset_success.html', extra=extra)
