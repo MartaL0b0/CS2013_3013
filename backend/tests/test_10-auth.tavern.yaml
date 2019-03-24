@@ -3,7 +3,7 @@ test_name: Check invalid credentials
 includes:
   - !include common.yaml
   - !include components/login.yaml
-strict: False
+strict: True
 
 stages:
   - name: Log in without parameters
@@ -53,8 +53,8 @@ test_name: Check login works
 includes:
   - !include common.yaml
   - !include components/login.yaml
-
 strict: True
+
 stages:
   - type: ref
     id: login
@@ -64,8 +64,8 @@ test_name: Check password change
 includes:
   - !include common.yaml
   - !include components/login.yaml
-
 strict: True
+
 stages:
   - type: ref
     id: login
@@ -129,8 +129,8 @@ test_name: Get user info
 includes:
   - !include common.yaml
   - !include components/login.yaml
-
 strict: True
+
 stages:
   - type: ref
     id: login
@@ -157,8 +157,8 @@ test_name: Test token refresh
 includes:
   - !include common.yaml
   - !include components/login.yaml
-
 strict: True
+
 stages:
   - type: ref
     id: login
@@ -196,6 +196,8 @@ test_name: Test access token revocation
 includes:
   - !include common.yaml
   - !include components/login.yaml
+strict: True
+
 stages:
   - type: ref
     id: login
@@ -221,6 +223,8 @@ test_name: Test refresh token revocation
 includes:
   - !include common.yaml
   - !include components/login.yaml
+strict: True
+
 stages:
   - type: ref
     id: login

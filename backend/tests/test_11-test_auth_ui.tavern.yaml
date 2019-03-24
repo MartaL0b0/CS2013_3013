@@ -197,6 +197,34 @@ stages:
       status_code: 422
 
 ---
+test_name: Check user registration by non-admin user
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: o_login
+  - name: User registration
+    request:
+      url: "{base_api}/auth/register"
+      method: POST
+      headers:
+        Authorization: "Bearer {o_access}"
+      json:
+        is_admin: false
+        username: dummy
+        email: dummy@example.com
+        first_name: Dummy
+        last_name: McDummyface
+    response:
+      status_code: 401
+      body:
+        message: This endpoint requires admin status
+    delay_after: 0.3
+
+---
 test_name: Check password reset errors
 includes:
   - !include common.yaml
