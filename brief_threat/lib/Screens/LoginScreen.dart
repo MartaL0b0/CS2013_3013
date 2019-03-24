@@ -9,7 +9,7 @@ import 'package:brief_threat/Screens/ForgotPasswordScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:brief_threat/Processors/TokenProcessor.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:brief_threat/colors.dart' as colors;
+import 'package:brief_threat/Theme/colors.dart' as colors;
 
 class LoginScreen extends StatefulWidget {
   @override

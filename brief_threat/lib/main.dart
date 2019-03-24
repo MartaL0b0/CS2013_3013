@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:brief_threat/Screens/LoginScreen.dart';
-import 'package:brief_threat/colors.dart' as colors;
+import 'package:brief_threat/Theme/colors.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -11,14 +11,4 @@ void main() {
       },
       theme : buildTheme()
     ));
-}
-
-ThemeData buildTheme() {
-  final ThemeData base = ThemeData.light();
-  return base.copyWith(
-    primaryColor: colors.primaryColor,
-    accentColor: colors.accentColor,
-    buttonColor: colors.primaryColor,
-    backgroundColor: colors.primaryColor
-  );
 }

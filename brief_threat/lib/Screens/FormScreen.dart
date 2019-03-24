@@ -10,7 +10,7 @@ import 'package:brief_threat/Screens/RegisterScreen.dart';
 import 'package:brief_threat/Models/request.dart';
 import 'package:page_indicator/page_indicator.dart';
 import 'dart:async';
-import 'package:brief_threat/colors.dart' as colors;
+import 'package:brief_threat/Theme/colors.dart' as colors;
 import 'package:local_auth/local_auth.dart';
 
 class FormScreen extends StatefulWidget {
