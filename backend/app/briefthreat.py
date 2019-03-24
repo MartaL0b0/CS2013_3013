@@ -47,7 +47,7 @@ app.config.update({
 })
 if app.config['TEST_MODE']:
     app.config.update({
-        'SQLALCHEMY_DATABASE_URI': 'sqlite://',
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:////tmp/test.db',
     })
 else:
     app.config.update({

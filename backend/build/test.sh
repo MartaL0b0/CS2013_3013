@@ -2,4 +2,4 @@
 # wait for server
 export PYTHONUNBUFFERED=1
 sleep 1
-exec pytest -v /opt/tests
+exec pytest /opt/tests "$@"
