@@ -1,6 +1,6 @@
 import 'package:corsac_jwt/corsac_jwt.dart';
-import 'package:brief_threat/Requests.dart';
-import 'models/AccessToken.dart';
+import 'package:brief_threat/Processors/HttpRequestsProcessor.dart';
+import 'package:brief_threat/Models/AccessToken.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenParser {
@@ -15,6 +15,7 @@ class TokenParser {
     return val > now;
   }
 
+  // returns a valid access token (null when refresh token expired)
   static Future<String> checkTokens(String access, String refresh, SharedPreferences prefs) async {
     AccessToken token;
     if (!validateToken(access) && !validateToken(refresh)) {
