@@ -126,8 +126,8 @@
         <tr>
           <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
       <![endif]-->
-    <div style="Margin:0px auto;max-width:600px;">
-      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
+    <div style="background:#f0f0f0;background-color:#f0f0f0;Margin:0px auto;max-width:600px;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#f0f0f0;background-color:#f0f0f0;width:100%;">
         <tbody>
           <tr>
             <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;vertical-align:top;">
@@ -147,7 +147,7 @@
                       <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
                         <tbody>
                           <tr>
-                            <td style="width:256px;"> <img height="auto" src="{{ url_for('static', filename='logo.svg', _external=True) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;" width="256" /> </td>
+                            <td style="width:256px;"> <img height="auto" src="{{ url_for('static', filename='logo.png', _external=True) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;" width="256" /> </td>
                           </tr>
                         </tbody>
                       </table>
@@ -155,10 +155,10 @@
                   </tr>
                   <tr>
                     <td style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                      <p style="border-top:solid 4px #ef5350;font-size:1;margin:0px auto;width:100%;"> </p>
+                      <p style="border-top:solid 4px #673ab7;font-size:1;margin:0px auto;width:100%;"> </p>
                       <!--[if mso | IE]>
         <table
-           align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 4px #ef5350;font-size:1;margin:0px auto;width:550px;" role="presentation" width="550px"
+           align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 4px #673ab7;font-size:1;margin:0px auto;width:550px;" role="presentation" width="550px"
         >
           <tr>
             <td style="height:0;line-height:0;">
@@ -171,9 +171,9 @@
                   </tr>
                   <tr>
                     <td align="left" class="text-scaling" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                      <div style="font-family:Roboto, sans-serif;font-size:13px;line-height:1;text-align:left;color:#b61827;">
-                        <p>Hi {{ admin.first_name }},</p>
-                        <p>{{ form.user.full_name }} (<a href="mailto:{{ form.user.email }}">{{ form.user.email }}</a>) has submitted form no. {{ form.id }}.</p>
+                      <div style="font-family:Roboto, sans-serif;font-size:13px;line-height:1;text-align:left;color:#585858;">
+                        <h1>Hi {{ admin.first_name }},</h1>
+                        <h3>{{ form.user.full_name }} (<a href="mailto:{{ form.user.email }}">{{ form.user.email }}</a>) has submitted form no. {{ form.id }}.</h3>
                         <p>Here are the details:</p>
                         <ul>
                           <li>Course: {{ form.course }}</li>
@@ -189,7 +189,7 @@
                     <td align="center" vertical-align="middle" style="font-size:0px;padding:10px 25px;word-break:break-word;">
                       <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
                         <tr>
-                          <td align="center" bgcolor="#43A047" role="presentation" style="border:none;border-radius:3px;cursor:auto;padding:10px 25px;background:#43A047;" valign="middle"> <a href="{{ resolve_link }}" style="background:#43A047;color:#ffffff;font-family:Roboto, sans-serif;font-size:22px;font-weight:normal;line-height:120%;Margin:0;text-decoration:none;text-transform:none;" target="_blank">
+                          <td align="center" bgcolor="#673ab7" role="presentation" style="border:none;border-radius:3px;cursor:auto;padding:10px 25px;background:#673ab7;" valign="middle"> <a href="{{ resolve_link }}" style="background:#673ab7;color:#ffffff;font-family:Roboto, sans-serif;font-size:22px;font-weight:normal;line-height:120%;Margin:0;text-decoration:none;text-transform:none;" target="_blank">
               Resolve
             </a> </td>
                         </tr>
