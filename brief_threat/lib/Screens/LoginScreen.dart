@@ -132,23 +132,6 @@ class _LoginScreen extends State<LoginScreen> {
                     )
                   ],
                 ),
-<<<<<<< HEAD
-=======
-                SizedBox(height: 15.0), //spacer
-                ButtonBar(
-                  alignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    FlatButton(
-                      child: Text('Forgot your password?'),
-                      onPressed: () async {
-                        _user =_userNameController.text;
-                        // redirect to new page
-                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ForgotPassword(originalUsername:_user)));
-                      },
-                    )
-                  ],
-                )
->>>>>>> fixing button alignment for forgot password
               ],
             )
         )
