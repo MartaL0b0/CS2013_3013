@@ -171,9 +171,9 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
           submissions(context)
           ],
         ),
-        align: IndicatorAlign.top,
+        align: IndicatorAlign.bottom,
         length: 2,
-        padding: EdgeInsets.only(top: 44),
+        padding: EdgeInsets.only(bottom: 10, left: 15),
         indicatorSpace: 10.0, // space between circles
         indicatorColor: Colors.grey,
         indicatorSelectorColor: Colors.blue[200],
