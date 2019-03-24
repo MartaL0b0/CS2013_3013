@@ -1,0 +1,117 @@
+---
+test_name: Check invalid form submission
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - name: Form submission without being logged in
+    request:
+      url: "{base_api}/form"
+      method: POST
+      json: &sample_form
+        amount: 123.99
+        course: Place
+        customer_name: Dude
+        payment_method: cash
+        receipt: "no. 1234"
+        time: 1553450103
+    response:
+      status_code: 401
+      body:
+        message: Missing Authorization Header
+  - type: ref
+    id: login
+  - name: Form submission without JSON body
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 400
+      body:
+        message: No input data provided
+  - name: Form submission with missing fields
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        amount: &m_data
+          [Missing data for required field.]
+        course: *m_data
+        customer_name: *m_data
+        payment_method: *m_data
+        receipt: *m_data
+        time: *m_data
+  - name: Form submission with poorly formatted time
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        <<: *sample_form
+        time: "the future"
+    response:
+      status_code: 422
+      body:
+        _schema: ['time must be a valid Unix timestamp']
+  - name: Form submission with poorly formatted other fields
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        <<: *sample_form
+        amount: "a lot"
+        receipt: 123
+        payment_method: cheese
+    response:
+      status_code: 422
+      body:
+        amount: [Not a valid number.]
+        receipt: [Not a valid string.]
+        payment_method: [Not a valid choice.]
+
+---
+test_name: Check form submission
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Test submission
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json: *sample_form
+    response:
+      status_code: 200
+      body:
+        id: !anyint
+    delay_after: 0.3
+  - name: Check notification email was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: [Administrator, "{email}"]
+        subject: !anystr
+        html: !anystr
+        text: !anystr
