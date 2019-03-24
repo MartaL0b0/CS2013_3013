@@ -19,7 +19,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreen extends State<LoginScreen> {
   // text input controllers & variables
   final TextEditingController _userNameController = new TextEditingController(text:"root");
-  final TextEditingController _passwordController = new TextEditingController(text: "fxtL6Zx4LL9Qpu0c90sMZTy5yZveoaawUAhSHIcOHdv");
+  final TextEditingController _passwordController = new TextEditingController(text: "wgOinRAdA7xn7EyAVyoKzwbsTSVzr16G4L58kHCwP6s");
   String _user = "";
   String _password = "";
   var hidePassword = true;
@@ -132,6 +132,23 @@ class _LoginScreen extends State<LoginScreen> {
                     )
                   ],
                 ),
+<<<<<<< HEAD
+=======
+                SizedBox(height: 15.0), //spacer
+                ButtonBar(
+                  alignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    FlatButton(
+                      child: Text('Forgot your password?'),
+                      onPressed: () async {
+                        _user =_userNameController.text;
+                        // redirect to new page
+                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ForgotPassword(originalUsername:_user)));
+                      },
+                    )
+                  ],
+                )
+>>>>>>> fixing button alignment for forgot password
               ],
             )
         )
