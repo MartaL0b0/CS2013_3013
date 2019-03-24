@@ -7,8 +7,9 @@ import 'Requests.dart';
 import 'dart:async';
 import 'ForgotPassword.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart';
 import 'Tokens/TokenProcessor.dart';
-
+import 'colors.dart' as colors;
 
 void main() {
   runApp(MaterialApp(
@@ -17,7 +18,18 @@ void main() {
       routes: <String, WidgetBuilder> {
         '/login': (BuildContext context) => new LoginPage(),
       },
+      theme : buildTheme()
     ));
+}
+
+ThemeData buildTheme() {
+  final ThemeData base = ThemeData.light();
+  return base.copyWith(
+    primaryColor: colors.primaryColor,
+    accentColor: colors.accentColor,
+    buttonColor: colors.primaryColor,
+    backgroundColor: colors.primaryColor
+  );
 }
 
 class LoginPage extends StatefulWidget {
@@ -32,6 +44,7 @@ class _LoginPageState extends State<LoginPage> {
   String _user = "";
   String _password = "";
   var hidePassword = true;
+  IconData showOrHideIcon = Icons.visibility_off;
   SharedPreferences prefs;
 
 
@@ -50,19 +63,14 @@ class _LoginPageState extends State<LoginPage> {
             child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 24.0),
               children: <Widget>[
-                SizedBox(height: 80.0),
                 Column(
                   children: <Widget>[
-                    SizedBox(height: 40.0),
-                    Text('Welcome !',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
+                    Image.asset(
+                      'assets/flat_logo.png',
                     ),
                   ],
                 ),
-                SizedBox(height: 120.0),
                 TextField(
-                  cursorColor: Colors.white,
                   decoration: InputDecoration(
                     labelText: "Username",
                     filled: true,
@@ -70,29 +78,41 @@ class _LoginPageState extends State<LoginPage> {
                   controller: _userNameController,
                 ),
                 SizedBox(height: 12.0), //spacer
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    filled: true,
-                  ),
-                  controller: _passwordController,
-                  obscureText: hidePassword,
+                Stack(
+                    alignment: const Alignment(1.0, 1.0),
+                    children: <Widget>[
+                      TextField(decoration: InputDecoration(
+                        labelText: "Password",
+                        filled: true,
+                      ),
+                        controller: _passwordController,
+                        obscureText: hidePassword,),
+                      Positioned(
+                        right: 10,
+                        top: 5,
+                        child: IconButton(
+                          onPressed: () {
+                            _toggleShowPassword();
+                          },
+                          icon: new Icon(showOrHideIcon)
+                        )
+                      )
+                    ]
                 ),
-                ButtonBar(
-                children: <Widget>[
-                    FlatButton(
-                      child: Text('Show'),
-                      onPressed: () {
-                        //handle show/hide password
-                        _toggleShowPassword();
-                      },
-                    )
-                  ],
-                ),
+                SizedBox(height: 12.0), //spacer
                 ButtonBar(
                   children: <Widget>[
                     FlatButton(
-                      child: Text('Login'),
+                      child: Text('Forgot your password?'),
+                      onPressed: () async {
+                        _user =_userNameController.text;
+                        // redirect to new page
+                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ForgotPassword(originalUsername:_user)));
+                      },
+                    ),
+                    RaisedButton(
+                      color: colors.buttonColor,
+                      child: Text('Login', style: TextStyle(color: Colors.white),),
                       onPressed: () async {
                         // trim user name but not password
                         _user = _userNameController.text.trim();
@@ -132,23 +152,16 @@ class _LoginPageState extends State<LoginPage> {
                     )
                   ],
                 ),
-                SizedBox(height: 60.0), //spacer
-                ButtonBar(
-                  children: <Widget>[
-                    FlatButton(
-                      child: Text('Forgot your password?'),
-                      onPressed: () async {
-                        _user =_userNameController.text;
-                        // redirect to new page
-                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ForgotPassword(originalUsername:_user)));
-                      },
-                    )
-                  ],
-                )
               ],
             )
         )
     );
+  }
+
+  Future<bool>_biometricAuth() async {
+    var localAuth = LocalAuthentication();
+    return await localAuth.authenticateWithBiometrics(
+        localizedReason: 'Please authenticate to Login', useErrorDialogs: false);
   }
 
   void _getPreferences() async {
@@ -160,7 +173,10 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (TokenParser.validateToken((await prefs.getString('refresh') ??  ''))){
       // already logged in
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
+      if (!prefs.getBool("isBiometricsEnabled") || (prefs.getBool("isBiometricsEnabled") && await _biometricAuth()) ) {
+        Navigator.push(context, new MaterialPageRoute(
+            builder: (context) => new FormScreen(prefs: prefs)));
+      }
       return;
     }
   }
@@ -168,6 +184,11 @@ class _LoginPageState extends State<LoginPage> {
   void _toggleShowPassword() async {
     setState(() {
       hidePassword = !hidePassword;
+      if (hidePassword) {
+        showOrHideIcon = Icons.visibility_off;
+      } else {
+        showOrHideIcon = Icons.visibility;
+      }
     });
   }
 

@@ -6,16 +6,17 @@ import 'Verification.dart';
 import 'Tokens/TokenProcessor.dart';
 import 'Requests.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart';
+import 'colors.dart' as colors;
 
 class FormScreen extends StatefulWidget {
   final SharedPreferences prefs;
-
   FormScreen({Key key, @required this.prefs}) : super(key: key);
   @override
   State createState() => _FormScreen(prefs);
 }
 
-class _FormScreen extends State<FormScreen> {
+class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
  
   final SharedPreferences prefs;
   _FormScreen(this. prefs);  //constructor
@@ -58,6 +59,20 @@ class _FormScreen extends State<FormScreen> {
   void initState() {
     super.initState();
     _loadTokensAndRepName();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && prefs.getBool("isBiometricsEnabled")) {
+      _biometricAuth();
+    }
   }
 
   @override
@@ -70,11 +85,11 @@ class _FormScreen extends State<FormScreen> {
           title: Text('Transaction Details'),
           automaticallyImplyLeading: false,
           actions: <Widget>[
-            PopupMenuButton<barButtonOptions>(
+            PopupMenuButton<BarButtonOptions>(
               onSelected: _select,
               itemBuilder: (BuildContext context) {
-                return options.map((barButtonOptions options) {
-                  return PopupMenuItem<barButtonOptions>(
+                return options.map((BarButtonOptions options) {
+                  return PopupMenuItem<BarButtonOptions>(
                     value: options,
                     child: Text(options.title),
                   );
@@ -87,7 +102,7 @@ class _FormScreen extends State<FormScreen> {
             child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 24.0),
               children: <Widget>[
-                SizedBox(height: 12.0),
+                SizedBox(height: 1.0),
                 Column(
                   children: <Widget>[
                     SizedBox(height: 30.0),
@@ -133,6 +148,7 @@ class _FormScreen extends State<FormScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         new Radio(
+                          activeColor: colors.buttonColor,
                           value: false,
                           groupValue: _radioValue,
                           onChanged: _handleRadioChange,
@@ -142,6 +158,7 @@ class _FormScreen extends State<FormScreen> {
                           style: new TextStyle(fontSize: 16.0),
                         ),
                         new Radio(
+                          activeColor: colors.buttonColor,
                           value: true,
                           groupValue: _radioValue,
                           onChanged: _handleRadioChange,
@@ -177,8 +194,9 @@ class _FormScreen extends State<FormScreen> {
                     ),
                     ButtonBar(
                       children: <Widget>[
-                        FlatButton(
-                          child: Text('SUBMIT'),
+                        RaisedButton(
+                          color: colors.buttonColor,
+                          child: Text('SUBMIT', style: TextStyle(color: Colors.white)),
                           onPressed: () async {
                             _user =_userNameController.text.trim();
                             _repName =_repNameController.text.trim();
@@ -236,13 +254,16 @@ class _FormScreen extends State<FormScreen> {
     setState(() => _date = null);
   }
 
-  void _select(barButtonOptions options) {
+  void _select(BarButtonOptions options) {
     switch (options.title) {
       case "Log Out":
         _showLogOutDialog();
         break;
+      case "Toggle Biometrics" :
+        _toggleBiometrics();
+        break;
       default:
-        // shoudln't come here
+        // shouldn't come here
     }
   }
 
@@ -271,8 +292,6 @@ class _FormScreen extends State<FormScreen> {
     await this.prefs.remove('access');
     await this.prefs.remove('refresh');
 
-    // pop popup message
-    Navigator.of(context).pop();
     // pop form screen
     Navigator.of(context).pop();
   }
@@ -309,7 +328,55 @@ class _FormScreen extends State<FormScreen> {
             new FlatButton(
               child: new Text("Confirm"),
               onPressed: () {
+                Navigator.of(context).pop();
                 _logout();
+              },
+            ),
+            new FlatButton(
+              child: new Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _biometricAuth () async {
+    var localAuth = LocalAuthentication();
+    bool didAuthenticate = await localAuth.authenticateWithBiometrics(
+        localizedReason: 'Please authenticate to Login', useErrorDialogs: false);
+    if (!didAuthenticate) {
+      _logout();
+    }
+  }
+
+  void _toggleBiometrics() {
+    String question = "";
+    bool isOptionEnabled = prefs.getBool("isBiometricsEnabled");
+    if ( ( isOptionEnabled == null) || (isOptionEnabled == false)) {
+      question = "Turn on Biometrics?";
+    } else if (isOptionEnabled == true) {
+      question = "Turn off Biometrics?";
+    }
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text(question),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Confirm"),
+              onPressed: () {
+                if (( isOptionEnabled == null) || (isOptionEnabled == false)) {
+                  prefs.setBool("isBiometricsEnabled", true);
+                } else if (isOptionEnabled == true) {
+                  prefs.setBool("isBiometricsEnabled", false);
+                }
+                Navigator.of(context).pop();
               },
             ),
             new FlatButton(
@@ -326,15 +393,16 @@ class _FormScreen extends State<FormScreen> {
 }
 
 // class used to represent buttons
-class barButtonOptions {
-  const barButtonOptions({this.title, this.icon});
+class BarButtonOptions {
+  const BarButtonOptions({this.title, this.icon});
 
   final String title;
   final IconData icon;
 }
 
 // list of choices on the side menu, add a line here to add another option
- const List<barButtonOptions> options = const <barButtonOptions>[
+ const List<BarButtonOptions> options = const <BarButtonOptions>[
    // we don't use the icons as of now
-  const barButtonOptions(title: 'Log Out', icon: null),
+  const BarButtonOptions(title: 'Log Out', icon: null),
+  const BarButtonOptions(title: 'Toggle Biometrics', icon: null),
 ];
