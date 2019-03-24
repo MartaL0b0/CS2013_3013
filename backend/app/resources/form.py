@@ -73,7 +73,7 @@ class Manage(Resource):
 
         if not current_user.is_admin and to_update.user != current_user:
             return {'message': ('You must have either submitted form {} '
-                    'or be an admin to update it').format(to_delete.id)}, 401
+                    'or be an admin to update it').format(to_update.id)}, 401
 
         to_update.get_changes()
         old_res = full_form_schema.jsonify(to_update)
