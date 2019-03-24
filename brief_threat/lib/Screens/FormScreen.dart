@@ -10,7 +10,8 @@ import 'package:brief_threat/Screens/RegisterScreen.dart';
 import 'package:brief_threat/Models/request.dart';
 import 'package:page_indicator/page_indicator.dart';
 import 'dart:async';
-
+import 'package:brief_threat/colors.dart' as colors;
+import 'package:local_auth/local_auth.dart';
 
 class FormScreen extends StatefulWidget {
   final SharedPreferences prefs;
@@ -21,11 +22,13 @@ class FormScreen extends StatefulWidget {
   State createState() => _FormScreen(prefs, isAdmin);
 }
 
-class _FormScreen extends State<FormScreen> {
+class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
  // list of choices on the side menu, add a line here to add another option
  final List<barButtonOptions> options = <barButtonOptions>[
    // we don't use the icons as of now
   const barButtonOptions(title: 'Log Out', icon: null),
+  const barButtonOptions(title: 'Toggle Biometrics', icon: null),
+
   ];
   final SharedPreferences prefs;
   final bool isAdmin;
@@ -79,7 +82,22 @@ class _FormScreen extends State<FormScreen> {
       options.add(const barButtonOptions(title: 'Add new user', icon: null));
     }
     submittedForms = _buildFormScreen();
+    WidgetsBinding.instance.addObserver(this);
   }
+
+   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && prefs.getBool("isBiometricsEnabled")) {
+      _biometricAuth();
+    }
+  }
+
   Widget _buildFormScreen() {
     return new FutureBuilder(
       future: Requests.getForms(prefs),
@@ -87,7 +105,7 @@ class _FormScreen extends State<FormScreen> {
         if (snapshot.connectionState == ConnectionState.done) {
           if(snapshot.data == null) {
             // no data to display 
-            return Scaffold(
+            return new Scaffold(
               body: Center(
                 child: Text('There is nothing to display right now.'),
               ),
@@ -122,7 +140,7 @@ class _FormScreen extends State<FormScreen> {
       contentPadding: EdgeInsets.all(8.0),
       leading: request.resolvedAt == null ? Icon(Icons.radio_button_unchecked) : Icon(Icons.radio_button_checked),
       title: Text('Customer: ${request.customerName} - Submitted by ${request.submitter}'),
-      subtitle: new Text('Submitted on: $dateSubmitted\nPaid in ${request.paymentMethod}\nReceipt No: ${request.receipt}\nCourse: ${request.course}',
+      subtitle: new Text('Submitted on: $dateSubmitted\nPaid in ${request.paymentMethod}\nReceipt No: ${request.receipt}\nCourse: ${request.course}\n$status',
         style: TextStyle(fontSize: 12.0),
       ),
       trailing: 
@@ -155,10 +173,11 @@ class _FormScreen extends State<FormScreen> {
         ),
         align: IndicatorAlign.top,
         length: 2,
-        indicatorSpace: 10.0,
-        padding: EdgeInsets.all(45),
+        padding: EdgeInsets.only(top: 44),
+        indicatorSpace: 10.0, // space between circles
         indicatorColor: Colors.grey,
         indicatorSelectorColor: Colors.blue[200],
+        size: 15.0, // indicator size.
       )
     );
   }
@@ -188,7 +207,7 @@ class _FormScreen extends State<FormScreen> {
           child: ListView(
             padding: EdgeInsets.symmetric(horizontal: 24.0),
             children: <Widget>[
-              SizedBox(height: 7.0),
+              SizedBox(height: 1.0),
               Column(
                 children: <Widget>[
                   SizedBox(height: 30.0),
@@ -234,6 +253,7 @@ class _FormScreen extends State<FormScreen> {
                         value: false,
                         groupValue: _radioValue,
                         onChanged: _handleRadioChange,
+                        activeColor: colors.buttonColor,
                       ),
                       new Text(
                         'Cash',
@@ -243,6 +263,7 @@ class _FormScreen extends State<FormScreen> {
                         value: true,
                         groupValue: _radioValue,
                         onChanged: _handleRadioChange,
+                        activeColor: colors.buttonColor,
                       ),
                       new Text(
                         'Cheque',
@@ -273,8 +294,9 @@ class _FormScreen extends State<FormScreen> {
                   ),
                   ButtonBar(
                     children: <Widget>[
-                      FlatButton(
-                        child: Text('SUBMIT'),
+                      RaisedButton(
+                        color: colors.buttonColor,
+                        child: Text('SUBMIT', style: TextStyle(color: Colors.white)),
                         onPressed: () async {
                           _user =_userNameController.text.trim();
                           _repName =_repNameController.text.trim();
@@ -370,6 +392,9 @@ class _FormScreen extends State<FormScreen> {
       case "Refresh forms":
         setFormScreen();
         break;
+      case "Toggle Biometrics" :
+        _toggleBiometrics();
+        break;
       default:
         // shoudln't come here
     }
@@ -432,8 +457,6 @@ class _FormScreen extends State<FormScreen> {
     await this.prefs.remove('refresh');
     await this.prefs.remove('is_admin');
 
-    // pop popup message
-    Navigator.of(context).pop();
     // pop form screen
     Navigator.of(context).pop();
   }
@@ -503,7 +526,55 @@ class _FormScreen extends State<FormScreen> {
             new FlatButton(
               child: new Text("Confirm"),
               onPressed: () {
+                Navigator.of(context).pop();
                 _logout();
+              },
+            ),
+            new FlatButton(
+              child: new Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+    void _biometricAuth () async {
+    var localAuth = LocalAuthentication();
+    bool didAuthenticate = await localAuth.authenticateWithBiometrics(
+        localizedReason: 'Please authenticate to Login', useErrorDialogs: false);
+    if (!didAuthenticate) {
+      _logout();
+    }
+  }
+
+  void _toggleBiometrics() {
+    String question = "";
+    bool isOptionEnabled = prefs.getBool("isBiometricsEnabled");
+    if ( ( isOptionEnabled == null) || (isOptionEnabled == false)) {
+      question = "Turn on Biometrics?";
+    } else if (isOptionEnabled == true) {
+      question = "Turn off Biometrics?";
+    }
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text(question),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Confirm"),
+              onPressed: () {
+                if (( isOptionEnabled == null) || (isOptionEnabled == false)) {
+                  prefs.setBool("isBiometricsEnabled", true);
+                } else if (isOptionEnabled == true) {
+                  prefs.setBool("isBiometricsEnabled", false);
+                }
+                Navigator.of(context).pop();
               },
             ),
             new FlatButton(

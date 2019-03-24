@@ -126,7 +126,7 @@ class _LoginScreen extends State<LoginScreen> {
                         _passwordController.clear();
 
                         // redirect to new page
-                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs)));
+                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs, isAdmin: isAdmin,)));
 
                       },
                     )
@@ -155,9 +155,9 @@ class _LoginScreen extends State<LoginScreen> {
 
     if (TokenParser.validateToken((prefs.getString('refresh') ??  ''))){
       // already logged in
-      if (!prefs.getBool("isBiometricsEnabled") || (prefs.getBool("isBiometricsEnabled") && await _biometricAuth()) ) {
+      if (!(prefs.getBool("isBiometricsEnabled") ?? false) || ((prefs.getBool("isBiometricsEnabled") ?? false) && await _biometricAuth()) ) {
         Navigator.push(context, new MaterialPageRoute(
-            builder: (context) => new FormScreen(prefs: prefs)));
+            builder: (context) => new FormScreen(prefs: prefs, isAdmin: isAdmin)));
       }
       return;
     }
