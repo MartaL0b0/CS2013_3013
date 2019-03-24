@@ -95,6 +95,7 @@ stages:
         last_name: "{o_lname}"
     response:
       status_code: 204
+    delay_after: 0.3
   - name: Check password set notification was sent
     request:
       url: "{u_lastmail}"
@@ -103,7 +104,7 @@ stages:
       body:
         from: ["{sys_name}", "{sys_email}"]
         to: ["{o_fname} {o_lname}", "{o_email}"]
-        subject: !anystr
+        subject: BriefThreat registration
         html: !anystr
         text: !anystr
       save:
@@ -115,7 +116,7 @@ test_name: Check user initial password flow errors
 includes:
   - !include common.yaml
   - !include components/login.yaml
-strict: False
+strict: True
 
 stages:
   - name: Login with password unset
@@ -129,6 +130,16 @@ stages:
       status_code: 400
       body:
         message: Your password is not set
+  - name: Request password reset with password unset
+    request:
+      url: "{base_api}/auth/login"
+      method: PATCH
+      json:
+        username: "{o_user}"
+    response:
+      status_code: 400
+      body:
+        message: "User {o_user}'s password has not been set"
   - name: Attempt to retrieve UI page without token
     request:
       url: "{base}/reset-password"
@@ -161,7 +172,7 @@ test_name: Check user initial password flow
 includes:
   - !include common.yaml
   - !include components/login.yaml
-strict: False
+strict: True
 
 stages:
   - name: Set initial password
@@ -184,3 +195,121 @@ stages:
         password: "{o_pass}"
     response:
       status_code: 422
+
+---
+test_name: Check password reset errors
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - name: Request password reset without username
+    request:
+      url: "{base_api}/auth/login"
+      method: PATCH
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        username: [Missing data for required field.]
+  - name: Request password reset for non-existent user
+    request:
+      url: "{base_api}/auth/login"
+      method: PATCH
+      json:
+        username: bro
+    response:
+      status_code: 400
+      body:
+        message: "User bro does not exist"
+
+---
+test_name: Check password reset
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - &pw_reset
+    name: Request password reset
+    request:
+      url: "{base_api}/auth/login"
+      method: PATCH
+      json:
+        username: "{o_user}"
+    response:
+      status_code: 204
+    delay_after: 0.3
+  - &check_pw_reset
+    name: Check password reset email was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: ["{o_fname} {o_lname}", "{o_email}"]
+        subject: BriefThreat password reset
+        html: !anystr
+        text: !anystr
+      save:
+        $ext:
+          function: util:extract_email_html_link_token
+  - name: Reset password
+    request:
+      url: "{base}/reset-password"
+      method: POST
+      data:
+        token: "{email_token}"
+        password: whatsup
+    response:
+      status_code: 200
+  - name: Attempt to re-use token
+    request:
+      url: "{base}/reset-password"
+      method: POST
+      data:
+        token: "{email_token}"
+        password: whatsup
+    response:
+      status_code: 422
+  - name: Attempt login with old password
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{o_user}"
+        password: "{o_pass}"
+      headers:
+        content-type: application/json
+    response:
+      status_code: 401
+  - name: Log in with new password
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{o_user}"
+        password: whatsup
+      headers:
+        content-type: application/json
+    response:
+      status_code: 200
+  - <<: *pw_reset
+    name: Request password reset to restore old password
+  - <<: *check_pw_reset
+    name: Check password reset email was sent
+  - name: Reset password to original value
+    request:
+      url: "{base}/reset-password"
+      method: POST
+      data:
+        token: "{email_token}"
+        password: "{o_pass}"
+    response:
+      status_code: 200
+  - type: ref
+    id: login

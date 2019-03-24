@@ -81,7 +81,7 @@ stages:
       status_code: 422
       body:
         password: ['Missing data for required field.']
-  - name: Check password change
+  - name: Change password
     request:
       url: "{base_api}/auth/login"
       method: PUT
