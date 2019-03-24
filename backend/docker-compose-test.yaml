@@ -30,7 +30,7 @@ services:
             - JWT_ACCESS_EXPIRY=10
             - JWT_REFRESH_EXPIRY=30
             - PW_RESET_WINDOW=10
-            - RATELIMIT_DEFAULT=20/second;1000/hour;10000/day
+            - RATELIMIT_DEFAULT=100/second;1000/hour;10000/day
             - CLEANUP_INTERVAL=5
         volumes:
             - ./app:/opt/app:ro
