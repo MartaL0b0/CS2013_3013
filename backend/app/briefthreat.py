@@ -1,10 +1,11 @@
+import os
 from os import environ
 from datetime import datetime
 import json
 
 import passlib.pwd
 from werkzeug.contrib.fixers import ProxyFix
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, Response, request, jsonify, render_template
 import redis
 from healthcheck import HealthCheck
 
@@ -125,6 +126,14 @@ api.add_resource(form.Resolution, '/form/resolve')
 # UI routes
 auth.add_ui_routes(app)
 form.add_ui_routes(app)
+
+if app.config['TEST_MODE']:
+    @app.route('/lastmail')
+    def lastmail():
+        with open('/tmp/lastmail.json') as in_:
+            last = in_.read()
+        os.remove('/tmp/lastmail.json')
+        return Response(last, content_type='application/json')
 
 @app.before_first_request
 def init_db():
