@@ -1,6 +1,6 @@
-FROM python:3.6-alpine
+FROM alpine:latest
 
-RUN pip install tavern
+RUN apk --no-cache add py3-lxml curl && pip3 install tavern
 COPY test.sh /opt/
 
 ENTRYPOINT [ "/opt/test.sh" ]
