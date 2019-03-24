@@ -156,7 +156,7 @@ class Login(Resource):
         # Validate and deserialize input
         pw_change = User()
         try:
-            reset_pw_schema.load(request.r_data, instance=pw_change)
+            change_pw_schema.load(request.r_data, instance=pw_change)
         except ValidationError as err:
             return err.messages, 422
 
