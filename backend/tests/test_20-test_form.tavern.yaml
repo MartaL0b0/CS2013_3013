@@ -103,6 +103,9 @@ stages:
       status_code: 200
       body:
         id: !anyint
+      save:
+        body:
+          form1_id: id
     delay_after: 0.3
   - name: Check notification email was sent
     request:
@@ -115,3 +118,201 @@ stages:
         subject: !anystr
         html: !anystr
         text: !anystr
+  - type: ref
+    id: o_login
+  - name: Test other user submission
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {o_access}"
+      json: &o_sample_form
+        amount: 200
+        course: Place 2
+        customer_name: Dude2
+        payment_method: cheque
+        receipt: "no. 4321"
+        time: 1553450153
+    response:
+      status_code: 200
+      body:
+        id: !anyint
+      save:
+        body:
+          form2_id: id
+    delay_after: 0.3
+  - name: Check other use notification email was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: [Administrator, "{email}"]
+        subject: !anystr
+        html: !anystr
+        text: !anystr
+      save:
+        $ext:
+          function: util:extract_email_html_link_token
+          extra_kwargs:
+            suffix: _or
+
+---
+test_name: Check form retrieval
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Retrieve admin user's forms
+    request:
+      url: "{base_api}/form"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 200
+      body:
+        - &sample_form_retr
+          <<: *sample_form
+          id: !int "{form1_id:d}"
+          amount: '123.99'
+          submitter: "{user}"
+          resolved_at: null
+        - &o_sample_retr
+          <<: *o_sample_form
+          id: !int "{form2_id:d}"
+          amount: '200.00'
+          submitter: "{o_user}"
+          resolved_at: null
+  - type: ref
+    id: o_login
+  - name: Retrieve other user's forms
+    request:
+      url: "{base_api}/form"
+      method: GET
+      headers:
+        Authorization: "Bearer {o_access}"
+    response:
+      status_code: 200
+      body:
+        - *o_sample_retr
+
+---
+test_name: Check form editing errors
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Form edit with missing fields
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        id: [Missing data for required field.]
+  - name: Form edit with non-existing form
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: 1337
+    response:
+      status_code: 400
+      body:
+        message: Form 1337 does not exist
+  - type: ref
+    id: o_login
+  - name: Form edit of non-owned form by non-admin user
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {o_access}"
+      json:
+        id: !int "{form1_id}"
+    response:
+      status_code: 401
+      body:
+        message: "You must have either submitted form {form1_id} or be an admin to update it"
+
+---
+test_name: Check form editing
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: o_login
+  - name: Form edit with no changes
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: !int "{form1_id}"
+    response:
+      status_code: 204
+  - name: Check edit notification was not sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 500
+  - name: Form edit
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: !int "{form1_id}"
+        amount: 999
+    response:
+      status_code: 200
+      body: *sample_form_retr
+  - name: Check edit notification was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: [Administrator, "{email}"]
+        subject: !anystr
+        html: !anystr
+        text: !anystr
+  - name: Check form was updated
+    request:
+      url: "{base_api}/form"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 200
+      body:
+        - <<: *sample_form_retr
+          amount: '999.00'
+        - *o_sample_retr
+      save:
+        $ext:
+          function: util:extract_email_html_link_token
+          extra_kwargs:
+            suffix: _r
