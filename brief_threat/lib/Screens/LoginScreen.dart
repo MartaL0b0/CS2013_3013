@@ -18,8 +18,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreen extends State<LoginScreen> {
   // text input controllers & variables
-  final TextEditingController _userNameController = new TextEditingController(text:"root");
-  final TextEditingController _passwordController = new TextEditingController(text: "wgOinRAdA7xn7EyAVyoKzwbsTSVzr16G4L58kHCwP6s");
+  final TextEditingController _userNameController = new TextEditingController();
+  final TextEditingController _passwordController = new TextEditingController();
   String _user = "";
   String _password = "";
   var hidePassword = true;
