@@ -1,20 +1,21 @@
 import 'package:corsac_jwt/corsac_jwt.dart';
-import 'package:brief_threat/Requests.dart';
-import 'models/AccessToken.dart';
+import 'package:brief_threat/Processors/HttpRequestsProcessor.dart';
+import 'package:brief_threat/Models/AccessToken.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class TokenParser {
+class TokenProcessor {
   // returns true if token is valid
   static bool validateToken (String token) {
     if (token.isEmpty) return false;
     var decodedToken = new JWT.parse(token);
     
-    // need to multiply as dart will only generate time in ms as opposed to seconds
+    // need to multiply as dart will only generate time in ms as opposed to seconds (which is what our backend returns)
     int val = decodedToken.expiresAt * 1000;
     int now = DateTime.now().toUtc().millisecondsSinceEpoch;
     return val > now;
   }
 
+  // returns a valid access token (null when refresh token expired)
   static Future<String> checkTokens(String access, String refresh, SharedPreferences prefs) async {
     AccessToken token;
     if (!validateToken(access) && !validateToken(refresh)) {

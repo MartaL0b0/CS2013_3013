@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'Requests.dart';
+import 'package:brief_threat/Processors/HttpRequestsProcessor.dart';
+
 
 class ForgotPassword extends StatefulWidget {
   final String originalUsername;
