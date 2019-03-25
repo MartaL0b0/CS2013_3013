@@ -1,0 +1,49 @@
+---
+name: Login stage
+description:
+  Re-usable login stage
+
+stages:
+  - id: login
+    name: Log in and save tokens
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{user}"
+        password: "{password}"
+      headers:
+        content-type: application/json
+    response:
+      status_code: 200
+      body:
+        $ext: &verify_token
+          function: tavern.testutils.helpers:validate_jwt
+          extra_kwargs:
+            jwt_key: "access_token"
+            key: "{jwt_secret}"
+            options:
+              verify_signature: true
+              verify_exp: true
+      save:
+        body:
+          access: access_token
+          refresh: refresh_token
+  - id: o_login
+    name: Log in other user and save tokens
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{o_user}"
+        password: "{o_pass}"
+      headers:
+        content-type: application/json
+    response:
+      status_code: 200
+      body:
+        $ext: *verify_token
+      save:
+        body:
+          o_access: access_token
+          o_refresh: refresh_token

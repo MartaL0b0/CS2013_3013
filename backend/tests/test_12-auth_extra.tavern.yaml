@@ -1,0 +1,103 @@
+---
+test_name: Check access setting errors
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Attempt to set user access with missing field
+    request:
+      url: "{base_api}/auth/access"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        username: [Missing data for required field.]
+  - name: Attempt to set user access for non-existing user
+    request:
+      url: "{base_api}/auth/access"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        username: bro
+    response:
+      status_code: 400
+      body:
+        message: "User 'bro' does not exist"
+  - type: ref
+    id: o_login
+  - name: Attempt to set user access with non-admin user
+    request:
+      url: "{base_api}/auth/access"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {o_access}"
+      json:
+        username: "{o_user}"
+    response:
+      status_code: 401
+      body:
+        message: This endpoint requires admin status
+
+---
+test_name: Check access setting
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: False
+
+stages:
+  - type: ref
+    id: login
+  - name: Make user an admin
+    request:
+      url: "{base_api}/auth/access"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        username: "{o_user}"
+        is_admin: true
+    response:
+      status_code: 204
+  - type: ref
+    id: o_login
+  - name: Validate changed access
+    request:
+      url: "{base_api}/auth/login"
+      method: GET
+      headers:
+        Authorization: "Bearer {o_access}"
+    response:
+      status_code: 200
+      body:
+        is_admin: true
+  - name: Reset user to non-admin
+    request:
+      url: "{base_api}/auth/access"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        username: "{o_user}"
+        is_admin: false
+    response:
+      status_code: 204
+  - name: Validate reset access
+    request:
+      url: "{base_api}/auth/login"
+      method: GET
+      headers:
+        Authorization: "Bearer {o_access}"
+    response:
+      status_code: 200
+      body:
+        is_admin: false

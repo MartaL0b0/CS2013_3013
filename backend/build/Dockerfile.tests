@@ -1,0 +1,6 @@
+FROM alpine:latest
+
+RUN apk --no-cache add py3-lxml curl && pip3 install tavern
+COPY test.sh /opt/
+
+ENTRYPOINT [ "/opt/test.sh" ]

@@ -1,0 +1,535 @@
+---
+test_name: Check invalid form submission
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - name: Form submission without being logged in
+    request:
+      url: "{base_api}/form"
+      method: POST
+      json: &sample_form
+        amount: 123.99
+        course: Place
+        customer_name: Dude
+        payment_method: cash
+        receipt: "no. 1234"
+        time: 1553450103
+    response:
+      status_code: 401
+      body:
+        message: Missing Authorization Header
+  - type: ref
+    id: login
+  - name: Form submission without JSON body
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 400
+      body:
+        message: No input data provided
+  - name: Form submission with missing fields
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        amount: &m_data
+          [Missing data for required field.]
+        course: *m_data
+        customer_name: *m_data
+        payment_method: *m_data
+        receipt: *m_data
+        time: *m_data
+  - name: Form submission with poorly formatted time
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        <<: *sample_form
+        time: "the future"
+    response:
+      status_code: 422
+      body:
+        _schema: ['time must be a valid Unix timestamp']
+  - name: Form submission with poorly formatted other fields
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        <<: *sample_form
+        amount: "a lot"
+        receipt: 123
+        payment_method: cheese
+    response:
+      status_code: 422
+      body:
+        amount: [Not a valid number.]
+        receipt: [Not a valid string.]
+        payment_method: [Not a valid choice.]
+
+---
+test_name: Check form submission
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Test submission
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json: *sample_form
+    response:
+      status_code: 200
+      body:
+        id: !anyint
+      save:
+        body:
+          form1_id: id
+    delay_after: 0.3
+  - name: Check notification email was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: [Administrator, "{email}"]
+        subject: !anystr
+        html: !anystr
+        text: !anystr
+  - type: ref
+    id: o_login
+  - name: Test other user submission
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {o_access}"
+      json: &o_sample_form
+        amount: 200
+        course: Place 2
+        customer_name: Dude2
+        payment_method: cheque
+        receipt: "no. 4321"
+        time: 1553450153
+    response:
+      status_code: 200
+      body:
+        id: !anyint
+      save:
+        body:
+          form2_id: id
+    delay_after: 0.3
+  - name: Check other use notification email was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: [Administrator, "{email}"]
+        subject: !anystr
+        html: !anystr
+        text: !anystr
+      save:
+        $ext:
+          function: util:extract_email_html_link_token
+          extra_kwargs:
+            suffix: _or
+
+---
+test_name: Check form retrieval
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Retrieve admin user's forms
+    request:
+      url: "{base_api}/form"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 200
+      body:
+        - &sample_form_retr
+          <<: *sample_form
+          id: !int "{form1_id:d}"
+          amount: '123.99'
+          submitter: "{user}"
+          resolved_at: null
+        - &o_sample_retr
+          <<: *o_sample_form
+          id: !int "{form2_id:d}"
+          amount: '200.00'
+          submitter: "{o_user}"
+          resolved_at: null
+  - type: ref
+    id: o_login
+  - name: Retrieve other user's forms
+    request:
+      url: "{base_api}/form"
+      method: GET
+      headers:
+        Authorization: "Bearer {o_access}"
+    response:
+      status_code: 200
+      body:
+        - *o_sample_retr
+
+---
+test_name: Check form editing errors
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Form edit with missing fields
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        id: [Missing data for required field.]
+  - name: Form edit with non-existing form
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: 1337
+    response:
+      status_code: 400
+      body:
+        message: Form 1337 does not exist
+  - type: ref
+    id: o_login
+  - name: Form edit of non-owned form by non-admin user
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {o_access}"
+      json:
+        id: !int "{form1_id}"
+    response:
+      status_code: 401
+      body:
+        message: "You must have either submitted form {form1_id} or be an admin to update it"
+
+---
+test_name: Check form editing
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: o_login
+  - name: Form edit with no changes
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: !int "{form1_id}"
+    response:
+      status_code: 204
+  - name: Check edit notification was not sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 500
+  - name: Form edit
+    request:
+      url: "{base_api}/form"
+      method: PATCH
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: !int "{form1_id}"
+        amount: 999
+    response:
+      status_code: 200
+      body: *sample_form_retr
+  - name: Check edit notification was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: [Administrator, "{email}"]
+        subject: !anystr
+        html: !anystr
+        text: !anystr
+  - name: Check form was updated
+    request:
+      url: "{base_api}/form"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 200
+      body:
+        - &sample_form_retr_upd
+          <<: *sample_form_retr
+          amount: '999.00'
+        - *o_sample_retr
+
+---
+test_name: Check form deletion errors
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Form delete with missing fields
+    request:
+      url: "{base_api}/form"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        id: [Missing data for required field.]
+  - name: Form delete with non-existing form
+    request:
+      url: "{base_api}/form"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: 1337
+    response:
+      status_code: 400
+      body:
+        message: Form 1337 does not exist
+  - type: ref
+    id: o_login
+  - name: Form delete of non-owned form by non-admin user
+    request:
+      url: "{base_api}/form"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {o_access}"
+      json:
+        id: !int "{form1_id}"
+    response:
+      status_code: 401
+      body:
+        message: "You must have either submitted form {form1_id} or be an admin to delete it"
+
+---
+test_name: Check form deletion
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Dummy submission
+    request:
+      url: "{base_api}/form"
+      method: POST
+      headers:
+        Authorization: "Bearer {access}"
+      json: &del_form
+        amount: 127.99
+        course: Place3
+        customer_name: Dude3
+        payment_method: cheque
+        receipt: "no. 9999"
+        time: 1553450193
+    response:
+      status_code: 200
+      body:
+        id: !anyint
+      save:
+        body:
+          formd_id: id
+    delay_after: 0.3
+  - name: Consume notification email
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+  - name: Delete form
+    request:
+      url: "{base_api}/form"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: !int "{formd_id}"
+    response:
+      status_code: 200
+      body:
+        <<: *del_form
+        id: !anyint
+        amount: '127.99'
+        submitter: "{user}"
+        resolved_at: null
+  - name: Check form was deleted
+    request:
+      url: "{base_api}/form"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 200
+      body:
+        - *sample_form_retr_upd
+        - *o_sample_retr
+
+---
+test_name: Check form resolution errors
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Attempt resolution with missing fields
+    request:
+      url: "{base_api}/form/resolve"
+      method: PUT
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        id: [Missing data for required field.]
+  - name: Attempt resolution of non-existent form
+    request:
+      url: "{base_api}/form/resolve"
+      method: PUT
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: 999
+    response:
+      status_code: 400
+      body:
+        message: Form 999 does not exist
+  - type: ref
+    id: login
+  - name: Attempt resolution of form by non-admin
+    request:
+      url: "{base_api}/form/resolve"
+      method: PUT
+      headers:
+        Authorization: "Bearer {o_access}"
+      json:
+        id: !int "{form2_id}"
+    response:
+      status_code: 401
+      body:
+        message: This endpoint requires admin status
+
+---
+test_name: Check form resolution
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Form resolution
+    request:
+      url: "{base_api}/form/resolve"
+      method: PUT
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: !int "{form1_id}"
+    response:
+      status_code: 200
+      body:
+        <<: *sample_form_retr_upd
+        resolved_at: !anyint
+  - name: Check form was updated
+    request:
+      url: "{base_api}/form"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 200
+      body:
+        - <<: *sample_form_retr_upd
+          resolved_at: !anyint
+        - *o_sample_retr
+  - name: Check notification was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: [Administrator, "{email}"]
+        subject: !anystr
+        html: !anystr
+        text: !anystr
+  - name: Attempt re-resolution of form
+    request:
+      url: "{base_api}/form/resolve"
+      method: PUT
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        id: !int "{form1_id}"
+    response:
+      status_code: 400
+      body:
+        message: "Form {form1_id} is already resolved"

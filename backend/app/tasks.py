@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 
 from celery import Celery
 from celery.utils.log import get_task_logger
@@ -47,12 +48,23 @@ def init_app(app):
 # The input must be JSON-serializable (since it will be sent to the Celery
 # worker over the network)
 def send_email(*, from_, to, subject, html, text=None):
+    if current_app.config['TEST_MODE']:
+        with open('/tmp/lastmail.json', 'w') as out:
+            json.dump({
+                'from': from_,
+                'to': to,
+                'subject': subject,
+                'html': html,
+                'text': text
+            }, out)
+        return
+
     message = mail.Message(
             mail_from=from_,
             subject=subject,
             html=html,
             text=text
-            )
+    )
     message.config.smtp_options['fail_silently'] = False
     message.send(to=to)
 

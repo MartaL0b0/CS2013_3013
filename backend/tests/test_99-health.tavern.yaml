@@ -1,0 +1,26 @@
+---
+test_name: Make sure health check works
+includes:
+  - !include common.yaml
+strict: False
+
+stages:
+  - name: Do a health check
+    request:
+      url: "{base}/health"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        hostname: !anystr
+        status: success
+        results:
+          - checker: db_ok
+            passed: true
+            output: !anystr
+          - checker: tasks_ok
+            passed: true
+            output:
+              succeeded: !anyint
+              failed: []

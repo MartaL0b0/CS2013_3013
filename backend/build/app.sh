@@ -9,7 +9,10 @@ celery worker --workdir /opt/app --app briefthreat.celery --loglevel info &
 
 # start the periodic task scheduler (delayed to ensure db is ready)
 rm -f /tmp/celerybeat.pid
-sleep 5 && celery beat --workdir /opt/app --app briefthreat.celery --loglevel info --pidfile /tmp/celerybeat.pid --schedule /tmp/celerybeat-schedule &
+if [ "$TEST_MODE" != "true" ]; then
+	sleep 5
+fi
+celery beat --workdir /opt/app --app briefthreat.celery --loglevel info --pidfile /tmp/celerybeat.pid --schedule /tmp/celerybeat-schedule &
 
 if [ "$FLASK_ENV" == "development" ]; then
 	# use flask debug server in development
