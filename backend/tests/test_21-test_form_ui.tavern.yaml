@@ -1,0 +1,53 @@
+---
+test_name: Check UI form resolution errors
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - name: Attempt to retrieve UI page without token
+    request:
+      url: "{base}/resolve"
+      method: GET
+    response:
+      status_code: 422
+  - name: Attempt to retrieve UI page with invalid token
+    request:
+      url: "{base}/resolve?token=lol"
+      method: GET
+    response:
+      status_code: 422
+
+---
+test_name: Check UI form resolution
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - name: Resolve form
+    request:
+      url: "{email_link_or}"
+      method: GET
+    response:
+      status_code: 200
+    delay_after: 0.3
+  - name: Check notification email was sent
+    request:
+      url: "{u_lastmail}"
+    response:
+      status_code: 200
+      body:
+        from: ["{sys_name}", "{sys_email}"]
+        to: ["{o_fname} {o_lname}", "{o_email}"]
+        subject: !anystr
+        html: !anystr
+        text: !anystr
+  - name: Attempt to re-resolve form
+    request:
+      url: "{email_link_or}"
+      method: GET
+    response:
+      status_code: 400
