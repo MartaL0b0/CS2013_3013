@@ -1,4 +1,4 @@
-import 'AccessToken.dart';
+import 'package:brief_threat/Models/AccessToken.dart';
 
 class RefreshToken {
   // backend also generates access token when generating refresh token
