@@ -30,8 +30,9 @@ class Requests {
     return null;
   }
 
-    // get forms from as a list of 'Request' classes, returns null on error
-    static Future<List<Request>> getForms(SharedPreferences prefs) async {
+    // get forms as a list of 'Request' classes, returns null on error
+  static Future<List<Request>> getForms(SharedPreferences prefs) async {
+    //make sure access token is valid, generate a new one otherwise
     String accessToken = prefs.getString('access');
     accessToken = await TokenProcessor.checkTokens(accessToken, prefs.getString('refresh'), prefs);
     if (accessToken == null) return null;
@@ -43,16 +44,17 @@ class Requests {
     if (response.statusCode == 200) {
       // decode response into list of requests
       var forms = (jsonDecode(response.body) as List).map((form) => new Request.fromJson(form)).toList();
+      // reverse list in order to make the latest submissions appear first
       return forms.reversed.toList();
     } 
     // request failed
     return null;
   }
 
-  // get all data from user
+  // get all data from user, return json response
   static Future<Map<String, dynamic>> getUser(SharedPreferences prefs) async {
-    String accessToken = prefs.getString('access');
-    accessToken = await TokenProcessor.checkTokens(accessToken, prefs.getString('refresh'), prefs);
+    //make sure access token is valid, generate a new one otherwise
+    String accessToken = await updateAccessToken(prefs);
     if (accessToken == null) return null;
 
     final response = await http.get(
@@ -119,7 +121,7 @@ class Requests {
     return -1;
   }
 
-  // used to delete a token (log user out)
+  // delete a token (log user out)
   static Future<bool> deleteToken(String token) async {
     final response = await http.delete(
       'https://briefthreat.nul.ie/api/v1/auth/token', 
@@ -139,14 +141,13 @@ class Requests {
     return accessToken;
   }
 
-
   // only used by admins, can send a request to approve a request
   static Future<bool> approveRequest(int id, SharedPreferences prefs) async {
     // make sure access token is valid
     String accessToken = await updateAccessToken(prefs);
     if (accessToken == null) return null;
 
-    String data =jsonEncode({"id" : id});
+    String data = jsonEncode({"id" : id});
     final response = await http.put(
       'https://briefthreat.nul.ie//api/v1/form/resolve', 
       headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"},
@@ -159,7 +160,7 @@ class Requests {
     return false;
   }
 
-  // register new user, returns boolean status reflecting success / failure
+  // register new user, returns boolean string reflecting success / failure
   static Future<String> register(String username, String email, bool isAdmin, String firstName, String lastName, String accessToken) async {
     String dataAsJson =jsonEncode({"username": username, "email": email, "is_admin":isAdmin, "first_name":firstName, "last_name":lastName});
 
@@ -168,9 +169,11 @@ class Requests {
       headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"},
       body: dataAsJson);
 
+    // return null on succes, return the error message on failure
     return response.statusCode == 204 ? null : jsonDecode(response.body)['message'];
   }  
 
+  // send request to the backend to reset a user's password
   static Future<String> resetPassword (String username) async {
     String data = jsonEncode({"username": username});
 
@@ -179,6 +182,7 @@ class Requests {
       headers: {"Content-Type": "application/json"},
       body: data);
 
+    // return null on success and error message on error
     return response.statusCode == 204 ? null : jsonDecode(response.body)['message'];
   }
 }

@@ -1,13 +1,20 @@
 class Verification {
   // returns null if the string contains a special char, otherwise the original string is returned
   static String checkForSpecialChars (String s) {
-    return RegExp(r'[.,<>§£$°^!@#<>?":_`~;[\]\\|=+)(*&^%-]').hasMatch(s) ? null : s;
+    return RegExp(r'[.,<>§£$°^!@#<>?":`~;[\]\\|=+)(*&^%]').hasMatch(s) ? null : s;
   }
 
   // checks if the amount entered is a valid double
   static double checkForMoneyAmountInput (String s) {
     // not ideal but does the job
     s = s.replaceAll(',', '.');
+    var string = s.split(".");
+
+    // string has more than 1 dot or has more than 2 digits after the dot
+    if (string.length > 2 || (string.length == 2 && string[1].length > 2)) {
+      return null;
+    }
+    // if can't parse the value to a double, then it's not a valid amount
     try {
       return double.parse(s);
     } catch (e) {
@@ -40,7 +47,7 @@ class Verification {
     return false;
   }
 
-  // checks that a list of elements (strings) contain no empty strings
+  // returns true if any string in a list of string is not empty
   static bool isAnyFilled(List<String> s) {
     for(int i = 0; i < s.length; i++){
       if(s[i].isNotEmpty) {
