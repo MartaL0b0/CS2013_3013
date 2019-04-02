@@ -17,6 +17,7 @@ class FormScreen extends StatefulWidget {
   final SharedPreferences prefs;
   final bool isAdmin;
 
+  // get admin status & shared preferences from login screen
   FormScreen({Key key, @required this.prefs, this.isAdmin}) : super(key: key);
   @override
   State createState() => _FormScreen(prefs, isAdmin);
@@ -25,15 +26,18 @@ class FormScreen extends StatefulWidget {
 class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
  // list of choices on the side menu, add a line here to add another option
  final List<barButtonOptions> options = <barButtonOptions>[
-   // we don't use the icons as of now
-  const barButtonOptions(title: 'Log Out', icon: null),
-  const barButtonOptions(title: 'Toggle Biometrics', icon: null),
-
+     // we don't use the icons as of now
+    const barButtonOptions(title: 'Log Out', icon: null),
+    const barButtonOptions(title: 'Toggle Biometrics', icon: null),
   ];
+
   final SharedPreferences prefs;
   final bool isAdmin;
   _FormScreen(this.prefs, this.isAdmin);  //constructor
+
+  // list view of forms
   Widget submittedForms;
+
   String _user = "";
   String _repName = "";
   String _course = "";
@@ -50,11 +54,13 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     InputType.time: DateFormat("HH:mm"),
   };
 
-  // let the user pick a date
+  // let the user pick a date, if you want both date & time enter InputType.both here
   InputType inputType = InputType.date;
   DateTime _date;
 
+  // boolean for radio buttons (cash / cheque) : default is cash (false), cheque (true)
   bool _radioValue = false;
+
   //default value for the radio button
   String _currentPaymentMethod = "cash"; 
 
@@ -77,7 +83,10 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    // load from shared preferences & auto fill the rep name
     _loadTokensAndRepName();
+
+    // add new user option for admins
     if (this.isAdmin) {
       options.add(const barButtonOptions(title: 'Add new user', icon: null));
     }
@@ -98,6 +107,31 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     }
   }
 
+  // build main page (page view), and include both screens
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () => Future.value(false),
+      child: PageIndicatorContainer(
+        pageView: PageView(
+        controller: pageControll,
+        children: <Widget>[
+          form(context),
+          submissions(context)
+          ],
+        ),
+        align: IndicatorAlign.bottom,
+        length: 2,
+        padding: EdgeInsets.only(bottom: 10, left: 15),
+        indicatorSpace: 10.0, // space between circles
+        indicatorColor: Colors.grey,
+        indicatorSelectorColor: Colors.blue[200],
+        size: 15.0, // indicator size.
+      )
+    );
+  }
+
+  // screen used for building list of submitted forms
   Widget _buildFormScreen() {
     return new FutureBuilder(
       future: Requests.getForms(prefs),
@@ -132,6 +166,8 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
       }
     );
   }
+
+  // builds a single request item (list tile)
   Widget _buildFormItem(Request request, int index) {
     var formatter = new DateFormat('dd-MM-yy');
     String dateSubmitted =formatter.format(request.submittedTime);
@@ -155,34 +191,8 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     );
   }
 
-  void updateAccessToken () async {
-    accessToken = await TokenProcessor.checkTokens(accessToken, refreshToken, this.prefs);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () => Future.value(false),
-      child: PageIndicatorContainer(
-        pageView: PageView(
-        controller: pageControll,
-        children: <Widget>[
-          form(context),
-          submissions(context)
-          ],
-        ),
-        align: IndicatorAlign.bottom,
-        length: 2,
-        padding: EdgeInsets.only(bottom: 10, left: 15),
-        indicatorSpace: 10.0, // space between circles
-        indicatorColor: Colors.grey,
-        indicatorSelectorColor: Colors.blue[200],
-        size: 15.0, // indicator size.
-      )
-    );
-  }
-
   
+  // build the form submission screen
   Widget form(BuildContext context) {
     return Scaffold(
       key: _formKey,
@@ -298,12 +308,15 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
                         color: colors.buttonColor,
                         child: Text('SUBMIT', style: TextStyle(color: Colors.white)),
                         onPressed: () async {
+                          // set values from controllers
                           _user =_userNameController.text.trim();
                           _repName =_repNameController.text.trim();
                           _course =_courseController.text.trim();
                           _amount =_amountController.text.trim();
                           _receipt =_receiptController.text.trim();
                           double _amountValue = Verification.checkForMoneyAmountInput(_amount);
+                          
+                          // on error, the string contains the message to display. Null on success
                           String printErrorMessage = Verification.validateFormSubmission(_user, _repName, _course, _amount, _amountValue, _receipt, _date);
                           if (printErrorMessage != null) {
                             SnackBarController.showSnackBarErrorMessage(_formKey, printErrorMessage);
@@ -322,6 +335,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     );
   }
 
+  // build the submissions widget, contains a child that is a list view of the submitted forms
   Widget submissions(BuildContext context) {
     return Scaffold(
       key: _formsListKey,
@@ -348,8 +362,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     );
   }
 
-
-
+  // make sure to change between chaque and cash radio button options
   void _handleRadioChange(bool value) {
     setState(() {
       _radioValue = value;
@@ -359,6 +372,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
 
   void handleSubmitForm(String user, String repName, String course, double amount, String receipt, DateTime date, String paymentMethod) async {
     if ((accessToken = await TokenProcessor.checkTokens(accessToken, refreshToken, this.prefs)) == null) {
+      SnackBarController.showSnackBarErrorMessage(_formKey, "You are no longer logged in");
       // an error occured with the tokens, means the user no longer has valid tokens 
       // redirect to login page
       Navigator.pop(context);
@@ -367,7 +381,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
 
     int requestId = await Requests.postForm(accessToken, user, repName, course, amount, receipt, date, paymentMethod);
     if (requestId == -1) {
-      SnackBarController.showSnackBarErrorMessage(_formKey, "An error occured. Please try again later.");
+      SnackBarController.showSnackBarErrorMessage(_formKey, "An error occured, please try again later.");
       return;
     } 
     
@@ -381,6 +395,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     setState(() => _date = null);
   }
 
+  // handle clicks on menu buttons
   void _select(barButtonOptions options) {
     switch (options.title) {
       case "Log Out":
@@ -400,13 +415,15 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     }
   }
 
+  // re render the list view of submissions
   void setFormScreen() {
     setState(() {
       submittedForms = _buildFormScreen();
     });
   }
 
-   Future<void> _handleRefresh() async {
+  // handle pull to refresh on the forms list screen
+  Future<void> _handleRefresh() async {
     List<Request> forms = await Requests.getForms(prefs);
     if (forms == null || forms.isEmpty) {
       setState(() {
@@ -435,6 +452,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     return null;
   }
 
+  // loads information from shared preferences and pre fills the rep name
   void _loadTokensAndRepName() async {
     _repName = (this.prefs.getString('username') ?? '');
     refreshToken = (this.prefs.getString('refresh') ?? '');
@@ -456,7 +474,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
       print("refresh token deletion failed");
     }
 
-    // remove them from local storage
+    // remove from local storage
     await this.prefs.remove('access');
     await this.prefs.remove('refresh');
     await this.prefs.remove('is_admin');
@@ -465,6 +483,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     Navigator.of(context).pop();
   }
 
+  // show dialog used for successfull form submission
   void _showDialog(int id) {
     showDialog(
       context: context,
@@ -486,7 +505,8 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     );
   }
 
-    void showValidateDialog(int id) {
+  // pop up dialog for admin, validate their intent to approve a request
+  void showValidateDialog(int id) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -513,6 +533,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     );
   }
 
+  // admin only, approve a an open request
   void handleApproveRequest (int id) async {
     bool status = await Requests.approveRequest(id, prefs);
     SnackBarController.showSnackBarErrorMessage(_formsListKey, status ? "Successfully approved request #$id" : "An error occurred.");
@@ -546,7 +567,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     );
   }
 
-    void _biometricAuth () async {
+  void _biometricAuth () async {
     var localAuth = LocalAuthentication();
     bool didAuthenticate = await localAuth.authenticateWithBiometrics(
         localizedReason: 'Please authenticate to Login', useErrorDialogs: false);
