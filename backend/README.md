@@ -84,3 +84,8 @@ WantedBy=multi-user.target
 ```
 
 Then, simply do `sudo systemctl start briefthreat.service`. You can also run `sudo systemctl enable briefthreat.service` to have it run automatically at boot.
+
+# Testing
+This project makes use of [Tavern](https://taverntesting.github.io/) for testing (including mocked emails).
+
+To run the tests, install Docker and Docker Compose (as above). You can then do `./run_tests.sh`. A temporary test environment will be created automatically (no `.env` file required).
