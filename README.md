@@ -17,7 +17,7 @@ This is an application developed by 2nd and 3rd year Computer Science Students. 
 
 ## Overview - Purpose of the System
 
-This iOS and Android application was tailored for a specific use case. It is used to submit a invoice request as an email which should then be approvable by administrators via e-mail or in the app itself.
+This iOS and Android application was tailored for a specific use case. The app will replace the current process of manual request resolving over the phone by an employee. It is used to submit a invoice request as an email which should then be approvable by administrators via e-mail or in the app itself.
 
 ## Getting Started
 
