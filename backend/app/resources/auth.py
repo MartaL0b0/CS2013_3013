@@ -102,8 +102,6 @@ class Registration(Resource):
         if User.find_by_email(new_user.email):
             return {'message': 'A user with email {} already exists'.format(new_user.email)}, 400
 
-        # New users should not be admins
-        new_user.is_admin = False
         new_user.current_pw_token = 0
         new_user.registration_time = datetime.now()
 
@@ -158,7 +156,7 @@ class Login(Resource):
         # Validate and deserialize input
         pw_change = User()
         try:
-            reset_pw_schema.load(request.r_data, instance=pw_change)
+            change_pw_schema.load(request.r_data, instance=pw_change)
         except ValidationError as err:
             return err.messages, 422
 
@@ -262,10 +260,10 @@ def add_ui_routes(app):
         extra = ' You may now log in.' if not user.password else ''
 
         pw_change = User()
-        change_pw_schema.load({
-            'username': user.username,
-            'password': request.form['password']
-        }, instance=pw_change)
+        try:
+            change_pw_schema.load(dict(request.form), instance=pw_change)
+        except ValidationError as ex:
+            return render_template('422.html', message=ex), 422
 
         user.password = pw_change.password
         user.current_pw_token += 1

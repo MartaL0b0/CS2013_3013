@@ -1,0 +1,246 @@
+---
+test_name: Check invalid credentials
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - name: Log in without parameters
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+    response:
+      status_code: 400
+      body:
+        message: No input data provided
+  - name: Log in with missing parameters
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{user}"
+    response:
+      status_code: 422
+      body:
+        password:
+          - Missing data for required field.
+  - name: Log in with a non-existent user
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: joe
+        password: lol
+    response:
+      status_code: 401
+      body:
+        message: Invalid credentials
+  - name: Log in with an incorrect password
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{user}"
+        password: lol
+    response:
+      status_code: 401
+      body:
+        message: Invalid credentials
+
+---
+test_name: Check login works
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+
+---
+test_name: Check password change
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Invalid input change password
+    request:
+      url: "{base_api}/auth/login"
+      method: PUT
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        a: b
+    response:
+      status_code: 422
+      body:
+        password: ['Missing data for required field.']
+  - name: Change password
+    request:
+      url: "{base_api}/auth/login"
+      method: PUT
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        password: admin
+    response:
+      status_code: 204
+  - name: Log in with old password
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{user}"
+        password: "{password}"
+      headers:
+        content-type: application/json
+    response:
+      status_code: 401
+  - name: Log in with new password
+    request:
+      url: "{base_api}/auth/login"
+      method: POST
+      json:
+        username: "{user}"
+        password: admin
+      headers:
+        content-type: application/json
+    response:
+      status_code: 200
+  - name: Change password back
+    request:
+      url: "{base_api}/auth/login"
+      method: PUT
+      headers:
+        Authorization: "Bearer {access}"
+      json:
+        password: "{password}"
+    response:
+      status_code: 204
+
+---
+test_name: Get user info
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Validate user profile
+    request:
+      url: "{base_api}/auth/login"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 200
+      body:
+        forms: []
+        id: !anyint
+        username: root
+        email: root@example.com
+        first_name: Administrator
+        last_name: null
+        is_admin: true
+        registration_time: !anyint
+
+---
+test_name: Test token refresh
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Request a new refresh token
+    request:
+      url: "{base_api}/auth/token"
+      method: POST
+      headers:
+        Authorization: "Bearer {refresh}"
+    response:
+      status_code: 200
+      body:
+        $ext: &verify_token
+          function: tavern.testutils.helpers:validate_jwt
+          extra_kwargs:
+            jwt_key: "access_token"
+            key: "{jwt_secret}"
+            options:
+              verify_signature: true
+              verify_exp: true
+      save:
+        body:
+          access: access_token
+  - name: Check new token works
+    request:
+      url: "{base_api}/auth/login"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 200
+
+---
+test_name: Test access token revocation
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Revoke access token
+    request:
+      url: "{base_api}/auth/token"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {access}"
+  - name: Check revoked token no longer works
+    request:
+      url: "{base_api}/auth/login"
+      method: GET
+      headers:
+        Authorization: "Bearer {access}"
+    response:
+      status_code: 401
+      body:
+        message: Token has been revoked
+
+---
+test_name: Test refresh token revocation
+includes:
+  - !include common.yaml
+  - !include components/login.yaml
+strict: True
+
+stages:
+  - type: ref
+    id: login
+  - name: Revoke refresh token
+    request:
+      url: "{base_api}/auth/token"
+      method: DELETE
+      headers:
+        Authorization: "Bearer {refresh}"
+  - name: Check revoked token no longer works
+    request:
+      url: "{base_api}/auth/token"
+      method: POST
+      headers:
+        Authorization: "Bearer {refresh}"
+    response:
+      status_code: 401
+      body:
+        message: Token has been revoked

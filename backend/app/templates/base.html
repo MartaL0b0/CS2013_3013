@@ -1,4 +1,3 @@
-<!doctype html>
 <html lang="en">
   <head>
     <!-- Required meta tags -->
@@ -9,7 +8,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <style>
     body {
-      color: #b61827;
+      color: #585858;
+      background-color: #f0f0f0;
     }
   </style>
 
@@ -19,7 +19,7 @@
     <main role="main" class="flex-shrink-0">
       <div class="container">
         <div class="text-center mt-3">
-          <img src="{{ url_for('static', filename='logo.svg') }}" />
+          <img src="{{ url_for('static', filename='logo.png') }}" />
         </div>
 {% block content %}{% endblock %}
       </div>

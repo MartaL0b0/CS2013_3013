@@ -2,7 +2,7 @@
   <mj-head>
     <mj-title>Form no. {{ form.id }}</mj-title>
     <mj-attributes>
-      <mj-class name="text" font-family="Roboto, sans-serif" color="#b61827"/>
+      <mj-class name="text" font-family="Roboto, sans-serif" color="#585858"/>
     </mj-attributes>
     <mj-style>
       @media (min-width:480px) {
@@ -17,15 +17,15 @@
     </mj-style>
   </mj-head>
   <mj-body>
-    <mj-section>
+    <mj-section background-color="#f0f0f0">
       <mj-column>
-        <mj-image width="256px" src="{{ url_for('static', filename='logo.svg', _external=True) }}" />
+        <mj-image width="256px" src="{{ url_for('static', filename='logo.png', _external=True) }}" />
 
-        <mj-divider border-color="#ef5350"></mj-divider>
+        <mj-divider border-color="#673ab7"></mj-divider>
 
         <mj-text mj-class="text" css-class="text-scaling">
-          <p>Hi {{ admin.first_name }},</p>
-          <p>{{ editor.full_name }} (<a href="mailto:{{ editor.email }}">{{ editor.email }}</a>) has edited form no. {{ form.id }}{% if editor.username != form.user.username %} (original submitter was {{ form.user.full_name }}){% endif %}.</p>
+          <h1>Hi {{ admin.first_name }},</h1>
+          <h3>{{ editor.full_name }} (<a href="mailto:{{ editor.email }}">{{ editor.email }}</a>) has edited form no. {{ form.id }}{% if editor.username != form.user.username %} (original submitter was {{ form.user.full_name }}){% endif %}.</h3>
           <p>Here's what changed:</p>
           <ul>
           {% if 'course' in changed %}
@@ -46,7 +46,7 @@
           </ul>
         </mj-text>
 
-        <mj-button font-family="Roboto, sans-serif" font-size="22px" href="{{ resolve_link }}" background-color="#43A047">Resolve</mj-button>
+        <mj-button font-family="Roboto, sans-serif" font-size="22px" href="{{ resolve_link }}" background-color="#673ab7">Resolve</mj-button>
       </mj-column>
     </mj-section>
   </mj-body>
