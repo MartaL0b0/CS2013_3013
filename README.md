@@ -1,24 +1,65 @@
-#Betdaq
+# CS2013_3013
+Group 23 Software Engineering Group Project at Trinity College Dublin - Second Semester of 2018-2019
+
+This is an application developed by 2nd and 3rd year Computer Science Students. It is was an assignment for a module in which we worked with a client 3rd party. Click [HERE](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit) for the original statement of work.
+
+![BD logo][logo]
+
+## Table of Contents
+
+  * [Overview - Purpose of the System](#overview---purpose-of-the-system)
+  * [Getting Started](@getting-started)
+  * [Project Structure](#project-structure)
+  * [Overview of implementation, tools, frameworks and languages, design decisions](#overview-of-implementation--tools--frameworks-and-languages--design-decisions)
+  * [Features](#features)
+  * [Design Decisions](#design-decisions)
+  * [Flutter installation instructions](#flutter-installation-instructions)
 
 ## Overview - Purpose of the System
 
-This iOS and Andriod application was tailored for a specific use case. It is used to submit a invoice request as an email which should then be approvable by administrators via e-mail or in the app itself.
+This iOS and Android application was tailored for a specific use case. It is used to submit a invoice request as an email which should then be approvable by administrators via e-mail or in the app itself.
+
+## Getting Started
+
+For installation of the backend server components please view the backend [README](https://github.com/MartaL0b0/CS2013_3013/tree/dev/backend)
+
+**Install/Update Android Studio:**
+
+Begin by installing Android Studio on your computer ([Android Studio Install](https://developer.android.com/studio/install)). This is required for developing, testing and deploying android applications. 
+
+**Install Flutter and Dart plugins:**
+
+Since the application was built using the Flutter framework you will need to Flutter and Dart plugins for your editor. See how to set them up here:
+
+* [Flutter install: Linux](https://flutter.dev/docs/get-started/install/linux)
+* [Flutter install: Windows](https://flutter.dev/docs/get-started/install/windows)
+* [Flutter install: Mac OS](https://flutter.dev/docs/get-started/install/macos)
+* [Flutter: Setting up your Editor](https://flutter.dev/docs/get-started/editor)
+
+**Get dependencies:**
+
+Clone the repo and open the application folder in your Android Studio. Accept the prompt to install/get dependencies.
+
+**Run in Virtual device:** 
+
+Create a virtual device in Android studio to test you application [Managing Andriod Virtual Devices](https://developer.android.com/studio/run/managing-avds)
+
+[**Deploy your application**](https://developer.android.com/studio/publish/app-signing)
 
 ## Project Structure
 
-The App is divided into 2 parts. The actual application written in Flutter and then the server-side to handle authentication, logging, resolving, emails etc. The folders are labeled in the repo.
+The app is divided into 2 parts. The actual application written in Flutter and then the server-side to handle authentication, logging, resolving, emails etc. The folders are labelled in the repo.
 
 ## Overview of implementation, tools, frameworks and languages, design decisions
 
-**Application Framework: Flutter** [Link](https://flutter.dev/) 
+**application Framework: Flutter** [Link](https://flutter.dev/) 
+Our application is being built using the Google's Flutter framework. This allowed us to deploy to iOS and as well as Android from one codebase. Flutter applications are built using the Dart language. Dart is an object oriented language supporting both loose and strong typing. Dart/Flutter comes with many useful libraries allowing for easy integration of authentication (JSON Web Tokens) and fingerprint reader login.
 
-Our application is being built using the Google's Flutter framework. This allowed us to deploy to iOS and well as Android from one codebase. Flutter application are built using the dart language. Dart is an object oriented language supporting both loose and strong typing. Dart/Flutter comes with many useful libraries allowing for easy integration of authentication (JSON Web Tokens) and things like push notifications.
-
-**Web Interface + ReST API: Python Flask** [Link](http://flask.pocoo.org/) 
+**Web Interface + REST API: Python Flask** [Link](http://flask.pocoo.org/) 
 
 We used the Flask Python framework to handle the backend along with some libraries such as **passlib.hash, sqlalchemy, marshmallow, celery** 
 
-**Authentication: Json Web Tokens** [Link](https://jwt.io/) 
+**Authentication: JSON Web Tokens** [Link](https://jwt.io/) 
 
 For authentication we opted to use JWT as they allow for stateless authentication and the team was unfamiliar with then which also posed as an additional learning opportunity.
 
@@ -30,109 +71,27 @@ The application runs in several containers to add modularity. We used docker ins
 
 This form submission app has many features:
 
-* Login/Logout (Stateless authentication)
+* Login/Logout (Stateless authentication using JSON Web Tokens)
 * Fingerprint authentication
-* Password recovery
+* Password recovery and reset
 * Account creation/deletion (with approval and timeout)
-* Hashed Passwords
+* Secure credential + password storage
 * Resolve by EMAIL
-* Resolve in APP
-* ???
+* Resolve in app
+* List view of submissions
 
 ## Design Decisions
 
-**??????**
+**Authentication:**
+For the authentication we decided to use JSON Web Tokens (JWT from here on out) as a means of session and login/logout management. There were several reasons for this decision. Mainly we were building a mobile application and not a web-app so we knew our users would not be navigating between pages using links. This provides an ideal use case for JWT. Secondly our application required an API regardless of our authentication strategy and JWT are fairly seamless to integrate alongside our existing API, cookies would have made it difficult for our non-browser based application to consume them. More information on how the API works can be found here [authentication API](link)
 
-## Flutter installation instructions
+**Form Resolution Journey:**
+This application's goal was to replace an inefficient process of resolving invoice requests. It was usually done over the phone by a member of staff. We decided the simplest and quickest way to resolve forms would be to do so via emails. When requests are submitted via the application an email is sent so the request can be resolved directly in the inbox. This is what those emails look like.
 
-* [Linux](https://flutter.dev/docs/get-started/install/linux)
-* [Windows](https://flutter.dev/docs/get-started/install/windows)
-* [Mac OS](https://flutter.dev/docs/get-started/install/macos)
+![Resolve Email](https://i.imgur.com/Wh0HQAb.png)
 
+Administrators can also approve requests through the app. This is what that looks like:
 
-## Backend
-Flask, MySQL (MariaDB) and Nginx-based REST API (with Redis and [Celery](http://www.celeryproject.org/)) in Docker Compose
+![Resolve in app](https://i.imgur.com/CF80LeA.png)
 
-## Installation
-You'll need an up-to-date version of [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/) on your system to get started.
-
-Once you have that, create a `.env` file in this directory. This file contains configuration specific to your installation or development environment. Example:
-```
-MYSQL_DATA=./data/mysql
-MYSQL_ROOT_PASSWORD=lolbadpw
-MYSQL_USER=briefthreat
-MYSQL_PASSWORD=hunter2
-MYSQL_DATABASE=briefthreat
-REDIS_DATA=./data/redis
-FLASK_ENV=development
-FLASK_SECRET=thisshouldbesecret
-PUBLIC_HOST=localhost
-ROOT_EMAIL=test@example.com
-EMAIL_NAME=BriefThreat
-EMAIL_FROM=briefthreat@example.com
-SMTP_HOST=mail.example.com
-SMTP_USER=test
-SMTP_PASSWORD=hunter2
-JWT_SECRET=thisshouldalsobesecret
-JWT_ACCESS_EXPIRY=900
-JWT_REFRESH_EXPIRY=2592000
-PW_RESET_WINDOW=86400
-RATELIMIT_DEFAULT=1000/hour;10000/day
-CLEANUP_INTERVAL=120
-NGINX_HOST=localhost
-NGINX_HTTP_PORT=8080
-NGINX_HTTPS_PORT=8443
-SSL_CERTS=./ssl
-```
-
-- `MYSQL_DATA` specifies the directory on your system where the MySQL data should be stored.
-- `MYSQL_ROOT_PASSWORD` is the password which will be set for the new MySQL instance's root user.
-- `MYSQL_USER` is the name of the MySQL user that will be created and used for the application.
-- `MYSQL_PASSWORD` is the password which will be created for the above user.
-- `REDIS_DATA` is the directory where persistent Redis data should be stored
-- `FLASK_ENV` decides whether the app should run in production or development mode. In development mode the Flask debugger will be enabled, allowing you instantly see new changes in the app without having to restart it. Detailed stack traces will also be shown in your browser when exceptions occur.
-- `FLASK_SECRET` is the secret key which is issued to sign tokens for email notification links.
-- `PUBLIC_HOST` is the hostname and (optionally) port which the server should be publically accessible by - this is used for generating email links.
-- `ROOT_EMAIL` is the email address which will be used for automatic first-run registration of the root user (not to be confused with the MySQL root user)
-- `EMAIL_NAME` and `EMAIL_FROM` are _metadata_ only values used in email headers for emails sent by the system
-- `SMTP_*` are credentials for an SMTP server that will be used to send emails
-`openssl req -x509 -subj '/CN=localhost' -newkey rsa:4096 -keyout key.pem -nodes -out certificate.crt -days 365`
-Note that the filenames must be `key.pem` for the private key and `certificate.crt` for the certificate.
-- The `JWT_*_EXPIRY` variables set how long the JWT access and refresh tokens should be valid for (in seconds)
-- `PW_RESET_WINDOW` is the amount of time (in seconds) for which a password reset token will be valid
-- The format for the `RATELIMIT_*` options can be found in the [documentation for `flask-limiter`](https://flask-limiter.readthedocs.io/en/stable/#rate-limit-string-notation)
-- `CLEANUP_INTERVAL` specifies the interval for which the cleanup task should be executed. Note that this will only run in production.
-- `NGINX_HOST` is the public hostname through which the server will be accessible (no port part)
-- `NGINX_HTTP_PORT` / `NGINX_HTTPS_PORT` are the ports which will be bound publicly for external access to the backend
-- `SSL_CERTS` specifies the directory on your system where SSL certificates for the main Nginx server (which proxies to the main service) can be found. You can generate your own self-signed certificate with the following command:
-
-To start the app, just run `docker-compose up`. Hit CTRL+C to shut it down.
-
-Note: If the Dockerfiles change, you can run `docker-compose up --build` to ensure they're re-built.
-
-# Deployment tips
-After following the above steps, you should have a development environment which you can manually start / stop. Note that you should tweak some of the values in your `.env` to be more suitable for production, notably:
-- All of the passwords / secrets should use secure random values, for example using the command `pwgen 64 1`
-- `FLASK_ENV` should be set to `production`
-- `PUBLIC_HOST` and `NGINX_HOST` should be real domains
-- The Nginx ports should probably be 80 and 443 for HTTP and HTTPS respectively
-- Real SSL certificates should be used in place of self-signed ones, you can obtain these for free from [Let's Encrypt](https://letsencrypt.org/)
-
-After this, you can put the following into `/etc/systemd/system/briefthreat.service` (only on systemd-based systems of course!):
-```ini
-[Unit]
-Description=BriefThreat backend application
-After=docker.service
-Requires=docker.service
-
-[Service]
-Type=simple
-workingDirectory=/path/to/backend
-ExecStart=/usr/bin/docker-compose up
-ExecStop=/usr/bin/docker-compose down
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Then, simply do `sudo systemctl start briefthreat.service`. You can also run `sudo systemctl enable briefthreat.service` to have it run automatically at boot.
+[logo]:https://i.imgur.com/2vsvMmT.png
