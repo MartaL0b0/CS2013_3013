@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'colors.dart' as colors;
+import 'Theme/colors.dart' as colors;
 
 class RequestAccess extends StatefulWidget {
   @override
