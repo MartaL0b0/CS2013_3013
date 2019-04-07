@@ -310,10 +310,12 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
                           _amount =_amountController.text.trim();
                           _receipt =_receiptController.text.trim();
                           double _amountValue = Verification.checkForMoneyAmountInput(_amount);
+
                           if (prefs.getBool("isBiometricsEnabled") && !await _biometricAuth()) {
                             SnackBarController.showSnackBarErrorMessage(_formKey, "Failed to verify");
                             return;
                           }
+
                           // on error, the string contains the message to display. Null on success
                           String printErrorMessage = Verification.validateFormSubmission(_user, _repName, _course, _amount, _amountValue, _receipt, _date);
                           if (printErrorMessage != null) {
