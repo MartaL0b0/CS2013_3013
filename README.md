@@ -1,7 +1,7 @@
 # CS2013_3013
 Group 23 Software Engineering Group Project at Trinity College Dublin - Second Semester of 2018-2019
 
-This application was developed by 2nd and 3rd year Computer Science Students. It was an assignment for a module ("Software Engineering Project") in which we worked with a client 3rd party. To view the original statement of work click [HERE](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit.
+This application was developed by 2nd and 3rd year Computer Science Students. It was an assignment for a module ("Software Engineering Project") in which we worked with a client 3rd party. To view the original statement of work click [HERE](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit).
 
 ![BD logo][logo]
 
