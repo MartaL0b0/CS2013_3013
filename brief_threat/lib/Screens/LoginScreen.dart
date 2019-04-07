@@ -51,6 +51,7 @@ class _LoginScreen extends State<LoginScreen> {
                   ],
                 ),
                 TextField(
+                  key: Key('login field'),
                   decoration: InputDecoration(
                     labelText: "Username",
                     filled: true,
@@ -61,7 +62,9 @@ class _LoginScreen extends State<LoginScreen> {
                 Stack(
                     alignment: const Alignment(1.0, 1.0),
                     children: <Widget>[
-                      TextField(decoration: InputDecoration(
+                      TextField(
+                        key: Key('password field'),
+                        decoration: InputDecoration(
                         labelText: "Password",
                         filled: true,
                       ),
@@ -91,6 +94,7 @@ class _LoginScreen extends State<LoginScreen> {
                       },
                     ),
                     RaisedButton(
+                      key: Key('login'),
                       color: colors.buttonColor,
                       child: Text('Login', style: TextStyle(color: Colors.white),),
                       onPressed: () async {

@@ -197,7 +197,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     return Scaffold(
       key: _formKey,
       appBar: AppBar(
-        title: Text('Transaction Details'),
+        title: Text('Transaction Details', key: Key('title'),),
         automaticallyImplyLeading: false,
         actions: <Widget>[
           PopupMenuButton<barButtonOptions>(
@@ -230,6 +230,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
                   ),
                   SizedBox(height: 12.0),
                   TextField(
+                    key: Key('customer username'),
                     decoration: InputDecoration(
                       labelText: "Customer Username",
                       filled: true,
@@ -238,6 +239,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
                   ),
                   SizedBox(height: 12.0),       
                   TextField(
+                    key: Key('course'),
                     decoration: InputDecoration(
                       labelText: "Course",
                       filled: true,
@@ -483,7 +485,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     Navigator.of(context).pop();
   }
 
-  // show dialog used for successfull form submission
+  // show dialog used for successful form submission
   void _showDialog(int id) {
     showDialog(
       context: context,
