@@ -1,7 +1,7 @@
 # CS2013_3013
 Group 23 Software Engineering Group Project at Trinity College Dublin - Second Semester of 2018-2019
 
-This is an application developed by 2nd and 3rd year Computer Science Students. It is was an assignment for a module in which we worked with a client 3rd party. Click [HERE](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit) for the original statement of work.
+This application was developed by 2nd and 3rd year Computer Science Students. It was an assignment for a module ("Software Engineering Project") in which we worked with a client 3rd party. To view the original statement of work click [HERE](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit.
 
 ![BD logo][logo]
 
@@ -23,13 +23,15 @@ This iOS and Android application was tailored for a specific use case. The app w
 
 For installation of the backend server components please view the backend [README](https://github.com/MartaL0b0/CS2013_3013/tree/dev/backend)
 
+For installation of the frontend components please view the backend [README](https://github.com/MartaL0b0/CS2013_3013/tree/dev/brief_threat/README.md)
+
 **Install/Update Android Studio:**
 
 Begin by installing Android Studio on your computer ([Android Studio Install](https://developer.android.com/studio/install)). This is required for developing, testing and deploying android applications. 
 
 **Install Flutter and Dart plugins:**
 
-Since the application was built using the Flutter framework you will need to Flutter and Dart plugins for your editor. See how to set them up here:
+Since the application was built using the Flutter framework you will need to install Flutter and Dart plugins for your editor. Here are links on how to set them up.
 
 * [Flutter install: Linux](https://flutter.dev/docs/get-started/install/linux)
 * [Flutter install: Windows](https://flutter.dev/docs/get-started/install/windows)
@@ -63,9 +65,9 @@ We used the Flask Python framework to handle the backend along with some librari
 
 For authentication we opted to use JWT as they allow for stateless authentication and the team was unfamiliar with then which also posed as an additional learning opportunity.
 
-**Containerisation: Docker** [Link](https://www.docker.com/)
+**Containerisation: Docker Compose** [Link](https://docs.docker.com/compose/)
 
-The application runs in several containers to add modularity. We used docker instead of something like Kubernetes due to its ease of use and quick setup.
+The application runs in several containers to add modularity. We used docker compose instead of something like Kubernetes due to its ease of use and quick setup.
 
 ## Features
 
@@ -74,7 +76,7 @@ This form submission app has many features:
 * Login/Logout (Stateless authentication using JSON Web Tokens)
 * Fingerprint authentication
 * Password recovery and reset
-* Account creation/deletion (with approval and timeout)
+* Account Signup
 * Secure credential + password storage
 * Resolve by EMAIL
 * Resolve in app
