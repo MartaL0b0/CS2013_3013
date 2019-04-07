@@ -26,7 +26,7 @@ void main() {
       await driver.tap(loginFieldFinder);
       await driver.enterText("root");
       await driver.tap(passwordFieldFinder);
-      await driver.enterText("CtGdsJIezfuG15GbX73yk8DE2Uu1DDS1iFsxQqZO3Vl"); //TODO: make sure this password is correct when testing
+      await driver.enterText("ENTER PASSWORD HERE"); //TODO: make sure this password is correct when testing
       await driver.tap(loginButtonFinder);
       expect(await driver.getText(screenTitleFinder), "Transaction Details");
     });
