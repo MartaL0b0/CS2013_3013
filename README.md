@@ -1,7 +1,7 @@
 # CS2013_3013
 Group 23 Software Engineering Group Project at Trinity College Dublin - Second Semester of 2018-2019
 
-This application was developed by 2nd and 3rd year Computer Science Students. It was an assignment for a module ("Software Engineering Project") in which we worked with a client 3rd party. To view the original statement of work click [HERE](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit).
+This application was developed by 2nd and 3rd year Computer Science Students. It was an assignment for a module ("Software Engineering Group Project") in which we worked with a client 3rd party. To view the original statement of work click [HERE](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit).
 
 ![BD logo][logo]
 
@@ -21,7 +21,7 @@ This iOS and Android application was tailored for a specific use case. The app w
 
 ## Getting Started
 
-For installation of the backend server components please view the backend [README](https://github.com/MartaL0b0/CS2013_3013/tree/dev/backend)
+For installation of the backend server components please view the backend [README](https://github.com/MartaL0b0/CS2013_3013/tree/dev/backend).
 
 **Install/Update Android Studio:**
 
@@ -29,7 +29,7 @@ Begin by installing Android Studio on your computer ([Android Studio Install](ht
 
 **Install Flutter and Dart plugins:**
 
-Since the application was built using the Flutter framework you will need to install Flutter and Dart plugins for your editor. Here are links on how to set them up. View the frontend ReadMe for more detailed instructions regarding Flutter => [**HERE**](https://github.com/MartaL0b0/CS2013_3013/tree/dev/brief_threat/README.md).
+Since the application was built using the Flutter framework you will need to install Flutter and Dart plugins for your editor. Here are links on how to set them up. View the frontend README for more detailed instructions regarding Flutter => [**HERE**](https://github.com/MartaL0b0/CS2013_3013/tree/dev/brief_threat/README.md).
 
 * [Flutter install: Linux](https://flutter.dev/docs/get-started/install/linux)
 * [Flutter install: Windows](https://flutter.dev/docs/get-started/install/windows)
@@ -42,12 +42,12 @@ Clone the repo and open the application folder in your Android Studio. Accept th
 
 **Run in Virtual device:** 
 
-Create a virtual device in Android studio to test you application [Managing Andriod Virtual Devices](https://developer.android.com/studio/run/managing-avds)
+Create a virtual device in Android studio to test you application [Managing Android Virtual Devices](https://developer.android.com/studio/run/managing-avds).
 
 [**Deploy your application**](https://developer.android.com/studio/publish/app-signing)
 
 
-**For more details on Flutter instructions visit the frontend [README](https://github.com/MartaL0b0/CS2013_3013/tree/dev/brief_threat/README.md)**
+**For more details on Flutter instructions visit the frontend [README](https://github.com/MartaL0b0/CS2013_3013/tree/dev/brief_threat/README.md).**
 
 
 ## Project Structure
@@ -61,7 +61,7 @@ Our application is being built using the Google's Flutter framework. This allowe
 
 **Web Interface + REST API: Python Flask** [Link](http://flask.pocoo.org/) 
 
-We used the Flask Python framework to handle the backend along with some libraries such as **passlib.hash, sqlalchemy, marshmallow, celery** 
+We used the Flask Python framework to handle the backend along with some libraries such as **passlib.hash, sqlalchemy, marshmallow, celery**. 
 
 **Authentication: JSON Web Tokens** [Link](https://jwt.io/) 
 
