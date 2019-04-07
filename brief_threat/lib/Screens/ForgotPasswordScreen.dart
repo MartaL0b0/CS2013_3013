@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:brief_threat/Processors/HttpRequestsProcessor.dart';
 
-
+// screen to reset a users password
 class ForgotPassword extends StatefulWidget {
   final String originalUsername;
 
@@ -14,6 +14,7 @@ class ForgotPassword extends StatefulWidget {
 class _ForgotPassword extends State <ForgotPassword> {
   String _user = "";
 
+  // pass the username from the loging screen for filling the username field automatically
   _ForgotPassword(this._user);  //constructor
 // text input controllers & variables
   final TextEditingController _userNameController = new TextEditingController();
@@ -22,6 +23,7 @@ class _ForgotPassword extends State <ForgotPassword> {
   @override
   void initState() {
     super.initState();
+    // prefill username from login screen
     _userNameController.text =_user;
   }
   @override
@@ -63,15 +65,17 @@ class _ForgotPassword extends State <ForgotPassword> {
   }
 
   void _resetPassword () async {
+    // call backend
     String status = await Requests.resetPassword(_user);
     if (status == null) {
       // return to login screen on success
       Navigator.pop(context);
     }
+    // status is null on success, on error then it contains the error message from the backend (user does not exist..)
     status == null ? _showDialog("Success", "An email will be sent to you shortly.") : _showDialog("An error occured.", status);
   }
 
-    void _showDialog(String title, String message) {
+  void _showDialog(String title, String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

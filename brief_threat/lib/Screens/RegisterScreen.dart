@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:brief_threat/Processors/HttpRequestsProcessor.dart';
 import 'package:brief_threat/Processors/TokenProcessor.dart';
 
+// admin only screen, enables the registration for a new user
 class Register extends StatefulWidget {
   final SharedPreferences prefs;
   Register({Key key, @required this.prefs}) : super(key: key);
@@ -22,6 +23,7 @@ class _Register extends State <Register> {
   @override
   void initState() {
     super.initState();
+    // get tokens
     accessToken = prefs.getString('access');
     refreshToken = prefs.getString('refresh');
   }
@@ -45,6 +47,7 @@ class _Register extends State <Register> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop:() async {
+        // if any fields are filled, show dialog to confirm the return, otherwise just go back to previous screen
         setVariablesFromControllers();
         if (!Verification.isAnyFilled([_user, _firstName, _lastName, _email, _emailConfirmed])){
           return true;
@@ -157,6 +160,7 @@ class _Register extends State <Register> {
                       onPressed: () async {
                         setVariablesFromControllers();
                         String printErrorMessage = Verification.validateNewUserFields(_user, _firstName, _lastName, _email, _emailConfirmed);
+                        // printerror message contains the message to output if any fields does not meet requirements
                         if (printErrorMessage != null) {
                           SnackBarController.showSnackBarErrorMessage(_registerScaffold, printErrorMessage);
                           return;
@@ -174,7 +178,9 @@ class _Register extends State <Register> {
     );
   }
 
+  // handle user creation
   void _createNewUser () async {
+    // update access token if needed
     accessToken = await TokenProcessor.checkTokens(accessToken, refreshToken, prefs);
     if (accessToken == null) {
       // no longer logged in, pop both screens back to login screen & remove prefs
@@ -186,6 +192,8 @@ class _Register extends State <Register> {
       Navigator.pop(context);
       return;
     }
+
+    // register user, if string is null then there is no error message to display & registration was successfull
     String status = await Requests.register(_user, _email, isAdmin, _firstName, _lastName, accessToken);
     _showMessageDialog(status == null ? "Registration for user $_user was successful!" : "An error occured.", status == null ? '' : status);
 
@@ -202,6 +210,7 @@ class _Register extends State <Register> {
     }
   }
 
+  // show dialog with a title and body & close button
   void _showMessageDialog(String title, String message) {
     showDialog(
       context: context,
@@ -222,6 +231,8 @@ class _Register extends State <Register> {
       },
     );
   }
+
+  // re render the radio button for the new user's admin status
   void _handleAdminChange(bool value) {
     setState(() {
       isAdmin = value;

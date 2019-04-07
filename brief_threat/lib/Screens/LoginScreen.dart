@@ -51,6 +51,7 @@ class _LoginScreen extends State<LoginScreen> {
                   ],
                 ),
                 TextField(
+                  key: Key('login field'),
                   decoration: InputDecoration(
                     labelText: "Username",
                     filled: true,
@@ -61,7 +62,9 @@ class _LoginScreen extends State<LoginScreen> {
                 Stack(
                     alignment: const Alignment(1.0, 1.0),
                     children: <Widget>[
-                      TextField(decoration: InputDecoration(
+                      TextField(
+                        key: Key('password field'),
+                        decoration: InputDecoration(
                         labelText: "Password",
                         filled: true,
                       ),
@@ -91,6 +94,7 @@ class _LoginScreen extends State<LoginScreen> {
                       },
                     ),
                     RaisedButton(
+                      key: Key('login'),
                       color: colors.buttonColor,
                       child: Text('Login', style: TextStyle(color: Colors.white),),
                       onPressed: () async {
@@ -117,17 +121,14 @@ class _LoginScreen extends State<LoginScreen> {
                           )
                         );
                         bool status = await _loginPressed(_user, _password, _scaffoldKey);
-                        
                         // don't redirect if login failed
                         if(!status) {
                           return;
                         }
 
                         _passwordController.clear();
-
                         // redirect to new page
                         Navigator.push(context, new MaterialPageRoute(builder: (context) => new FormScreen(prefs:prefs, isAdmin: isAdmin,)));
-
                       },
                     )
                   ],
@@ -144,6 +145,7 @@ class _LoginScreen extends State<LoginScreen> {
         localizedReason: 'Please authenticate to Login', useErrorDialogs: false);
   }
 
+  // autofill username if it is present in local storage
   void _getPreferences() async {
     prefs = await SharedPreferences.getInstance();
     if ((_user = prefs.getString('username') ?? '') != '') {
@@ -153,13 +155,14 @@ class _LoginScreen extends State<LoginScreen> {
     }
     isAdmin = prefs.getBool('is_admin') ?? false;
 
+    // if refresh token is valid, the user is already logged in
     if (TokenProcessor.validateToken((prefs.getString('refresh') ??  ''))){
       // already logged in
       if (!(prefs.getBool("isBiometricsEnabled") ?? false) || ((prefs.getBool("isBiometricsEnabled") ?? false) && await _biometricAuth()) ) {
         Navigator.push(context, new MaterialPageRoute(
             builder: (context) => new FormScreen(prefs: prefs, isAdmin: isAdmin)));
+        return;
       }
-      return;
     }
   }
   // Toggles the password show status
@@ -174,7 +177,7 @@ class _LoginScreen extends State<LoginScreen> {
     });
   }
 
-  // handle login, currently just prints what was entered in the text fields
+  // handle login
   Future<bool> _loginPressed (String user, String password, GlobalKey<ScaffoldState> key) async {
     RefreshToken token = await Requests.login(_user, _password);
     if (token == null) {
@@ -182,10 +185,12 @@ class _LoginScreen extends State<LoginScreen> {
       SnackBarController.showSnackBarErrorMessage(key, "Incorrect username or password. Please try again");
       return false;
     }
+    // keep tokens and username in local storage
     await prefs.setString('username', user);
     await prefs.setString('refresh', token.refreshToken);
     await prefs.setString('access', token.accessToken.accessToken);
 
+    // get admin status from backend, the access token was just generated so it will be valid (no need to update)
     isAdmin = await Requests.isUserAdmin(token.accessToken.accessToken);
     await prefs.setBool('is_admin', isAdmin);
 

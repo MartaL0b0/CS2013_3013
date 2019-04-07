@@ -1,13 +1,20 @@
 class Verification {
   // returns null if the string contains a special char, otherwise the original string is returned
   static String checkForSpecialChars (String s) {
-    return RegExp(r'[.,<>§£$°^!@#<>?":_`~;[\]\\|=+)(*&^%-]').hasMatch(s) ? null : s;
+    return RegExp(r'[.,<>§£$°^!@#<>?":`~;[\]\\|=+)(*&^%]').hasMatch(s) ? null : s;
   }
 
   // checks if the amount entered is a valid double
   static double checkForMoneyAmountInput (String s) {
     // not ideal but does the job
     s = s.replaceAll(',', '.');
+    var string = s.split(".");
+
+    // string has more than 1 dot or has more than 2 digits after the dot
+    if (string.length > 2 || (string.length == 2 && string[1].length > 2)) {
+      return null;
+    }
+    // if can't parse the value to a double, then it's not a valid amount
     try {
       return double.parse(s);
     } catch (e) {
@@ -30,8 +37,8 @@ class Verification {
     return RegExp(r'[.,<>§£$°^!@#<>?":_`~;[\]\\|=+)(*&^%-]').hasMatch(s);
   }
 
-  // checks that a list of elements (strings) contain no empty strings
-  static bool areAllFilled(List<String> s) {
+  // checks that a list of elements (strings) contains empty strings
+  static bool isAnyNotFilled(List<String> s) {
     for(int i = 0; i < s.length; i++){
       if(s[i].isEmpty) {
         return true;
@@ -40,7 +47,7 @@ class Verification {
     return false;
   }
 
-  // checks that a list of elements (strings) contain no empty strings
+  // returns true if any string in a list of string is not empty
   static bool isAnyFilled(List<String> s) {
     for(int i = 0; i < s.length; i++){
       if(s[i].isNotEmpty) {
@@ -53,7 +60,7 @@ class Verification {
   //check the inputs of a form submission, return the error message to display or null if all is well
   static String validateFormSubmission (String user, String repName, String course, String amount, double amountVal, String receipt, DateTime date){
     // input data checks, woho
-    if(areAllFilled([user, repName, course, amount, receipt]) || date == null){
+    if(isAnyNotFilled([user, repName, course, amount, receipt]) || date == null){
       return "Please fill in all fields";
     } else if (checkForSpecialChars(user) == null) {
       return "Invalid username.";
@@ -71,7 +78,7 @@ class Verification {
 
     // check the inputs of the login page, return the error message to display or null if all is well
   static String validateLoginSubmission(String _user, String _password) {
-    if(areAllFilled([_user, _password])){
+    if(isAnyNotFilled([_user, _password])){
       return "Please fill in all fields";
     } 
     else if(hasSpecialChar(_user)) {
@@ -85,7 +92,7 @@ class Verification {
   static String validateNewUserFields (String username, String firstName, String lastName, String email, String confirmEmail) {
     print(isStringAnEmail(email));
     print("printed");
-    if (areAllFilled([username, firstName, lastName, email, confirmEmail])) {
+    if (isAnyNotFilled([username, firstName, lastName, email, confirmEmail])) {
       return "Please fill in all fields";
     } else if (checkForSpecialChars(username) == null) {
       return "Invalid username.";
