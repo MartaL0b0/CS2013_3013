@@ -576,7 +576,7 @@ class _FormScreen extends State<FormScreen> with WidgetsBindingObserver {
     if ( ( isOptionEnabled == null) || (isOptionEnabled == false)) {
       question = "Turn on Biometrics?";
     } else if (isOptionEnabled == true) {
-      question = "Turn off Biometrics?";
+      question = "Turn off Biometrics?\n(This will log you out)";
     }
     showDialog(
       context: context,
