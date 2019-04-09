@@ -1,0 +1,11 @@
+Hi {{ admin.first_name }},
+
+{{ form.user.full_name }} ({{ form.user.email }}) has submitted form no. {{ form.id }}.
+Here are the details:
+ - Course: {{ form.course }}
+ - Time: {{ form.time.strftime('%A %d %B at %H:%M (UTC)') }}
+ - Payment method: {{ form.payment_method.name.capitalize() }}
+ - Amount: €{{ form.amount }}
+ - Receipt number: {{ form.receipt }}
+
+You can click the following link to mark this form as resolved: {{ resolve_link }}

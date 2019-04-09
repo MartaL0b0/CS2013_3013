@@ -1,0 +1,39 @@
+version: '3.7'
+services:
+    tests:
+        image: briefthreat/tests
+        build:
+            context: ./build
+            dockerfile: Dockerfile.tests
+        depends_on:
+            - briefthreat
+        volumes:
+            - ./tests:/opt/tests
+    briefthreat:
+        image: briefthreat/app
+        restart: on-failure
+        build:
+            context: ./build
+            dockerfile: Dockerfile.app
+        init: true
+        depends_on:
+            - redis
+        environment:
+            - TEST_MODE=true
+            - FLASK_ENV=production
+            - FLASK_SECRET=testsecret
+            - PUBLIC_HOST=briefthreat:8080
+            - ROOT_EMAIL=root@example.com
+            - EMAIL_NAME=BriefThreat
+            - EMAIL_FROM=briefthreat@example.com
+            - JWT_SECRET=testsecret2
+            - JWT_ACCESS_EXPIRY=2
+            - JWT_REFRESH_EXPIRY=30
+            - PW_RESET_WINDOW=10
+            - RATELIMIT_DEFAULT=20/second
+            - CLEANUP_INTERVAL=5
+        volumes:
+            - ./app:/opt/app:ro
+    redis:
+        image: redis:alpine
+        restart: on-failure

@@ -1,0 +1,5 @@
+FROM nginx:mainline-alpine
+
+RUN mkdir /opt/briefthreat /opt/ssl && rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /opt/briefthreat.conf.template
+CMD envsubst '${NGINX_HOST},${NGINX_HTTPS_PORT}' < /opt/briefthreat.conf.template > /etc/nginx/conf.d/briefthreat.conf && exec nginx -g 'daemon off;'

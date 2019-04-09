@@ -1,0 +1,21 @@
+Hi {{ admin.first_name }},
+
+{{ editor.full_name }} ({{ editor.email }}) has edited form no. {{ form.id }}{% if editor.username != form.user.username %} (original submitter was {{ form.user.full_name }}){% endif %}.
+Here's what changed:
+{% if 'course' in changed %}
+ - Course: {{ new.course }} (was {{ old.course }})
+{% endif %}
+{% if 'time' in changed %}
+ - Time: {{ new.time.strftime('%A %d %B at %H:%M (UTC)') }} (was {{ old.time.strftime('%A %d %B at %H:%M (UTC)') }})
+{% endif %}
+{% if 'payment_method' in changed %}
+ - Payment method: {{ new.payment_method.name.capitalize() }} (was {{ old.payment_method.name.capitalize() }})
+{% endif %}
+{% if 'amount' in changed %}
+ - Amount: &euro;{{ new.amount }} (was &euro;{{ old.amount }})
+{% endif %}
+{% if 'receipt' in changed %}
+ - Receipt number: {{ new.receipt }} (was {{ old.receipt }})
+{% endif %}
+
+You can click the following link to mark this form as resolved: {{ resolve_link }}

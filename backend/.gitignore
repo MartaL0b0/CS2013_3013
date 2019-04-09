@@ -1,0 +1,4 @@
+.env
+data/
+ssl/
+__pycache__/

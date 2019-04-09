@@ -1,0 +1,67 @@
+version: '3.7'
+services:
+    briefthreat:
+        image: briefthreat/app
+        restart: on-failure
+        build:
+            context: ./build
+            dockerfile: Dockerfile.app
+        init: true
+        depends_on:
+            - db
+            - redis
+        environment:
+            - FLASK_ENV=${FLASK_ENV}
+            - FLASK_SECRET=${FLASK_SECRET}
+            - PUBLIC_HOST=${PUBLIC_HOST}
+            - ROOT_EMAIL=${ROOT_EMAIL}
+            - EMAIL_NAME=${EMAIL_NAME}
+            - EMAIL_FROM=${EMAIL_FROM}
+            - SMTP_HOST=${SMTP_HOST}
+            - SMTP_USER=${SMTP_USER}
+            - SMTP_PASSWORD=${SMTP_PASSWORD}
+            - JWT_SECRET=${JWT_SECRET}
+            - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY}
+            - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY}
+            - MYSQL_HOST=db
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - PW_RESET_WINDOW=${PW_RESET_WINDOW}
+            - RATELIMIT_DEFAULT=${RATELIMIT_DEFAULT}
+            - CLEANUP_INTERVAL=${CLEANUP_INTERVAL}
+        volumes:
+            - ./app:/opt/app:ro
+    redis:
+        image: redis:alpine
+        restart: on-failure
+        volumes:
+            - $REDIS_DATA:/data
+    db:
+        image: mariadb:latest
+        restart: on-failure
+        command:
+            - --wait_timeout=28800
+        environment:
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+        volumes:
+            - $MYSQL_DATA:/var/lib/mysql
+    nginx:
+        image: briefthreat/nginx
+        restart: on-failure
+        build:
+            context: ./build
+            dockerfile: Dockerfile.nginx
+        depends_on:
+            - briefthreat
+        environment:
+            - NGINX_HOST=${NGINX_HOST}
+            - NGINX_HTTPS_PORT=${NGINX_HTTPS_PORT}
+        volumes:
+            - ${SSL_CERTS}:/opt/ssl
+        ports:
+            - "$NGINX_HTTP_PORT:80"
+            - "$NGINX_HTTPS_PORT:$NGINX_HTTPS_PORT"

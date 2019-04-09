@@ -1,0 +1,35 @@
+<mjml>
+  <mj-head>
+    <mj-title>BriefThreat password reset</mj-title>
+    <mj-attributes>
+      <mj-class name="text" font-family="Roboto, sans-serif" color="#585858"/>
+    </mj-attributes>
+    <mj-style>
+      @media (min-width:480px) {
+      	p, ul {
+      		font-size: 16px;
+      	}
+      }
+      a {
+      	text-decoration: none;
+      	color: #0D47A1;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body>
+    <mj-section background-color="#f0f0f0">
+      <mj-column>
+        <mj-image width="256px" src="{{ url_for('static', filename='logo.png', _external=True) }}" />
+
+        <mj-divider border-color="#673ab7"></mj-divider>
+
+        <mj-text mj-class="text" css-class="text-scaling">
+          <h1>Hi {{ user.first_name }},</h1>
+          <p>A request was made to reset your password. You can do this by clicking the button below.</p>
+        </mj-text>
+
+        <mj-button font-family="Roboto, sans-serif" font-size="22px" href="{{ reset_link }}" background-color="#673ab7">Reset my password</mj-button>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -1,0 +1,4 @@
+Hi {{ user.first_name }},
+
+A request was made to reset your password. You can do this by following the link below.
+{{ reset_link }}

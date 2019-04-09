@@ -1,0 +1,9 @@
+Hi {{ form.user.first_name }},
+
+Your form (no. {{ form.id }}) has been marked as resolved.
+Here are the details:
+ - Course: {{ form.course }}
+ - Time: {{ form.time.strftime('%A %d %B at %H:%M (UTC)') }}
+ - Payment method: {{ form.payment_method.name.capitalize() }}
+ - Amount: €{{ form.amount }}
+ - Receipt number: {{ form.receipt }}

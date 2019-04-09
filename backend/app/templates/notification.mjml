@@ -1,0 +1,37 @@
+<mjml>
+  <mj-head>
+    <mj-title>Form no. {{ form.id }}</mj-title>
+    <mj-attributes>
+      <mj-class name="text" font-family="Roboto, sans-serif" color="#585858"/>
+    </mj-attributes>
+    <mj-style>
+      @media (min-width:480px) {
+      	p, ul {
+      		font-size: 16px;
+      	}
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body>
+    <mj-section background-color="#f0f0f0">
+      <mj-column>
+        <mj-image width="256px" src="{{ url_for('static', filename='logo.png', _external=True) }}" />
+
+        <mj-divider border-color="#673ab7"></mj-divider>
+
+        <mj-text mj-class="text" css-class="text-scaling">
+          <h1>Hi {{ form.user.first_name }},</h1>
+          <h2>Your form (no. {{ form.id }}) has been marked as resolved.</h2>
+          <p>Here are the details:</p>
+          <ul>
+            <li>Course: {{ form.course }}</li>
+            <li>Time: {{ form.time.strftime('%A %d %B at %H:%M (UTC)') }}</li>
+            <li>Payment method: {{ form.payment_method.name.capitalize() }}</li>
+            <li>Amount: &euro;{{ form.amount }}</li>
+            <li>Receipt number: {{ form.receipt }}</li>
+          </ul>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
