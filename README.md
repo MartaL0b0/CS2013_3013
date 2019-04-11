@@ -1,10 +1,14 @@
+![BD logo](https://i.imgur.com/Pt1WA4V.png)
 
 # CS2013_3013
 Group 23 Software Engineering Group Project at Trinity College Dublin - Second Semester of 2018-2019
 
-This application was developed by 2nd and 3rd year Computer Science Students. It was an assignment for the module "Software Engineering Group Project" in which we worked with a 3rd party client. To view the **original Statement of Work** click [here](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit). The app's **User Manual** can be found [here](https://bit.ly/2Kfzjb5).
+This application was developed by 2nd and 3rd year Computer Science Students. It was an assignment for the module "Software Engineering Group Project" in which we worked with a 3rd party client.
+- To view the original **Statement of Work** click [here](https://docs.google.com/document/d/1txUZh5TiaYA9gDweK8FRTzW14c7a2z1N9qyPCBCNVYI/edit).
+- The app's **User Manual** can be found [here](https://bit.ly/2Kfzjb5).
 
-![BD logo][logo]
+## Demo video
+[![Demo](https://img.youtube.com/vi/CqqpgD1H3Gw/0.jpg)](https://www.youtube.com/watch?v=CqqpgD1H3Gw)
 
 ## Table of Contents
 
@@ -98,5 +102,3 @@ This application's goal was to replace an inefficient process of resolving invoi
 Administrators can also approve requests through the app. This is what that looks like:
 
 ![Resolve in app](https://i.imgur.com/CF80LeA.png)
-
-[logo]:https://i.imgur.com/2vsvMmT.png
